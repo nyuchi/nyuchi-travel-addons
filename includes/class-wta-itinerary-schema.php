@@ -1,0 +1,864 @@
+<?php
+/**
+ * The trip data WP Travel does not store.
+ *
+ * WP Travel covers title, duration, price, inclusions and a flat list of days.
+ * A richly presented itinerary needs more than that: which days belong to which
+ * leg of the journey, how the trip scores month by month, where the stops sit
+ * on a map, what the traveller has to choose between, and what it costs at
+ * different comfort levels.
+ *
+ * Each structure below is stored as a single post meta entry holding an array,
+ * and every one is exposed as a typed REST field so the whole itinerary can be
+ * authored by an API client rather than by hand.
+ *
+ * Nothing here duplicates WP Travel. Days still live in
+ * wp_travel_trip_itinerary_data; legs reference them by index rather than
+ * copying them, so there is exactly one source of truth for day content.
+ *
+ * @package WPTravelAddons
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class WTA_Itinerary_Schema {
+
+    /** Meta keys. Prefixed and not protected, so they are editable over REST. */
+    const HERO        = 'wta_hero';
+    const LEGS        = 'wta_legs';
+    const ROUTE       = 'wta_route';
+    const SEASONALITY = 'wta_seasonality';
+    const OPTIONS     = 'wta_options';
+    const COST        = 'wta_cost';
+    const CHECKLIST   = 'wta_checklist';
+    const NOTES       = 'wta_notes';
+
+    public function __construct() {
+        add_action('init', array($this, 'register_meta'), 20);
+        add_action('rest_api_init', array($this, 'register_rest_fields'));
+    }
+
+    /**
+     * Every field, with its REST schema and the callback that cleans it.
+     *
+     * @return array<string, array>
+     */
+    public static function fields() {
+        return array(
+            self::HERO => array(
+                'rest_key'    => 'hero',
+                'description' => 'Headline block: eyebrow, split headline, standfirst and the stat strip.',
+                'sanitize'    => 'sanitize_hero',
+                'schema'      => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'eyebrow'  => array('type' => 'string'),
+                        'headline' => array(
+                            'type'        => 'array',
+                            'description' => 'Headline rendered one line per entry; the accent flag colours that line.',
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'text'   => array('type' => 'string'),
+                                    'accent' => array('type' => 'string', 'enum' => array('', 'warm', 'cool')),
+                                ),
+                            ),
+                        ),
+                        'standfirst' => array('type' => 'string'),
+                        'stats'      => array(
+                            'type'  => 'array',
+                            'items' => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'value' => array('type' => 'string'),
+                                    'label' => array('type' => 'string'),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::LEGS => array(
+                'rest_key'    => 'legs',
+                'description' => 'Stages of the journey. Days are referenced by their index in the WP Travel itinerary, never copied.',
+                'sanitize'    => 'sanitize_legs',
+                'schema'      => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'title'    => array('type' => 'string'),
+                            'subtitle' => array('type' => 'string'),
+                            'accent'   => array('type' => 'string', 'enum' => array('forest', 'plain', 'ocean')),
+                            'day_from' => array('type' => 'integer', 'description' => 'First day index, zero-based, into itinerary_days.'),
+                            'day_to'   => array('type' => 'integer', 'description' => 'Last day index, inclusive.'),
+                            'term_id'  => array('type' => 'integer', 'description' => 'travel_locations term this leg covers, so the heading links through to the destination. Left at 0, it is resolved by matching the leg title against the trip\'s own destinations.'),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::ROUTE => array(
+                'rest_key'    => 'route',
+                'description' => 'Ordered stops. Positions come from real latitude and longitude, the same coordinates WP Travel stores for the trip map, and are projected into the map viewport automatically. x/y may be set to override a projected position by hand.',
+                'sanitize'    => 'sanitize_route',
+                'schema'      => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'name'     => array('type' => 'string'),
+                            'subtitle' => array('type' => 'string'),
+                            'nights'   => array('type' => 'integer'),
+                            'leg'      => array('type' => 'integer', 'description' => 'Index into legs.'),
+                            'lat'      => array('type' => 'number', 'description' => 'Latitude. The same coordinate system WP Travel already uses for the trip map.'),
+                            'lng'      => array('type' => 'number', 'description' => 'Longitude.'),
+                            'x'        => array('type' => 'number', 'description' => 'Optional manual horizontal position, 0-100. Leave null to derive from lat/lng.'),
+                            'y'        => array('type' => 'number', 'description' => 'Optional manual vertical position, 0-100. Leave null to derive from lat/lng.'),
+                            'arrive'   => array('type' => 'string', 'enum' => array('fly', 'drive', 'start'), 'description' => 'How the traveller reaches this stop from the previous one.'),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::SEASONALITY => array(
+                'rest_key'    => 'seasonality',
+                'description' => 'Month-by-month suitability. Rows are the things being scored; each month scores every row 0-3 and carries its own verdict.',
+                'sanitize'    => 'sanitize_seasonality',
+                'schema'      => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'rows' => array(
+                            'type'  => 'array',
+                            'items' => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'key'    => array('type' => 'string'),
+                                    'label'  => array('type' => 'string'),
+                                    'accent' => array('type' => 'string', 'enum' => array('forest', 'plain', 'ocean')),
+                                ),
+                            ),
+                        ),
+                        'months' => array(
+                            'type'        => 'array',
+                            'description' => 'Exactly twelve entries, January first.',
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'scores'  => array('type' => 'object', 'description' => 'Row key => 0 (avoid) to 3 (ideal).'),
+                                    'rank'    => array('type' => 'string', 'enum' => array('', 'primary', 'alternative')),
+                                    'tags'    => array('type' => 'array', 'items' => array('type' => 'string')),
+                                    'verdict' => array('type' => 'string'),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::OPTIONS => array(
+                'rest_key'    => 'options',
+                'description' => 'A choice the traveller makes within the trip, such as which coast or which lodge style.',
+                'sanitize'    => 'sanitize_options',
+                'schema'      => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'title' => array('type' => 'string'),
+                        'items' => array(
+                            'type'  => 'array',
+                            'items' => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'name'     => array('type' => 'string'),
+                                    'subtitle' => array('type' => 'string'),
+                                    'body'     => array('type' => 'string'),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::COST => array(
+                'rest_key'    => 'cost',
+                'description' => 'Inputs for the cost estimator. Every figure is per person unless the label says otherwise.',
+                'sanitize'    => 'sanitize_cost',
+                'schema'      => array(
+                    'type'       => 'object',
+                    'properties' => array(
+                        'currency' => array('type' => 'string'),
+                        'note'     => array('type' => 'string'),
+                        'tiers'    => array(
+                            'type'  => 'array',
+                            'items' => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'name'    => array('type' => 'string'),
+                                    'land'    => array('type' => 'number'),
+                                    'flights' => array('type' => 'number'),
+                                ),
+                            ),
+                        ),
+                        'fees'      => array('type' => 'number', 'description' => 'Park and conservation fees.'),
+                        'addons'    => array(
+                            'type'        => 'array',
+                            'description' => 'Optional priced choices such as permits, rendered as a segmented control.',
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'label'   => array('type' => 'string'),
+                                    'choices' => array(
+                                        'type'  => 'array',
+                                        'items' => array(
+                                            'type'       => 'object',
+                                            'properties' => array(
+                                                'name'  => array('type' => 'string'),
+                                                'price' => array('type' => 'number'),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::CHECKLIST => array(
+                'rest_key'    => 'checklist',
+                'description' => 'What to book, in the order it must be booked.',
+                'sanitize'    => 'sanitize_pairs',
+                'schema'      => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'heading' => array('type' => 'string'),
+                            'body'    => array('type' => 'string'),
+                        ),
+                    ),
+                ),
+            ),
+
+            self::NOTES => array(
+                'rest_key'    => 'notes',
+                'description' => 'Practical warnings: visas, vaccinations, luggage limits.',
+                'sanitize'    => 'sanitize_pairs',
+                'schema'      => array(
+                    'type'  => 'array',
+                    'items' => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'heading' => array('type' => 'string'),
+                            'body'    => array('type' => 'string'),
+                        ),
+                    ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Registered so the values are real post meta, but kept out of the `meta`
+     * object: these are arrays, and a REST field gives them a typed schema and
+     * a sanitiser instead of a serialised blob.
+     */
+    public function register_meta() {
+        if (!WTA_Trip::is_available()) {
+            return;
+        }
+
+        foreach (array_keys(self::fields()) as $key) {
+            register_post_meta(WTA_Trip::post_type(), $key, array(
+                'type'          => 'array',
+                'single'        => true,
+                'show_in_rest'  => false,
+                'auth_callback' => function ($allowed, $meta_key, $post_id) {
+                    return current_user_can('edit_post', $post_id);
+                },
+            ));
+        }
+    }
+
+    public function register_rest_fields() {
+        if (!WTA_Trip::is_available()) {
+            return;
+        }
+
+        foreach (self::fields() as $meta_key => $field) {
+            register_rest_field(WTA_Trip::post_type(), $field['rest_key'], array(
+                'get_callback'    => function ($post) use ($meta_key) {
+                    $value = get_post_meta($post['id'], $meta_key, true);
+
+                    return '' === $value ? null : $value;
+                },
+                'update_callback' => function ($value, $post) use ($meta_key, $field) {
+                    if (!current_user_can('edit_post', $post->ID)) {
+                        return new WP_Error('wta_forbidden', 'You are not allowed to edit this trip.', array('status' => 403));
+                    }
+
+                    $clean = call_user_func(array(__CLASS__, $field['sanitize']), $value);
+
+                    if (is_wp_error($clean)) {
+                        return $clean;
+                    }
+
+                    update_post_meta($post->ID, $meta_key, $clean);
+
+                    return true;
+                },
+                'schema'          => array_merge(
+                    array('description' => $field['description'], 'context' => array('view', 'edit')),
+                    $field['schema']
+                ),
+            ));
+        }
+    }
+
+    /* ---------------------------------------------------------- sanitisers */
+
+    protected static function text($v) {
+        return sanitize_text_field((string) $v);
+    }
+
+    protected static function html($v) {
+        return wp_kses_post((string) $v);
+    }
+
+    public static function sanitize_hero($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $out = array(
+            'eyebrow'    => isset($value['eyebrow']) ? self::text($value['eyebrow']) : '',
+            'standfirst' => isset($value['standfirst']) ? self::html($value['standfirst']) : '',
+            'headline'   => array(),
+            'stats'      => array(),
+        );
+
+        if (!empty($value['headline']) && is_array($value['headline'])) {
+            foreach ($value['headline'] as $line) {
+                if (!is_array($line)) {
+                    continue;
+                }
+
+                $accent = isset($line['accent']) ? sanitize_key($line['accent']) : '';
+
+                $out['headline'][] = array(
+                    'text'   => self::text(isset($line['text']) ? $line['text'] : ''),
+                    'accent' => in_array($accent, array('warm', 'cool'), true) ? $accent : '',
+                );
+            }
+        }
+
+        if (!empty($value['stats']) && is_array($value['stats'])) {
+            foreach ($value['stats'] as $stat) {
+                if (!is_array($stat)) {
+                    continue;
+                }
+
+                $out['stats'][] = array(
+                    'value' => self::text(isset($stat['value']) ? $stat['value'] : ''),
+                    'label' => self::text(isset($stat['label']) ? $stat['label'] : ''),
+                );
+            }
+        }
+
+        return $out;
+    }
+
+    public static function sanitize_legs($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $out = array();
+
+        foreach ($value as $leg) {
+            if (!is_array($leg)) {
+                continue;
+            }
+
+            $accent = isset($leg['accent']) ? sanitize_key($leg['accent']) : 'forest';
+
+            $from = isset($leg['day_from']) ? max(0, (int) $leg['day_from']) : 0;
+            $to   = isset($leg['day_to']) ? max(0, (int) $leg['day_to']) : $from;
+
+            $out[] = array(
+                'title'    => self::text(isset($leg['title']) ? $leg['title'] : ''),
+                'subtitle' => self::text(isset($leg['subtitle']) ? $leg['subtitle'] : ''),
+                'accent'   => in_array($accent, array('forest', 'plain', 'ocean'), true) ? $accent : 'forest',
+                'day_from' => $from,
+                // A leg that ends before it starts would silently render nothing.
+                'day_to'   => max($from, $to),
+                'term_id'  => isset($leg['term_id']) ? max(0, (int) $leg['term_id']) : 0,
+            );
+        }
+
+        return $out;
+    }
+
+    public static function sanitize_route($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $out = array();
+
+        foreach ($value as $stop) {
+            if (!is_array($stop)) {
+                continue;
+            }
+
+            $arrive = isset($stop['arrive']) ? sanitize_key($stop['arrive']) : 'drive';
+
+            $has_lat = isset($stop['lat']) && '' !== $stop['lat'] && null !== $stop['lat'];
+            $has_lng = isset($stop['lng']) && '' !== $stop['lng'] && null !== $stop['lng'];
+
+            $out[] = array(
+                'name'     => self::text(isset($stop['name']) ? $stop['name'] : ''),
+                'subtitle' => self::text(isset($stop['subtitle']) ? $stop['subtitle'] : ''),
+                'nights'   => isset($stop['nights']) ? max(0, (int) $stop['nights']) : 0,
+                'leg'      => isset($stop['leg']) ? max(0, (int) $stop['leg']) : 0,
+                // Real coordinates, clamped to valid ranges. Null means this stop
+                // has none and will be skipped by the projection rather than
+                // silently plotted at (0,0) off the coast of Africa.
+                'lat'      => $has_lat ? min(90, max(-90, (float) $stop['lat'])) : null,
+                'lng'      => $has_lng ? min(180, max(-180, (float) $stop['lng'])) : null,
+                // Manual override. Null, not 50, so "unset" is distinguishable
+                // from "deliberately centred".
+                'x'        => (isset($stop['x']) && '' !== $stop['x'] && null !== $stop['x']) ? min(100, max(0, (float) $stop['x'])) : null,
+                'y'        => (isset($stop['y']) && '' !== $stop['y'] && null !== $stop['y']) ? min(100, max(0, (float) $stop['y'])) : null,
+                'arrive'   => in_array($arrive, array('fly', 'drive', 'start'), true) ? $arrive : 'drive',
+            );
+        }
+
+        return $out;
+    }
+
+    public static function sanitize_seasonality($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $rows = array();
+        $keys = array();
+
+        if (!empty($value['rows']) && is_array($value['rows'])) {
+            foreach ($value['rows'] as $row) {
+                if (!is_array($row) || empty($row['key'])) {
+                    continue;
+                }
+
+                $key    = sanitize_key($row['key']);
+                $accent = isset($row['accent']) ? sanitize_key($row['accent']) : 'forest';
+                $keys[] = $key;
+
+                $rows[] = array(
+                    'key'    => $key,
+                    'label'  => self::text(isset($row['label']) ? $row['label'] : ''),
+                    'accent' => in_array($accent, array('forest', 'plain', 'ocean'), true) ? $accent : 'forest',
+                );
+            }
+        }
+
+        $months = array();
+        $given  = (!empty($value['months']) && is_array($value['months'])) ? array_values($value['months']) : array();
+
+        // Always twelve, so the renderer never has to guard against a short
+        // array and the matrix cannot come out ragged.
+        for ($i = 0; $i < 12; $i++) {
+            $month  = isset($given[$i]) && is_array($given[$i]) ? $given[$i] : array();
+            $scores = array();
+
+            foreach ($keys as $key) {
+                $raw = isset($month['scores'][$key]) ? (int) $month['scores'][$key] : 0;
+                $scores[$key] = min(3, max(0, $raw));
+            }
+
+            $rank = isset($month['rank']) ? sanitize_key($month['rank']) : '';
+            $tags = array();
+
+            if (!empty($month['tags']) && is_array($month['tags'])) {
+                foreach (array_slice($month['tags'], 0, 4) as $tag) {
+                    $tags[] = self::text($tag);
+                }
+            }
+
+            $months[] = array(
+                'scores'  => $scores,
+                'rank'    => in_array($rank, array('primary', 'alternative'), true) ? $rank : '',
+                'tags'    => $tags,
+                'verdict' => isset($month['verdict']) ? self::html($month['verdict']) : '',
+            );
+        }
+
+        return array('rows' => $rows, 'months' => $months);
+    }
+
+    public static function sanitize_options($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $items = array();
+
+        if (!empty($value['items']) && is_array($value['items'])) {
+            foreach ($value['items'] as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+
+                $items[] = array(
+                    'name'     => self::text(isset($item['name']) ? $item['name'] : ''),
+                    'subtitle' => self::text(isset($item['subtitle']) ? $item['subtitle'] : ''),
+                    'body'     => self::html(isset($item['body']) ? $item['body'] : ''),
+                );
+            }
+        }
+
+        return array(
+            'title' => isset($value['title']) ? self::text($value['title']) : '',
+            'items' => $items,
+        );
+    }
+
+    public static function sanitize_cost($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $tiers = array();
+
+        if (!empty($value['tiers']) && is_array($value['tiers'])) {
+            foreach ($value['tiers'] as $tier) {
+                if (!is_array($tier)) {
+                    continue;
+                }
+
+                $tiers[] = array(
+                    'name'    => self::text(isset($tier['name']) ? $tier['name'] : ''),
+                    'land'    => isset($tier['land']) ? max(0, (float) $tier['land']) : 0,
+                    'flights' => isset($tier['flights']) ? max(0, (float) $tier['flights']) : 0,
+                );
+            }
+        }
+
+        $addons = array();
+
+        if (!empty($value['addons']) && is_array($value['addons'])) {
+            foreach ($value['addons'] as $addon) {
+                if (!is_array($addon)) {
+                    continue;
+                }
+
+                $choices = array();
+
+                if (!empty($addon['choices']) && is_array($addon['choices'])) {
+                    foreach ($addon['choices'] as $choice) {
+                        if (!is_array($choice)) {
+                            continue;
+                        }
+
+                        $choices[] = array(
+                            'name'  => self::text(isset($choice['name']) ? $choice['name'] : ''),
+                            'price' => isset($choice['price']) ? max(0, (float) $choice['price']) : 0,
+                        );
+                    }
+                }
+
+                $addons[] = array(
+                    'label'   => self::text(isset($addon['label']) ? $addon['label'] : ''),
+                    'choices' => $choices,
+                );
+            }
+        }
+
+        return array(
+            'currency' => isset($value['currency']) ? self::text($value['currency']) : 'USD',
+            'note'     => isset($value['note']) ? self::html($value['note']) : '',
+            'tiers'    => $tiers,
+            'fees'     => isset($value['fees']) ? max(0, (float) $value['fees']) : 0,
+            'addons'   => $addons,
+        );
+    }
+
+    public static function sanitize_pairs($value) {
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $out = array();
+
+        foreach ($value as $pair) {
+            if (!is_array($pair)) {
+                continue;
+            }
+
+            $out[] = array(
+                'heading' => self::text(isset($pair['heading']) ? $pair['heading'] : ''),
+                'body'    => self::html(isset($pair['body']) ? $pair['body'] : ''),
+            );
+        }
+
+        return $out;
+    }
+
+    /* ---------------------------------------------------------- projection */
+
+    /**
+     * Turn latitude and longitude into positions in the map viewport.
+     *
+     * The stylised map is an SVG with a 1000x750 viewBox, so it is wider than
+     * it is tall. Scaling each axis independently to fill that box would
+     * stretch the geography — a north-south route would look as wide as an
+     * east-west one. Instead a single scale is derived from whichever axis is
+     * the tighter fit, and the result is centred, so the shape of the route
+     * survives.
+     *
+     * Longitude is multiplied by cos(latitude) because a degree of longitude
+     * covers less ground the further you are from the equator. Without it, an
+     * East African route comes out noticeably too wide.
+     *
+     * A stop that already carries a manual x/y keeps it. A stop with no
+     * coordinates at all is left unpositioned for the caller to skip.
+     *
+     * @param array $stops Sanitised route stops.
+     * @return array Same stops with x/y filled in where derivable.
+     */
+    public static function project_route($stops) {
+        if (!is_array($stops) || empty($stops)) {
+            return array();
+        }
+
+        // Padding in viewBox units. The right side gets more because stop
+        // labels are drawn outward from the marker.
+        $pad = apply_filters('wta_route_map_padding', array(
+            'top' => 70, 'right' => 190, 'bottom' => 70, 'left' => 90,
+        ));
+
+        $vb_w = 1000;
+        $vb_h = 750;
+
+        $located = array();
+
+        foreach ($stops as $i => $stop) {
+            if (null !== $stop['lat'] && null !== $stop['lng']) {
+                $located[$i] = $stop;
+            }
+        }
+
+        if (empty($located)) {
+            return $stops;
+        }
+
+        $mean_lat = 0.0;
+        foreach ($located as $stop) {
+            $mean_lat += $stop['lat'];
+        }
+        $mean_lat = deg2rad($mean_lat / count($located));
+
+        // Equirectangular, north up.
+        $points = array();
+        foreach ($located as $i => $stop) {
+            $points[$i] = array(
+                'px' => $stop['lng'] * cos($mean_lat),
+                'py' => -$stop['lat'],
+            );
+        }
+
+        $xs = wp_list_pluck($points, 'px');
+        $ys = wp_list_pluck($points, 'py');
+
+        $min_x = min($xs);
+        $max_x = max($xs);
+        $min_y = min($ys);
+        $max_y = max($ys);
+
+        $span_x = $max_x - $min_x;
+        $span_y = $max_y - $min_y;
+
+        $avail_w = $vb_w - $pad['left'] - $pad['right'];
+        $avail_h = $vb_h - $pad['top'] - $pad['bottom'];
+
+        // A single stop, or several at the same point, has no span to scale
+        // against — division would be by zero, so centre them instead.
+        if ($span_x < 0.0001 && $span_y < 0.0001) {
+            foreach (array_keys($points) as $i) {
+                if (null === $stops[$i]['x']) {
+                    $stops[$i]['x'] = 50.0;
+                }
+                if (null === $stops[$i]['y']) {
+                    $stops[$i]['y'] = 50.0;
+                }
+            }
+
+            return $stops;
+        }
+
+        $scale = min(
+            $span_x > 0.0001 ? $avail_w / $span_x : PHP_INT_MAX,
+            $span_y > 0.0001 ? $avail_h / $span_y : PHP_INT_MAX
+        );
+
+        // Centre whatever slack the uniform scale leaves on each axis.
+        $offset_x = $pad['left'] + ($avail_w - $span_x * $scale) / 2;
+        $offset_y = $pad['top'] + ($avail_h - $span_y * $scale) / 2;
+
+        foreach ($points as $i => $p) {
+            $vb_x = $offset_x + ($p['px'] - $min_x) * $scale;
+            $vb_y = $offset_y + ($p['py'] - $min_y) * $scale;
+
+            // Percentages, so the widget can place markers without knowing the
+            // viewBox and a designer can still override by hand.
+            if (null === $stops[$i]['x']) {
+                $stops[$i]['x'] = round($vb_x / $vb_w * 100, 3);
+            }
+
+            if (null === $stops[$i]['y']) {
+                $stops[$i]['y'] = round($vb_y / $vb_h * 100, 3);
+            }
+        }
+
+        return $stops;
+    }
+
+    /**
+     * Attach each leg to a destination term.
+     *
+     * A leg titled "Tanzania" on a trip filed under Tanzania is the same thing
+     * said twice, so the heading should link through to that destination rather
+     * than sit as dead text. Matching is by name against the trip's own terms
+     * only — never a site-wide lookup, which would happily link a leg called
+     * "The coast" to some unrelated term.
+     *
+     * An explicitly set term_id always wins.
+     */
+    public static function resolve_leg_terms($legs, $post_id) {
+        if (empty($legs) || !is_array($legs)) {
+            return $legs;
+        }
+
+        $terms = get_the_terms($post_id, 'travel_locations');
+
+        if (!$terms || is_wp_error($terms)) {
+            return $legs;
+        }
+
+        $by_name = array();
+        foreach ($terms as $term) {
+            $by_name[strtolower(trim($term->name))] = $term;
+        }
+
+        foreach ($legs as $i => $leg) {
+            $term = null;
+
+            if (!empty($leg['term_id'])) {
+                $found = get_term((int) $leg['term_id'], 'travel_locations');
+                if ($found && !is_wp_error($found)) {
+                    $term = $found;
+                }
+            }
+
+            if (!$term) {
+                $key = strtolower(trim(isset($leg['title']) ? $leg['title'] : ''));
+                if ('' !== $key && isset($by_name[$key])) {
+                    $term = $by_name[$key];
+                }
+            }
+
+            $legs[$i]['term_id']   = $term ? (int) $term->term_id : 0;
+            $legs[$i]['term_name'] = $term ? $term->name : '';
+            $legs[$i]['term_link'] = $term ? get_term_link($term) : '';
+
+            if (is_wp_error($legs[$i]['term_link'])) {
+                $legs[$i]['term_link'] = '';
+            }
+        }
+
+        return $legs;
+    }
+
+    /* ------------------------------------------------------------- reading */
+
+    /**
+     * Everything the template needs for one trip, with WP Travel's own data
+     * folded in and sensible fallbacks applied.
+     */
+    public static function for_trip($post_id) {
+        $data = array();
+
+        foreach (self::fields() as $meta_key => $field) {
+            $value = get_post_meta($post_id, $meta_key, true);
+            $data[$field['rest_key']] = is_array($value) ? $value : array();
+        }
+
+        $facts = WTA_Trip::facts($post_id);
+        $days  = get_post_meta($post_id, WTA_Trip::ITINERARY_META, true);
+
+        $data['days']  = is_array($days) ? array_values($days) : array();
+        $data['facts'] = $facts;
+
+        // Build on WP Travel's existing map rather than beside it: a trip that
+        // has set a location but no route still gets one pin, from the very
+        // coordinates its own map feature uses.
+        if (empty($data['route'])) {
+            $lat = get_post_meta($post_id, 'wp_travel_lat', true);
+            $lng = get_post_meta($post_id, 'wp_travel_lng', true);
+
+            if ('' !== $lat && '' !== $lng) {
+                $data['route'] = self::sanitize_route(array(array(
+                    'name'     => $facts['location'] ? $facts['location'] : get_the_title($post_id),
+                    'subtitle' => '',
+                    'nights'   => (int) $facts['nights'],
+                    'leg'      => 0,
+                    'lat'      => $lat,
+                    'lng'      => $lng,
+                    'arrive'   => 'start',
+                )));
+            }
+        }
+
+        $data['route'] = self::project_route($data['route']);
+        $data['legs']  = self::resolve_leg_terms($data['legs'], $post_id);
+
+        // A trip with no authored hero still deserves a headline block.
+        if (empty($data['hero']['stats'])) {
+            $stats = array();
+
+            if ($facts['nights']) {
+                $stats[] = array('value' => (string) (int) $facts['nights'], 'label' => 'Nights');
+            }
+
+            if ($data['route']) {
+                $stats[] = array('value' => (string) count($data['route']), 'label' => 'Stops');
+            }
+
+            $destinations = get_the_terms($post_id, 'travel_locations');
+
+            if ($destinations && !is_wp_error($destinations)) {
+                $stats[] = array('value' => (string) count($destinations), 'label' => 'Destinations');
+            }
+
+            $data['hero']['stats'] = $stats;
+        }
+
+        // With no legs authored, treat the whole itinerary as one leg so the
+        // day cards still render.
+        if (empty($data['legs']) && $data['days']) {
+            $data['legs'] = array(array(
+                'title'    => get_the_title($post_id),
+                'subtitle' => '',
+                'accent'   => 'forest',
+                'day_from' => 0,
+                'day_to'   => count($data['days']) - 1,
+            ));
+        }
+
+        return $data;
+    }
+}

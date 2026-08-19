@@ -1,0 +1,559 @@
+/*
+ * Itinerary design reference — Iconic Expeditions.
+ *
+ * This is the design language the Elementor widgets must reproduce. It is the
+ * source of truth for colour, type and component styling. Widget output should
+ * use these class names so a page composed widget-by-widget in Elementor looks
+ * identical to the full template.
+ *
+ * Scoped under .wta-itin so it cannot leak into the rest of the theme.
+ *
+ * Fonts: Bricolage Grotesque (display), Instrument Sans (body),
+ * JetBrains Mono (labels/eyebrows). Enqueue via wp_enqueue_style, never @import.
+ */
+
+.wta-itin {
+  /* Iconic Expeditions brand, taken from the Elementor Kit globals.
+     Navy is the primary; bush green is an accent, not the lead colour.
+       primary   #152744   secondary #F4EFE6   accent #34452F
+       gold      #C5A572   earth     #5C4326   sand   #E0CFB3  */
+  --navy:#152744;
+  --navy-deep:#0D1A2E;
+  --navy-lift:#3E5F8A;
+  --bush:#34452F;
+  --bush-soft:#4A6B3F;
+  --gold:#C5A572;
+  --gold-deep:#5C4326;
+  --sand:#E0CFB3;
+  --cream:#EADDC7;
+
+  /* The component rules below are written against these names. Re-pointing
+     them here re-skins the entire itinerary without touching a single rule. */
+  --forest:var(--bush);
+  --forest-deep:var(--navy-deep);
+  --moss:var(--bush-soft);
+  --dust:var(--gold);
+  --dust-deep:var(--gold-deep);
+  --bleach:var(--cream);
+  --ocean:var(--navy);
+  --ocean-bright:var(--navy-lift);
+  --shell:#F4EFE6;
+  --ink:#2B2B2B;
+  --ink-soft:rgba(43,43,43,.66);
+  --rule:rgba(21,39,68,.16);
+
+  --display:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;
+  --body:'Instrument Sans','Helvetica Neue',Arial,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+
+  --leg:var(--forest);
+  --pad:clamp(20px,5vw,72px);
+
+  background:var(--shell);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+}
+
+.wta-itin *,.wta-itin *::before,.wta-itin *::after{box-sizing:border-box}
+.wta-itin img,.wta-itin svg{display:block;max-width:100%}
+.wta-itin button{font:inherit;color:inherit;cursor:pointer}
+.wta-itin :focus-visible{outline:2px solid var(--dust);outline-offset:3px;border-radius:2px}
+
+.wta-wrap{max-width:1180px;margin:0 auto;padding:0 var(--pad)}
+
+.wta-eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-soft);
+}
+
+/* ── Accent scheme, applied per leg / per row ───────────────────────────── */
+.wta-accent-forest{--leg:var(--forest);--legtint:rgba(14,42,34,.06);--legfill:var(--moss)}
+.wta-accent-plain {--leg:var(--dust-deep);--legtint:rgba(200,147,63,.1);--legfill:var(--dust)}
+.wta-accent-ocean {--leg:var(--ocean);--legtint:rgba(11,110,127,.08);--legfill:var(--ocean)}
+
+/* ── HERO ───────────────────────────────────────────────────────────────── */
+.wta-hero{background:var(--forest-deep);color:var(--bleach);padding:clamp(36px,7vw,76px) 0 0;position:relative;overflow:hidden}
+.wta-hero .wta-eyebrow{color:rgba(232,220,192,.55)}
+.wta-hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,56px);align-items:end}
+.wta-hero h1{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(42px,8.2vw,92px);line-height:.92;letter-spacing:-.03em;margin:16px 0 0;
+}
+.wta-hero h1 .wta-line{font-style:normal;display:block;font-size:inherit;line-height:inherit;border:0;padding:0}
+.wta-hero h1 .wta-line[data-accent="warm"]{color:var(--dust)}
+.wta-hero h1 .wta-line[data-accent="cool"]{color:var(--ocean-bright)}
+.wta-hero-sub{margin:22px 0 0;max-width:46ch;color:rgba(232,220,192,.78);font-size:clamp(15px,1.6vw,18px)}
+.wta-hero-stats{display:flex;flex-wrap:wrap;margin:34px 0 0;border-top:1px solid rgba(232,220,192,.2)}
+.wta-stat{padding:16px 22px 20px 0;margin-right:22px;border-right:1px solid rgba(232,220,192,.16)}
+.wta-stat:last-child{border-right:0}
+.wta-stat b{
+  display:block;font-family:var(--display);font-weight:700;
+  font-size:clamp(24px,3vw,34px);line-height:1;letter-spacing:-.02em;color:var(--bleach);
+}
+.wta-stat span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(232,220,192,.5);
+}
+.wta-gradient-bar{
+  height:5px;margin-top:clamp(28px,5vw,56px);
+  background:linear-gradient(90deg,var(--navy) 0%,var(--navy-lift) 22%,var(--bush) 48%,var(--gold-deep) 74%,var(--gold) 100%);
+}
+
+/* ── SECTION SHELL ──────────────────────────────────────────────────────── */
+.wta-section{padding:clamp(48px,7vw,96px) 0}
+.wta-sec-head{
+  display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:clamp(24px,4vw,42px);
+}
+.wta-sec-head h2{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(26px,4.4vw,44px);letter-spacing:-.025em;line-height:1;margin:0;
+}
+.wta-sec-head p{margin:0;color:var(--ink-soft);font-size:14px;max-width:44ch}
+
+/* ── SEASONALITY MATRIX ─────────────────────────────────────────────────── */
+.wta-season{background:var(--bleach)}
+.wta-matrix{display:grid;grid-template-columns:118px 1fr;gap:3px 10px;align-items:stretch}
+/* Each row is its own 12-column track. This was previously declared only inside
+   the mobile query, so on desktop a row was a single grid item and its twelve
+   cells stacked into a vertical column. */
+.wta-mrow,.wta-monthstrip{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;min-width:0}
+.wta-matrix .wta-rowlabel{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-soft);display:flex;align-items:center;padding-right:10px;
+}
+.wta-mcell{
+  border:0;padding:0;height:34px;border-radius:2px;position:relative;
+  background:rgba(20,17,14,.07);transition:transform .18s ease;
+}
+.wta-mrow[data-accent="forest"] .wta-mcell[data-v="1"]{background:rgba(74,107,63,.3)}
+.wta-mrow[data-accent="forest"] .wta-mcell[data-v="2"]{background:rgba(74,107,63,.6)}
+.wta-mrow[data-accent="forest"] .wta-mcell[data-v="3"]{background:var(--moss)}
+.wta-mrow[data-accent="plain"]  .wta-mcell[data-v="1"]{background:rgba(200,147,63,.32)}
+.wta-mrow[data-accent="plain"]  .wta-mcell[data-v="2"]{background:rgba(200,147,63,.64)}
+.wta-mrow[data-accent="plain"]  .wta-mcell[data-v="3"]{background:var(--dust)}
+.wta-mrow[data-accent="ocean"]  .wta-mcell[data-v="1"]{background:rgba(11,110,127,.3)}
+.wta-mrow[data-accent="ocean"]  .wta-mcell[data-v="2"]{background:rgba(11,110,127,.6)}
+.wta-mrow[data-accent="ocean"]  .wta-mcell[data-v="3"]{background:var(--ocean)}
+
+.wta-monthbtn{
+  border:0;background:transparent;padding:10px 0 12px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-soft);border-bottom:2px solid transparent;
+  transition:color .18s ease,border-color .18s ease;
+}
+.wta-monthbtn:hover{color:var(--ink)}
+.wta-monthbtn[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:700}
+.wta-monthbtn .wta-flag{display:block;height:5px;width:5px;border-radius:50%;margin:5px auto 0;background:transparent}
+.wta-monthbtn[data-rank="primary"] .wta-flag{background:var(--dust)}
+.wta-monthbtn[data-rank="alternative"] .wta-flag{background:var(--ocean)}
+
+.wta-legend{
+  display:flex;gap:20px;flex-wrap:wrap;margin-top:22px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
+}
+.wta-legend i{display:inline-block;width:22px;height:8px;border-radius:2px;margin-right:7px;vertical-align:middle}
+
+.wta-verdict{
+  margin-top:clamp(22px,3vw,34px);background:var(--forest-deep);color:var(--bleach);
+  padding:clamp(22px,3.4vw,38px);display:grid;grid-template-columns:auto 1fr;
+  gap:clamp(20px,3vw,40px);align-items:start;
+}
+.wta-verdict-month{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(40px,7vw,74px);line-height:.85;letter-spacing:-.04em;color:var(--dust);
+}
+.wta-verdict-month small{
+  display:block;font-family:var(--mono);font-size:10px;font-weight:400;
+  letter-spacing:.16em;text-transform:uppercase;color:rgba(232,220,192,.5);margin-top:10px;
+}
+.wta-verdict-body p{margin:0;font-size:clamp(15px,1.7vw,19px);line-height:1.55;color:rgba(232,220,192,.9)}
+.wta-verdict-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.wta-tag{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  padding:5px 10px;border-radius:2px;border:1px solid rgba(232,220,192,.28);color:rgba(232,220,192,.75);
+}
+.wta-tag[data-t="go"]{background:var(--dust);border-color:var(--dust);color:var(--forest-deep);font-weight:700}
+.wta-tag[data-t="no"]{background:rgba(232,220,192,.1)}
+
+/* ── ROUTE MAP ──────────────────────────────────────────────────────────── */
+.wta-mapwrap{display:grid;grid-template-columns:1.5fr 1fr;gap:clamp(20px,3vw,44px);align-items:start}
+.wta-mapfig{background:var(--forest-deep);padding:clamp(12px,2vw,22px);border-radius:2px}
+.wta-stop{cursor:pointer}
+.wta-stop circle.wta-hit{fill:transparent}
+.wta-stop:hover .wta-dot,.wta-stop.is-on .wta-dot{r:9}
+.wta-stop .wta-dot{transition:r .18s ease}
+.wta-stop text{
+  font-family:var(--mono);font-size:15px;letter-spacing:.06em;
+  fill:rgba(232,220,192,.62);transition:fill .18s ease;
+}
+.wta-stop:hover text,.wta-stop.is-on text{fill:var(--bleach)}
+.wta-flightpath{fill:none;stroke:var(--dust);stroke-width:2;stroke-dasharray:9 7;opacity:.75;animation:wta-crawl 2.4s linear infinite}
+@keyframes wta-crawl{to{stroke-dashoffset:-32}}
+.wta-roadpath{fill:none;stroke:rgba(232,220,192,.4);stroke-width:2.5}
+.wta-maplist{display:flex;flex-direction:column}
+.wta-mapitem{
+  display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:baseline;
+  padding:13px 0;border:0;border-bottom:1px solid var(--rule);
+  text-align:left;background:none;width:100%;transition:padding-left .2s ease;
+}
+.wta-mapitem:hover,.wta-mapitem.is-on{padding-left:8px;background:rgba(200,147,63,.09)}
+.wta-mapitem .wta-n{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.wta-mapitem .wta-nm{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.wta-mapitem .wta-nm em{
+  display:block;font-style:normal;font-family:var(--body);font-weight:400;
+  font-size:13px;color:var(--ink-soft);letter-spacing:0;margin-top:2px;
+}
+.wta-mapitem .wta-nt{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;
+}
+
+/* ── LEGS & DAY CARDS ───────────────────────────────────────────────────── */
+.wta-leg{padding:clamp(44px,6vw,84px) 0;border-top:1px solid var(--rule)}
+.wta-leghead{display:grid;grid-template-columns:auto 1fr auto;gap:clamp(16px,3vw,32px);align-items:center;margin-bottom:clamp(20px,3vw,34px)}
+.wta-legno{font-family:var(--display);font-weight:800;font-size:clamp(48px,9vw,104px);line-height:.8;letter-spacing:-.05em;color:var(--leg);opacity:.22}
+.wta-legtitle h3{font-family:var(--display);font-weight:700;font-size:clamp(24px,4vw,40px);letter-spacing:-.025em;margin:0;color:var(--leg)}
+.wta-legtitle p{margin:5px 0 0;color:var(--ink-soft);font-size:14px;max-width:40ch}
+.wta-legmark svg{width:clamp(58px,9vw,104px);height:auto}
+
+.wta-days{display:flex;flex-direction:column;gap:8px}
+.wta-day{border:1px solid var(--rule);border-left:3px solid var(--leg);background:#fff;border-radius:2px;overflow:hidden}
+.wta-day > button{
+  width:100%;display:grid;grid-template-columns:74px 1fr 22px;gap:14px;
+  align-items:baseline;padding:15px 16px;background:none;border:0;text-align:left;
+}
+.wta-day > button:hover{background:var(--legtint)}
+.wta-day .wta-dnum{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.wta-day .wta-dtitle{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.wta-day .wta-dtitle em{
+  display:block;font-style:normal;font-family:var(--body);font-weight:400;
+  font-size:13.5px;color:var(--ink-soft);letter-spacing:0;margin-top:3px;
+}
+.wta-chev{font-family:var(--mono);font-size:15px;color:var(--ink-soft);transition:transform .22s ease;justify-self:end}
+.wta-day.is-open .wta-chev{transform:rotate(45deg)}
+.wta-dbody{display:none;padding:0 16px 18px 104px;font-size:14.5px;color:rgba(20,17,14,.78)}
+.wta-day.is-open .wta-dbody{display:block}
+.wta-dbody p{margin:0 0 10px}
+.wta-dbody p:last-child{margin-bottom:0}
+.wta-dbody strong{color:var(--ink)}
+.wta-callout{border-left:2px solid var(--leg);padding:2px 0 2px 14px;margin:12px 0 0;font-size:13.5px}
+.wta-callout b{
+  display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--leg);margin-bottom:5px;
+}
+
+/* ── OPTION PICKER ──────────────────────────────────────────────────────── */
+.wta-options{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+.wta-option{border:1px solid var(--rule);background:#fff;border-radius:2px;padding:16px;text-align:left;transition:border-color .18s ease,background .18s ease}
+.wta-option:hover{border-color:var(--ocean)}
+.wta-option[aria-pressed="true"]{background:var(--ocean);border-color:var(--ocean);color:var(--shell)}
+.wta-option h4{font-family:var(--display);font-weight:700;font-size:17px;margin:0 0 4px;letter-spacing:-.01em}
+.wta-option span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+.wta-optionout{margin-top:10px;background:var(--forest-deep);color:rgba(232,220,192,.9);padding:20px;font-size:14.5px;border-radius:2px}
+.wta-optionout b{
+  color:var(--ocean-bright);font-family:var(--mono);font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:7px;
+}
+
+/* ── COST ESTIMATOR ─────────────────────────────────────────────────────── */
+.wta-calc{background:var(--forest-deep);color:var(--bleach)}
+.wta-calc .wta-sec-head{border-color:rgba(232,220,192,.2)}
+.wta-calc .wta-sec-head h2{color:var(--bleach)}
+.wta-calc .wta-sec-head p{color:rgba(232,220,192,.6)}
+.wta-calcgrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:start}
+.wta-field{margin-bottom:24px}
+.wta-field > label{
+  display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(232,220,192,.55);margin-bottom:9px;
+}
+.wta-seg{display:flex;gap:5px;flex-wrap:wrap}
+.wta-seg button{
+  flex:1 1 auto;min-width:72px;background:transparent;
+  border:1px solid rgba(232,220,192,.26);color:rgba(232,220,192,.8);
+  padding:10px 12px;border-radius:2px;font-size:13.5px;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+.wta-seg button:hover{border-color:var(--dust)}
+.wta-seg button[aria-pressed="true"]{background:var(--dust);border-color:var(--dust);color:var(--forest-deep);font-weight:600}
+.wta-stepper{display:flex;align-items:center;border:1px solid rgba(232,220,192,.26);border-radius:2px;width:fit-content}
+.wta-stepper button{background:none;border:0;padding:9px 17px;color:var(--bleach);font-family:var(--mono);font-size:17px;line-height:1}
+.wta-stepper button:hover{background:rgba(200,147,63,.24)}
+.wta-stepper output{
+  font-family:var(--mono);font-size:15px;min-width:44px;text-align:center;padding:9px 0;
+  border-left:1px solid rgba(232,220,192,.26);border-right:1px solid rgba(232,220,192,.26);
+}
+.wta-readout{border-top:1px solid rgba(232,220,192,.2)}
+/* Cost readout row. Renamed from .wta-line, which collided with the hero
+   headline lines and was forcing 14px text and an underline onto them. */
+.wta-costline{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(232,220,192,.12);font-size:14px}
+.wta-costline span:first-child{color:rgba(232,220,192,.72)}
+.wta-costline span:last-child{font-family:var(--mono);font-size:13.5px}
+.wta-total{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:22px 0 6px}
+.wta-total .wta-lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,220,192,.55)}
+.wta-total .wta-amt{font-family:var(--display);font-weight:800;font-size:clamp(34px,5.6vw,60px);line-height:.9;letter-spacing:-.035em;color:var(--dust)}
+.wta-groupline{font-family:var(--mono);font-size:12px;color:rgba(232,220,192,.6);padding-bottom:6px}
+.wta-disc{font-size:12.5px;color:rgba(232,220,192,.5);margin-top:16px;line-height:1.5}
+
+/* ── CHECKLIST ──────────────────────────────────────────────────────────── */
+.wta-progressbar{height:3px;background:var(--rule);margin-bottom:22px;position:relative}
+.wta-progressbar i{position:absolute;left:0;top:0;bottom:0;background:var(--dust);width:0;transition:width .32s ease}
+.wta-check{
+  display:grid;grid-template-columns:26px 1fr;gap:14px;padding:16px 0;
+  border:0;border-bottom:1px solid var(--rule);width:100%;background:none;text-align:left;align-items:start;
+}
+.wta-check:hover{background:rgba(200,147,63,.07)}
+.wta-box{
+  width:19px;height:19px;border:1.5px solid var(--ink);border-radius:2px;
+  display:grid;place-items:center;margin-top:2px;font-size:12px;color:transparent;
+  transition:background .16s ease,color .16s ease;
+}
+.wta-check[aria-pressed="true"] .wta-box{background:var(--ink);color:var(--shell)}
+.wta-check[aria-pressed="true"] .wta-ctext h4{text-decoration:line-through;opacity:.5}
+.wta-ctext h4{font-family:var(--display);font-weight:700;font-size:16.5px;margin:0 0 3px;letter-spacing:-.01em}
+.wta-ctext p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+
+/* ── FIELD NOTES ────────────────────────────────────────────────────────── */
+.wta-notes{background:var(--bleach)}
+.wta-notegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--rule)}
+.wta-note{background:var(--bleach);padding:22px}
+.wta-note h4{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dust-deep);margin:0 0 9px}
+.wta-note p{margin:0;font-size:14px;color:rgba(20,17,14,.8)}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
+@media (max-width:900px){
+  .wta-hero-grid,.wta-mapwrap,.wta-calcgrid,.wta-verdict{grid-template-columns:1fr}
+  .wta-verdict-month{font-size:52px}
+  .wta-notegrid,.wta-options{grid-template-columns:1fr}
+  .wta-leghead{grid-template-columns:auto 1fr}
+  .wta-legmark{display:none}
+  .wta-matrix{grid-template-columns:1fr;gap:6px}
+  .wta-matrix .wta-rowlabel{padding:8px 0 2px}
+  .wta-monthbtn{font-size:9px;padding:8px 0}
+}
+@media (max-width:640px){ .wta-dbody{padding-left:16px} }
+@media (prefers-reduced-motion:reduce){ .wta-itin *{animation:none!important;transition:none!important} }
+
+/* ── TRIP CARDS ─────────────────────────────────────────────────────────────
+ * Replaces CSS-patched portfolio items. The wrapper clips and holds the aspect
+ * ratio; the image rests at its true framing and scales on hover. Doing it the
+ * other way round — a permanent scale(1.2) with overflow on the <img> — crops
+ * every thumbnail unpredictably and does not actually clip, because overflow
+ * has no effect on a replaced element.
+ */
+.wta-cards-grid{display:grid;gap:clamp(14px,2vw,22px)}
+.wta-cards-grid[data-cols="1"]{grid-template-columns:minmax(0,1fr)}
+.wta-cards-grid[data-cols="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.wta-cards-grid[data-cols="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+.wta-cards-grid[data-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1024px){
+  .wta-cards-grid[data-cols="3"],.wta-cards-grid[data-cols="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){ .wta-cards-grid{grid-template-columns:minmax(0,1fr)} }
+
+.wta-card{min-width:0;border-radius:10px;overflow:hidden;background:#fff;border:1px solid var(--rule)}
+.wta-card-link{display:block;color:inherit;text-decoration:none;height:100%}
+.wta-card-link:focus-visible{outline:2px solid var(--dust);outline-offset:2px}
+
+/* The clipping container. This is the element that must own overflow. */
+.wta-card-media{position:relative;overflow:hidden;background:var(--forest-deep)}
+.wta-cards-grid[data-ratio="1-1"]  .wta-card-media{aspect-ratio:1/1}
+.wta-cards-grid[data-ratio="4-3"]  .wta-card-media{aspect-ratio:4/3}
+.wta-cards-grid[data-ratio="3-4"]  .wta-card-media{aspect-ratio:3/4}
+.wta-cards-grid[data-ratio="16-9"] .wta-card-media{aspect-ratio:16/9}
+.wta-card-img{
+  width:100%;height:100%;object-fit:cover;
+  transform:scale(1);transition:transform .5s ease;
+}
+.wta-card:hover .wta-card-img,.wta-card-link:focus-visible .wta-card-img{transform:scale(1.06)}
+.wta-card-noimg{display:block;width:100%;height:100%;background:linear-gradient(135deg,var(--navy) 0%,var(--bush) 100%)}
+
+.wta-card-place{
+  position:absolute;left:10px;top:10px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  background:rgba(8,26,21,.82);color:var(--bleach);padding:5px 10px;border-radius:2px;
+}
+
+.wta-card-body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:7px}
+.wta-card-title{
+  font-family:var(--display);font-weight:700;font-size:18px;
+  line-height:1.25;letter-spacing:-.015em;margin:0;color:var(--ink);
+}
+.wta-card-excerpt{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+.wta-card-meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin-top:2px}
+.wta-card-dur{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.wta-card-price{margin-left:auto;font-family:var(--display);font-weight:700;font-size:17px;color:var(--dust-deep);letter-spacing:-.01em}
+.wta-card-price small{font-family:var(--body);font-weight:400;font-size:11px;color:var(--ink-soft);letter-spacing:0}
+.wta-card-cta{
+  align-self:flex-start;margin-top:8px;
+  border:1px solid var(--rule);border-radius:999px;padding:8px 18px;
+  font-size:13px;font-weight:500;color:var(--ink);
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+.wta-card:hover .wta-card-cta{background:var(--forest);border-color:var(--forest);color:var(--bleach)}
+
+/* Text over image. The gradient only exists to keep the title legible against
+ * whatever photograph sits behind it. */
+.wta-cards-grid[data-style="overlay"] .wta-card{border:0}
+.wta-cards-grid[data-style="overlay"] .wta-card-link{position:relative;display:grid}
+.wta-cards-grid[data-style="overlay"] .wta-card-media{grid-area:1/1}
+.wta-cards-grid[data-style="overlay"] .wta-card-body{
+  grid-area:1/1;align-self:end;position:relative;z-index:1;
+  background:linear-gradient(to top,rgba(8,26,21,.92) 0%,rgba(8,26,21,.72) 45%,rgba(8,26,21,0) 100%);
+  padding:44px 16px 16px;
+}
+.wta-cards-grid[data-style="overlay"] .wta-card-title{color:var(--bleach)}
+.wta-cards-grid[data-style="overlay"] .wta-card-excerpt,
+.wta-cards-grid[data-style="overlay"] .wta-card-dur{color:rgba(232,220,192,.75)}
+.wta-cards-grid[data-style="overlay"] .wta-card-price{color:var(--dust)}
+.wta-cards-grid[data-style="overlay"] .wta-card-price small{color:rgba(232,220,192,.6)}
+.wta-cards-grid[data-style="overlay"] .wta-card-cta{border-color:rgba(232,220,192,.4);color:var(--bleach)}
+.wta-cards-grid[data-style="overlay"] .wta-card:hover .wta-card-cta{background:var(--dust);border-color:var(--dust);color:var(--forest-deep)}
+
+@media (prefers-reduced-motion:reduce){
+  .wta-card-img{transition:none}
+  .wta-card:hover .wta-card-img{transform:none}
+}
+
+/* Price on request. Deliberately quieter than a real price — it is a prompt,
+   not a number, and should not compete with cards that do show one. */
+.wta-card-price.is-request{
+  font-family:var(--body);font-weight:500;font-size:13px;
+  color:var(--ink-soft);letter-spacing:0;
+}
+.wta-cards-grid[data-style="overlay"] .wta-card-price.is-request{color:rgba(232,220,192,.8)}
+.wta-card-cta.is-request{border-color:var(--dust);color:var(--dust-deep)}
+.wta-card:hover .wta-card-cta.is-request{background:var(--dust);border-color:var(--dust);color:var(--forest-deep)}
+.wta-cards-grid[data-style="overlay"] .wta-card-cta.is-request{border-color:var(--dust);color:var(--dust)}
+
+
+/* ── HOST THEME RESET ───────────────────────────────────────────────────────
+ * This site sets `button { border-radius:999px !important }` globally, and the
+ * theme fills buttons with a solid dark colour. Both land on the plain <button>
+ * elements used here for month cells, day toggles and checklist rows, turning
+ * them into dark pills with unreadable text. Class-plus-element beats a bare
+ * element selector, so these win without escalating further.
+ */
+.wta-itin button{
+  background:none !important;
+  background-image:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  color:inherit !important;
+  text-transform:none !important;
+  font:inherit;
+  line-height:inherit;
+  min-height:0 !important;
+  width:auto;
+}
+.wta-itin .wta-mcell{border-radius:2px !important;height:34px;width:100%;background:rgba(20,17,14,.07) !important}
+.wta-itin .wta-mrow[data-accent="forest"] .wta-mcell[data-v="1"]{background:rgba(74,107,63,.3) !important}
+.wta-itin .wta-mrow[data-accent="forest"] .wta-mcell[data-v="2"]{background:rgba(74,107,63,.6) !important}
+.wta-itin .wta-mrow[data-accent="forest"] .wta-mcell[data-v="3"]{background:var(--moss) !important}
+.wta-itin .wta-mrow[data-accent="plain"] .wta-mcell[data-v="1"]{background:rgba(200,147,63,.32) !important}
+.wta-itin .wta-mrow[data-accent="plain"] .wta-mcell[data-v="2"]{background:rgba(200,147,63,.64) !important}
+.wta-itin .wta-mrow[data-accent="plain"] .wta-mcell[data-v="3"]{background:var(--dust) !important}
+.wta-itin .wta-mrow[data-accent="ocean"] .wta-mcell[data-v="1"]{background:rgba(11,110,127,.3) !important}
+.wta-itin .wta-mrow[data-accent="ocean"] .wta-mcell[data-v="2"]{background:rgba(11,110,127,.6) !important}
+.wta-itin .wta-mrow[data-accent="ocean"] .wta-mcell[data-v="3"]{background:var(--ocean) !important}
+.wta-itin .wta-monthbtn{width:100%;padding:10px 0 12px;border-bottom:2px solid transparent !important}
+.wta-itin .wta-monthbtn[aria-pressed="true"]{border-bottom-color:var(--ink) !important}
+.wta-itin .wta-day > button{width:100%;padding:15px 16px}
+.wta-itin .wta-day > button:hover{background:var(--legtint) !important}
+.wta-itin .wta-check{width:100%;padding:16px 0;border-bottom:1px solid var(--rule) !important}
+.wta-itin .wta-check:hover{background:rgba(200,147,63,.07) !important}
+.wta-itin .wta-box{border:1.5px solid var(--ink) !important;border-radius:2px !important}
+.wta-itin .wta-check[aria-pressed="true"] .wta-box{background:var(--ink) !important;color:var(--shell) !important}
+.wta-itin .wta-option{border:1px solid var(--rule) !important;border-radius:2px !important;background:#fff !important;width:100%;padding:16px}
+.wta-itin .wta-option[aria-pressed="true"]{background:var(--ocean) !important;border-color:var(--ocean) !important;color:var(--shell) !important}
+.wta-itin .wta-seg button{border:1px solid rgba(232,220,192,.26) !important;border-radius:2px !important;padding:10px 12px}
+.wta-itin .wta-seg button[aria-pressed="true"]{background:var(--dust) !important;border-color:var(--dust) !important;color:var(--forest-deep) !important}
+.wta-itin .wta-stepper button{padding:9px 17px}
+.wta-itin .wta-card-cta{border:1px solid var(--rule) !important;border-radius:999px !important}
+
+/* Priced on request. Same weight as a real cost panel — a quoted trip is not a
+   lesser trip, and burying it would lose the one section that names the next step. */
+.wta-onrequest{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,3vw,44px);align-items:start}
+.wta-onrequest-lead{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(28px,4.6vw,52px);line-height:.95;letter-spacing:-.03em;color:var(--gold);max-width:9ch;
+}
+.wta-onrequest-body p{margin:0 0 20px;font-size:clamp(15px,1.7vw,19px);line-height:1.55;color:rgba(234,221,199,.9);max-width:52ch}
+.wta-onrequest-cta{
+  display:inline-block;text-decoration:none;
+  background:var(--gold);color:var(--navy-deep);
+  font-weight:600;font-size:14px;padding:12px 26px;border-radius:999px;
+  transition:background .18s ease;
+}
+.wta-onrequest-cta:hover{background:var(--sand);color:var(--navy-deep)}
+@media (max-width:900px){ .wta-onrequest{grid-template-columns:1fr} .wta-onrequest-lead{max-width:none} }
+
+/* Section rhythm. The widgets emit <section class="wta-calc|wta-season|wta-notes">
+   without the .wta-section helper, so the vertical padding has to be attached to
+   the section classes themselves or the content sits flush against the colour
+   change — which is what happened to the cost panel. */
+.wta-itin .wta-season,
+.wta-itin .wta-calc,
+.wta-itin .wta-notes,
+.wta-itin .wta-route-section{
+  padding-top:clamp(48px,7vw,96px);
+  padding-bottom:clamp(48px,7vw,96px);
+}
+
+/* Destination links in leg headings: same colour as the heading, underline only
+   on interaction, so the heading still reads as a heading. */
+.wta-itin .wta-leglink{color:inherit;text-decoration:none;border-bottom:2px solid transparent;transition:border-color .18s ease}
+.wta-itin .wta-leglink:hover,.wta-itin .wta-leglink:focus-visible{border-bottom-color:currentColor}
+
+/* ── HERO TRIPTYCH ──────────────────────────────────────────────────────────
+ * The reference design carries a three-panel illustration beside the headline.
+ * Hand-drawn art cannot scale across a catalogue, so the panels are generated
+ * from the trip's own legs — panel count and accent colours describe the actual
+ * shape of the journey. */
+.wta-hero-grid{align-items:end}
+.wta-hero-art{padding-bottom:0;min-width:0}
+.wta-triptych{display:grid;gap:6px;align-items:stretch}
+.wta-triptych[data-panels="1"]{grid-template-columns:1fr}
+.wta-triptych[data-panels="2"]{grid-template-columns:repeat(2,1fr)}
+.wta-triptych[data-panels="3"]{grid-template-columns:repeat(3,1fr)}
+.wta-panel{
+  position:relative;margin:0;overflow:hidden;
+  aspect-ratio:3/4;min-width:0;
+  background:var(--navy);
+}
+.wta-panel-img{
+  position:absolute;inset:0;
+  background-size:cover;background-repeat:no-repeat;
+  filter:grayscale(.35) contrast(1.05);
+  transform:scale(1.02);
+}
+/* The tint is what makes three crops of one photograph read as a set. */
+.wta-panel-tint{position:absolute;inset:0;background:var(--leg);opacity:.55;mix-blend-mode:multiply}
+.wta-panel::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(13,26,46,.9) 0%,rgba(13,26,46,.15) 55%,transparent 100%);
+}
+.wta-panel figcaption{
+  position:absolute;left:10px;right:10px;bottom:10px;z-index:1;
+  display:flex;flex-direction:column;gap:2px;
+}
+.wta-panel figcaption b{
+  font-family:var(--display);font-weight:800;font-size:22px;line-height:1;
+  letter-spacing:-.02em;color:var(--gold);
+}
+.wta-panel figcaption span{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(234,221,199,.85);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+@media (max-width:900px){
+  .wta-hero-art{margin-top:28px}
+  .wta-panel{aspect-ratio:1/1}
+}
+
+/* Day body needed more room inside the accordion. */
+.wta-itin .wta-dbody{padding:6px 22px 22px 104px;line-height:1.62}
+@media (max-width:640px){ .wta-itin .wta-dbody{padding:6px 18px 20px 18px} }

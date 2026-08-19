@@ -1,0 +1,223 @@
+{
+  "version": "0.4",
+  "title": "Nyuchi Itinerary — Single Trip",
+  "type": "section",
+  "content": [
+    {
+      "id": "fd4ad5c2",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "03598106",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "82d6a039",
+              "elType": "widget",
+              "widgetType": "wta-hero",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "99d848c2",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "e7bbe702",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "b70bbea9",
+              "elType": "widget",
+              "widgetType": "wta-seasonality",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "c5dfa3b2",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "1e496eb1",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "33f02a04",
+              "elType": "widget",
+              "widgetType": "wta-route",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "2b223128",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "83269b5b",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "6aae8a0e",
+              "elType": "widget",
+              "widgetType": "wta-legs",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "4d0eb6bf",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "6912a204",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "a16d684b",
+              "elType": "widget",
+              "widgetType": "wta-options",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "7ad81535",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "a1a92300",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "1aad4ef7",
+              "elType": "widget",
+              "widgetType": "wta-cost",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "68a5a9d4",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "fa78f680",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "fa0df565",
+              "elType": "widget",
+              "widgetType": "wta-checklist",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    },
+    {
+      "id": "83176114",
+      "elType": "section",
+      "settings": {
+        "layout": "full_width",
+        "gap": "no"
+      },
+      "elements": [
+        {
+          "id": "91d82c4b",
+          "elType": "column",
+          "settings": {
+            "_column_size": 100
+          },
+          "elements": [
+            {
+              "id": "335a10a6",
+              "elType": "widget",
+              "widgetType": "wta-notes",
+              "settings": {},
+              "elements": []
+            }
+          ]
+        }
+      ],
+      "isInner": false
+    }
+  ]
+}

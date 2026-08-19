@@ -1,0 +1,300 @@
+/**
+ * Trip editor meta box.
+ *
+ * Scoped to .wta-editor so nothing leaks into the rest of the post screen, and
+ * built on the same Mzizi/Bundu tokens as the plugin's own admin page: warm
+ * stone borders, tanzanite for anything active, cobalt for focus.
+ *
+ * The meta box is a narrow, resizable column inside someone else's layout, so
+ * every grid container declares min-width: 0 — without it a long value or a
+ * twelve-column month grid stretches the box past the screen instead of
+ * wrapping or scrolling.
+ */
+
+.wta-editor {
+    --wta-primary: #4B0082; /* tanzanite */
+    --wta-info:    #0047AB; /* cobalt */
+    --wta-ink:     #1A1917;
+    --wta-muted:   #55514B;
+    --wta-faint:   #86817A;
+    --wta-border:  #E7E5E0; /* warm stone, not cool grey */
+    --wta-surface: #FFFFFF;
+    --wta-sunken:  #FAF9F5;
+    --wta-r-card:  14px;
+    --wta-r-sm:    7px;
+
+    color: var(--wta-ink);
+    font-size: 13.5px;
+    line-height: 1.5;
+    min-width: 0;
+}
+
+.wta-editor *,
+.wta-editor *::before,
+.wta-editor *::after {
+    box-sizing: border-box;
+}
+
+.wta-editor h4,
+.wta-editor h5 {
+    font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+    letter-spacing: -0.01em;
+    color: var(--wta-ink);
+}
+
+.wta-editor .wta-lede {
+    color: var(--wta-muted);
+    margin: 0 0 14px;
+    max-width: 72ch;
+}
+
+/* Tabs */
+.wta-editor .wta-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--wta-border);
+    min-width: 0;
+}
+
+.wta-editor .wta-tab {
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid var(--wta-border);
+    background: var(--wta-surface);
+    color: var(--wta-muted);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.wta-editor .wta-tab:hover {
+    color: var(--wta-primary);
+    border-color: #CFC3DC;
+    background: #F3E5F5;
+}
+
+.wta-editor .wta-tab.is-active {
+    background: var(--wta-primary);
+    border-color: var(--wta-primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.wta-editor .wta-tab:focus-visible,
+.wta-editor .wta-btn:focus-visible,
+.wta-editor .wta-input:focus,
+.wta-editor .wta-input:focus-visible {
+    outline: 2px solid var(--wta-info);
+    outline-offset: 2px;
+    border-color: var(--wta-info);
+    box-shadow: none;
+}
+
+/* Panels */
+.wta-editor .wta-panel {
+    min-width: 0;
+}
+
+.wta-editor .wta-panel[hidden] {
+    display: none;
+}
+
+.wta-editor .wta-section {
+    font-size: 15px;
+    margin: 0 0 4px;
+    font-weight: 600;
+}
+
+.wta-editor .wta-subsection {
+    font-size: 13.5px;
+    margin: 22px 0 4px;
+    font-weight: 600;
+}
+
+.wta-editor .wta-note {
+    color: var(--wta-muted);
+    margin: 0 0 12px;
+    max-width: 78ch;
+}
+
+/* Fields */
+.wta-editor .wta-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    flex: 1 1 180px;
+    margin-bottom: 10px;
+}
+
+.wta-editor .wta-field.is-wide {
+    flex-basis: 100%;
+}
+
+.wta-editor .wta-field.is-score {
+    flex: 0 1 92px;
+}
+
+.wta-editor .wta-field-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--wta-faint);
+}
+
+.wta-editor .wta-field-hint {
+    font-size: 11.5px;
+    color: var(--wta-faint);
+}
+
+.wta-editor .wta-input {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--wta-border);
+    border-radius: var(--wta-r-sm);
+    background: var(--wta-surface);
+    color: var(--wta-ink);
+    font-size: 13.5px;
+    line-height: 1.4;
+}
+
+.wta-editor textarea.wta-input {
+    resize: vertical;
+}
+
+/* Repeaters */
+.wta-editor .wta-rep {
+    min-width: 0;
+    margin-bottom: 6px;
+}
+
+.wta-editor .wta-rep-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.wta-editor .wta-rep-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0 12px;
+    padding: 14px;
+    border: 1px solid var(--wta-border);
+    border-radius: var(--wta-r-card);
+    background: var(--wta-sunken);
+    min-width: 0;
+}
+
+.wta-editor .wta-rep-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 12px;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+/* A nested repeater sits inside a row, so it needs its own surface to read as
+   one level down rather than as more fields of the parent. */
+.wta-editor .wta-rep-row .wta-rep {
+    flex: 1 1 100%;
+    margin-top: 4px;
+    padding-left: 12px;
+    border-left: 2px solid var(--wta-border);
+}
+
+.wta-editor .wta-rep-row .wta-rep-row {
+    background: var(--wta-surface);
+}
+
+/* Buttons — always pill, per brand */
+.wta-editor .wta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--wta-border);
+    background: var(--wta-surface);
+    color: var(--wta-ink);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.wta-editor .wta-btn:hover {
+    border-color: #CFC3DC;
+    background: #F3E5F5;
+    color: var(--wta-primary);
+}
+
+.wta-editor .wta-add {
+    margin-top: 10px;
+    background: var(--wta-primary);
+    border-color: var(--wta-primary);
+    color: #fff;
+}
+
+.wta-editor .wta-add:hover {
+    background: #3B0068;
+    border-color: #3B0068;
+    color: #fff;
+}
+
+.wta-editor .wta-remove {
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+    color: var(--wta-muted);
+}
+
+.wta-editor .wta-remove:hover {
+    border-color: #E7BDBA;
+    background: #FDEDED;
+    color: #B3261E;
+}
+
+/* Twelve-month grid.
+   The wrapper scrolls rather than the box growing: the meta box column is
+   narrower than twelve legible columns on most screens. */
+.wta-editor .wta-months-scroll {
+    overflow-x: auto;
+    min-width: 0;
+    padding-bottom: 4px;
+}
+
+.wta-editor .wta-months {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.wta-editor .wta-month {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--wta-border);
+    border-radius: var(--wta-r-card);
+    background: var(--wta-sunken);
+}
+
+.wta-editor .wta-month-name {
+    font-size: 13.5px;
+    margin: 0 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--wta-border);
+    font-weight: 600;
+}
+
+.wta-editor .wta-month .wta-field {
+    flex: 1 1 100%;
+}

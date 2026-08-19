@@ -108,6 +108,14 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
             'condition'   => array('filter_taxonomy!' => ''),
         ));
 
+        $this->add_control('filter_fallback', array(
+            'label'       => 'Fall back when the filter is empty',
+            'type'        => \Elementor\Controls_Manager::SWITCHER,
+            'default'     => 'yes',
+            'description' => 'If no trip matches the extra filter here, show the unfiltered set instead of an empty section.',
+            'condition'   => array('filter_taxonomy!' => ''),
+        ));
+
         $this->add_control('use_archive', array(
             'label'       => 'Follow the archive',
             'type'        => \Elementor\Controls_Manager::SWITCHER,
@@ -465,7 +473,28 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         }
 
         $s     = $this->get_settings_for_display();
-        $query = new WP_Query($this->query_args($s));
+        $args  = $this->query_args($s);
+        $query = new WP_Query($args);
+
+        // A curated flag such as "featured" is applied to a handful of trips,
+        // so on most destinations the filtered set is empty. Rendering nothing
+        // there reads as a broken section, so drop the extra clause and show
+        // the destination's own trips rather than a void.
+        if (!$query->have_posts()
+            && 'yes' === $s['filter_fallback']
+            && !empty($s['filter_taxonomy'])) {
+
+            $relaxed = $args;
+
+            if (isset($relaxed['tax_query']['relation'])) {
+                unset($relaxed['tax_query']['relation'], $relaxed['tax_query'][1]);
+                $relaxed['tax_query'] = array_values($relaxed['tax_query']);
+            } else {
+                unset($relaxed['tax_query']);
+            }
+
+            $query = new WP_Query($relaxed);
+        }
 
         if (!$query->have_posts()) {
             echo '<div class="wta-itin"><p class="wta-eyebrow">No trips match this selection.</p></div>';

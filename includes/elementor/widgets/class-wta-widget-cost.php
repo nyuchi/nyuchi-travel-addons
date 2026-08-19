@@ -76,6 +76,20 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
             'default' => 2,
         ));
 
+        $this->add_control('estimate_label', array(
+            'label'       => 'Label above the figure when it is an estimate',
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'default'     => 'Estimated',
+            'description' => 'Replaces "Per person" when the trip\'s cost model is flagged as indicative.',
+        ));
+
+        $this->add_control('estimate_note', array(
+            'label'   => 'Estimate caption',
+            'type'    => \Elementor\Controls_Manager::TEXTAREA,
+            'rows'    => 3,
+            'default' => 'Indicative only, per person sharing, and rounded. Camp availability and the exact dates you travel move the figure, so your final cost is confirmed on quotation.',
+        ));
+
         $this->add_control('request_label', array(
             'label'   => 'Label when the trip has no price',
             'type'    => \Elementor\Controls_Manager::TEXT,
@@ -155,22 +169,47 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
         $fees     = isset($cost['fees']) ? (float) $cost['fees'] : 0.0;
         $note     = isset($cost['note']) ? (string) $cost['note'] : '';
 
+        $seasons = $this->seasons($cost);
+        $nights  = $this->nights($data);
+        $basis   = (isset($cost['basis']) && 'per_night' === $cost['basis']) ? 'per_night' : 'total';
+
         $travellers = isset($settings['travellers']) ? (int) $settings['travellers'] : 2;
         $travellers = min(self::MAX_TRAVELLERS, max(self::MIN_TRAVELLERS, $travellers));
 
-        // The default selection: first tier, first choice of every add-on.
-        $tier      = $tiers[0];
-        $selected  = array();
-        $addon_sum = 0.0;
+        // The default selection: first tier, first choice of every add-on, and
+        // the season the reader is standing in — someone browsing in July wants
+        // to see what July costs, not what January costs.
+        $tier     = $tiers[0];
+        $selected = array();
 
         foreach ($addons as $addon) {
-            $choice      = $addon['choices'][0];
-            $selected[]  = array('label' => $addon['label'], 'choice' => $choice);
-            $addon_sum  += (float) $choice['price'];
+            $selected[] = array('label' => $addon['label'], 'choice' => $addon['choices'][0]);
         }
 
-        $per_person = (float) $tier['land'] + $addon_sum + $fees + (float) $tier['flights'];
+        $season_index = $this->default_season($seasons);
+        $season_key   = isset($seasons[$season_index]) ? $seasons[$season_index]['key'] : '';
+
+        // The same call the script makes, so the figure painted server-side is
+        // the figure the script would have produced for this selection.
+        $derived = WTA_Itinerary_Schema::derive_cost(
+            array(
+                'tiers'          => $tiers,
+                'addons'         => $addons,
+                'fees'           => $fees,
+                'basis'          => $basis,
+                'seasons'        => $seasons,
+                'buffer_percent' => isset($cost['buffer_percent']) ? (float) $cost['buffer_percent'] : 25.0,
+                'estimate'       => isset($cost['estimate']) ? (bool) $cost['estimate'] : true,
+            ),
+            $nights,
+            $season_key,
+            0,
+            array()
+        );
+
+        $per_person = (float) $derived['total'];
         $party      = $per_person * $travellers;
+        $is_est     = (bool) $derived['is_estimate'];
 
         echo '<section class="wta-section wta-calc"><div class="wta-wrap">';
 
@@ -208,6 +247,27 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
         }
 
         echo '</div></div>';
+
+        // No configured seasons means no control at all: an empty group would
+        // read as a broken widget, and a single "All year" button would be a
+        // dial that does nothing.
+        if ($seasons) {
+            echo '<div class="wta-field">';
+            echo '<label>Season</label>';
+            echo '<div class="wta-seg wta-seasonseg" data-role="season">';
+
+            foreach ($seasons as $index => $season) {
+                printf(
+                    '<button type="button" aria-pressed="%s" data-index="%d" data-key="%s">%s</button>',
+                    $index === $season_index ? 'true' : 'false',
+                    (int) $index,
+                    esc_attr($season['key']),
+                    esc_html($season['label'])
+                );
+            }
+
+            echo '</div></div>';
+        }
 
         foreach ($addons as $a => $addon) {
             echo '<div class="wta-field">';
@@ -255,7 +315,10 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
          */
         echo '<div class="wta-readout">';
 
-        $this->line($tier['name'] . ' — land', $tier['land'], $currency);
+        // The land line carries the season: it is the only component the
+        // multiplier touches, so showing it anywhere else would misattribute
+        // the movement.
+        $this->line($this->land_label($tier['name'], $basis, $nights), $derived['base'], $currency);
         $this->line('Internal flights', $tier['flights'], $currency);
 
         // A zero fee is not a cost component; the script omits the row too.
@@ -273,8 +336,10 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
 
         echo '</div>';
 
+        $est_label = !empty($settings['estimate_label']) ? $settings['estimate_label'] : 'Estimated';
+
         echo '<div class="wta-total">';
-        echo '<span class="wta-lab">Per person</span>';
+        echo '<span class="wta-lab">' . esc_html($is_est ? $est_label : 'Per person') . '</span>';
         echo '<span class="wta-amt">' . esc_html($this->money($per_person, $currency)) . '</span>';
         echo '</div>';
 
@@ -282,6 +347,33 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
             '<div class="wta-groupline">%s</div>',
             esc_html($this->party_line($travellers, $party, $currency))
         );
+
+        /*
+         * An estimate that stops at a number invites the reader to treat it as
+         * a price. The caption says what the number is not, and the enquiry
+         * button stays exactly where it is on an unpriced trip, because the
+         * outcome we want is unchanged: every trip is quoted properly.
+         *
+         * The buffer is deliberately absent from the readout above. It is
+         * margin on the operator's own costs, not something the traveller buys,
+         * so itemising it would invent a line nobody could book — which is also
+         * why the components are shown as a breakdown of what drives the cost
+         * rather than as a sum that must reconcile to the total.
+         */
+        if ($is_est) {
+            $est_note = !empty($settings['estimate_note']) ? $settings['estimate_note'] : '';
+            $cta      = !empty($settings['request_cta']) ? $settings['request_cta'] : 'Request a quote';
+            $cta_link = !empty($settings['request_link']['url']) ? $settings['request_link']['url'] : '#wp-travel-enquiries';
+
+            echo '<div class="wta-estimate">';
+
+            if ('' !== $est_note) {
+                echo '<p class="wta-estnote">' . esc_html($est_note) . '</p>';
+            }
+
+            echo '<a class="wta-onrequest-cta wta-estcta" href="' . esc_url($cta_link) . '">' . esc_html($cta) . '</a>';
+            echo '</div>';
+        }
 
         if ('' !== $note) {
             // Author HTML, already run through wp_kses_post on save.
@@ -295,12 +387,19 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
         // A JSON island rather than an inline variable: the browser never
         // executes it, so no author string can escape into script context.
         $payload = array(
-            'currency'   => $currency,
-            'symbol'     => $this->symbol($currency),
-            'fees'       => $fees,
-            'tiers'      => $tiers,
-            'addons'     => $addons,
-            'travellers' => array(
+            'currency'       => $currency,
+            'symbol'         => $this->symbol($currency),
+            'fees'           => $fees,
+            'tiers'          => $tiers,
+            'addons'         => $addons,
+            // Everything derive_cost() needs, so the script recomputes rather
+            // than interpolating between server-rendered figures.
+            'seasons'        => $seasons,
+            'basis'          => $basis,
+            'buffer_percent' => isset($cost['buffer_percent']) ? (float) $cost['buffer_percent'] : 25.0,
+            'nights'         => $nights,
+            'estimate'       => $is_est,
+            'travellers'     => array(
                 'value' => $travellers,
                 'min'   => self::MIN_TRAVELLERS,
                 'max'   => self::MAX_TRAVELLERS,
@@ -396,6 +495,115 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
         }
 
         return $out;
+    }
+
+    /**
+     * Seasons, normalised. A band with no key cannot be selected or looked up,
+     * so it is dropped; a band with no label is named after its key rather than
+     * rendered as a blank button.
+     *
+     * @param array $cost
+     * @return array<int, array{key: string, label: string, multiplier: float, months: array}>
+     */
+    protected function seasons($cost) {
+        $out = array();
+
+        if (empty($cost['seasons']) || !is_array($cost['seasons'])) {
+            return $out;
+        }
+
+        foreach ($cost['seasons'] as $season) {
+            if (!is_array($season) || empty($season['key'])) {
+                continue;
+            }
+
+            $key    = (string) $season['key'];
+            $label  = isset($season['label']) ? (string) $season['label'] : '';
+            $months = array();
+
+            if (!empty($season['months']) && is_array($season['months'])) {
+                foreach ($season['months'] as $month) {
+                    $months[] = (int) $month;
+                }
+            }
+
+            $out[] = array(
+                'key'        => $key,
+                'label'      => '' !== $label ? $label : ucfirst(str_replace(array('-', '_'), ' ', $key)),
+                'multiplier' => isset($season['multiplier']) ? (float) $season['multiplier'] : 1.0,
+                'months'     => $months,
+            );
+        }
+
+        return $out;
+    }
+
+    /**
+     * Which season to open on.
+     *
+     * The month the reader is in, when a band claims it. When none does, the
+     * first band: whichever button is pressed has to be the one the figure was
+     * computed from, and leaving nothing pressed would leave the control lying
+     * about the number beside it.
+     *
+     * @param array $seasons
+     * @return int Index into $seasons.
+     */
+    protected function default_season($seasons) {
+        if (!$seasons) {
+            return 0;
+        }
+
+        $key = WTA_Itinerary_Schema::season_for_month($seasons, (int) current_time('n'));
+
+        foreach ($seasons as $index => $season) {
+            if ($season['key'] === $key) {
+                return (int) $index;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Nights for the trip, from WP Travel's own duration.
+     *
+     * A per-night rate is only useful because this number already exists on
+     * every trip. Where the nights field is empty but the day count is not, a
+     * night is taken off the days, which is how the itinerary itself counts.
+     *
+     * @param array $data Trip data.
+     * @return int
+     */
+    protected function nights($data) {
+        $facts = isset($data['facts']) && is_array($data['facts']) ? $data['facts'] : array();
+
+        $nights = isset($facts['nights']) ? (int) $facts['nights'] : 0;
+
+        if ($nights > 0) {
+            return $nights;
+        }
+
+        $days = isset($facts['days']) ? (int) $facts['days'] : 0;
+
+        return $days > 1 ? $days - 1 : 0;
+    }
+
+    /**
+     * Label for the land row. The night count is named on a per-night model so
+     * the reader can see where the multiplication came from.
+     *
+     * @param string $name
+     * @param string $basis
+     * @param int    $nights
+     * @return string
+     */
+    protected function land_label($name, $basis, $nights) {
+        if ('per_night' === $basis && $nights > 0) {
+            return $name . ' — land, ' . (int) $nights . ' nights';
+        }
+
+        return $name . ' — land';
     }
 
     /**

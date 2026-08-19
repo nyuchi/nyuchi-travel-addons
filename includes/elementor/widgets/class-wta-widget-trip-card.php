@@ -91,6 +91,23 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
             'condition'   => array('taxonomy!' => ''),
         ));
 
+        $this->add_control('filter_taxonomy', array(
+            'label'       => 'Also require a term in',
+            'type'        => \Elementor\Controls_Manager::SELECT,
+            'default'     => '',
+            'options'     => self::trip_taxonomy_options(),
+            'description' => 'Combined with the archive scope, so a destination page can show only its featured trips.',
+        ));
+
+        $this->add_control('filter_terms', array(
+            'label'       => 'Term slugs (optional)',
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'default'     => '',
+            'placeholder' => 'leave blank for any term',
+            'description' => 'Blank means "has any term in that taxonomy" — which is what "featured" usually means.',
+            'condition'   => array('filter_taxonomy!' => ''),
+        ));
+
         $this->add_control('use_archive', array(
             'label'       => 'Follow the archive',
             'type'        => \Elementor\Controls_Manager::SWITCHER,
@@ -125,7 +142,9 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         $this->add_control('ratio', array(
             'label'   => 'Image shape',
             'type'    => \Elementor\Controls_Manager::SELECT,
-            'default' => '4-3',
+            // Portrait by default: trip cards read better tall, and it matches
+            // the gallery, so a page mixing the two stays on one rhythm.
+            'default' => '3-4',
             'options' => array(
                 '1-1'  => 'Square',
                 '4-3'  => 'Landscape',
@@ -169,6 +188,27 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+    }
+
+    /**
+     * Taxonomies registered against the trip post type.
+     *
+     * Deliberately not limited to the REST-exposed four: "featured" is
+     * registered without show_in_rest, and it is exactly the taxonomy an
+     * editor wants here.
+     */
+    protected static function trip_taxonomy_options() {
+        $options = array('' => 'No extra filter');
+
+        if (!class_exists('WTA_Trip') || !WTA_Trip::is_available()) {
+            return $options;
+        }
+
+        foreach (get_object_taxonomies(WTA_Trip::post_type(), 'objects') as $slug => $tax) {
+            $options[$slug] = $tax->labels->singular_name . ' (' . $slug . ')';
+        }
+
+        return $options;
     }
 
     /**
@@ -251,10 +291,21 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         // On a term archive the widget must describe THAT term, otherwise
         // dropping it into an archive template silently lists the whole
         // catalogue on every destination page.
-        if ('yes' === $settings['use_archive'] && is_tax()) {
+        if ('yes' === $settings['use_archive'] && (is_tax() || is_post_type_archive(WTA_Trip::post_type()) || is_search())) {
+            // Inherit the page's own query first. WP Travel's filter widgets
+            // (duration, price, activity and so on) work by modifying the main
+            // query, so copying its clauses is what makes those filters apply
+            // to these cards. Rebuilding the query by hand would silently
+            // ignore every filter the visitor set.
+            $inherited = $this->inherited_query_args();
+
+            if ($inherited) {
+                $args = array_merge($args, $inherited);
+            }
+
             $queried = get_queried_object();
 
-            if ($queried instanceof WP_Term) {
+            if ($queried instanceof WP_Term && empty($args['tax_query'])) {
                 $args['tax_query'] = array(array(
                     'taxonomy'         => $queried->taxonomy,
                     'field'            => 'term_id',
@@ -262,6 +313,20 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
                     // Region parents must include the countries beneath them.
                     'include_children' => true,
                 ));
+            }
+
+            if ($queried instanceof WP_Term) {
+
+                $extra = $this->extra_tax_clause($settings);
+
+                if ($extra) {
+                    // AND, not OR: "featured trips in Tanzania" means both.
+                    $args['tax_query'] = array(
+                        'relation' => 'AND',
+                        $args['tax_query'][0],
+                        $extra,
+                    );
+                }
 
                 $paged = max(1, (int) get_query_var('paged'), (int) get_query_var('page'));
 
@@ -272,6 +337,14 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
 
                 return $args;
             }
+        }
+
+        $extra = $this->extra_tax_clause($settings);
+
+        if ($extra && empty($settings['taxonomy'])) {
+            $args['tax_query'] = array($extra);
+
+            return $args;
         }
 
         $taxonomy = $settings['taxonomy'];
@@ -303,6 +376,86 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         }
 
         return $args;
+    }
+
+    /**
+     * Query clauses copied from the page's own main query.
+     *
+     * Deliberately a whitelist rather than the whole query_vars array: copying
+     * everything would drag in pagination internals and post_type overrides
+     * that fight the widget's own settings. These are the keys a filter UI
+     * actually writes to.
+     *
+     * @return array
+     */
+    protected function inherited_query_args() {
+        global $wp_query;
+
+        if (!$wp_query instanceof WP_Query) {
+            return array();
+        }
+
+        $out  = array();
+        $vars = $wp_query->query_vars;
+
+        foreach (array('tax_query', 'meta_query', 's', 'post__in', 'post__not_in', 'meta_key', 'author') as $key) {
+            if (!empty($vars[$key])) {
+                $out[$key] = $vars[$key];
+            }
+        }
+
+        // Registered taxonomy query vars, which is how ?activity=ballooning and
+        // friends arrive from a filter form.
+        foreach (get_object_taxonomies(WTA_Trip::post_type()) as $taxonomy) {
+            $tax_obj = get_taxonomy($taxonomy);
+
+            if (!$tax_obj) {
+                continue;
+            }
+
+            $qv = !empty($tax_obj->query_var) ? $tax_obj->query_var : $taxonomy;
+
+            if (!empty($vars[$qv])) {
+                $out[$qv] = $vars[$qv];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The optional second tax_query clause.
+     *
+     * With no term slugs given the clause becomes EXISTS, which is how a
+     * "featured" flag actually behaves: any term in that taxonomy counts.
+     *
+     * @return array|null
+     */
+    protected function extra_tax_clause($settings) {
+        $taxonomy = isset($settings['filter_taxonomy']) ? $settings['filter_taxonomy'] : '';
+
+        if (!$taxonomy || !taxonomy_exists($taxonomy)) {
+            return null;
+        }
+
+        $slugs = array();
+
+        if (!empty($settings['filter_terms'])) {
+            $slugs = array_filter(array_map('trim', explode(',', $settings['filter_terms'])));
+        }
+
+        if ($slugs) {
+            return array(
+                'taxonomy' => $taxonomy,
+                'field'    => 'slug',
+                'terms'    => $slugs,
+            );
+        }
+
+        return array(
+            'taxonomy' => $taxonomy,
+            'operator' => 'EXISTS',
+        );
     }
 
     protected function render() {

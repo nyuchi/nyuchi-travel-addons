@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.1.3');
+define('WTA_VERSION', '1.3.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -36,6 +36,7 @@ require_once WTA_DIR . 'includes/class-wta-elementor.php';
 require_once WTA_DIR . 'includes/class-wta-term-status.php';
 require_once WTA_DIR . 'includes/class-wta-elementor-tags.php';
 require_once WTA_DIR . 'includes/class-wta-term-media.php';
+require_once WTA_DIR . 'includes/class-wta-term-fields.php';
 require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-rest.php';
@@ -100,6 +101,11 @@ final class WP_Travel_Addons {
                 'class'  => 'WTA_Term_Media',
                 'label'  => 'Term images and descriptions',
                 'detail' => 'Gives destination, activity and keyword terms a featured image and a dependable description, falling back to a trip in that term so no archive renders blank.',
+            ),
+            'term_fields' => array(
+                'class'  => 'WTA_Term_Fields',
+                'label'  => 'Destination and activity detail',
+                'detail' => 'Structured facts for destinations (country, gateway airport, currency, best months) and activities (duration, difficulty, minimum age, best months).',
             ),
             'term_status' => array(
                 'class'  => 'WTA_Term_Status',

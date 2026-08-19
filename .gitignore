@@ -1,16 +1,8 @@
-# macOS
 .DS_Store
-
-# Dependencies
 node_modules/
 vendor/
-
-# Build output and archives
-*.zip
-
-# Logs
 *.log
-
-# Editors
+*.zip
 .idea/
 .vscode/
+.claude/

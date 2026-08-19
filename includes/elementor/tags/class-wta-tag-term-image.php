@@ -53,7 +53,22 @@ class WTA_Tag_Term_Image extends \Elementor\Core\DynamicTags\Data_Tag {
      * @return array{id:int,url:string}
      */
     public function get_value(array $options = array()) {
-        $term = WTA_Elementor_Tags::current_term();
+        // A shared header serves both term archives and single trips. On a
+        // trip, the right image is the trip's own — swapping in a destination
+        // photo there would be a regression. Only archives resolve to a term.
+        if (is_singular()) {
+            $id = (int) get_post_thumbnail_id(get_the_ID());
+
+            if ($id) {
+                $url = wp_get_attachment_image_url($id, 'full');
+
+                if ($url) {
+                    return array('id' => $id, 'url' => $url);
+                }
+            }
+        }
+
+        $term = (is_tax() || is_category() || is_tag()) ? WTA_Elementor_Tags::current_term() : null;
 
         $settings = $this->get_settings();
         $allow    = 'trip' === (isset($settings['fallback_source']) ? $settings['fallback_source'] : 'trip');

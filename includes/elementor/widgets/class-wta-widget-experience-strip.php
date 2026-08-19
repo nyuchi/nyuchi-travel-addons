@@ -106,6 +106,13 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
             'condition' => array('layout' => 'grid'),
         ));
 
+        $this->add_control('scope_to_archive', array(
+            'label'       => 'Scope to the current destination',
+            'type'        => \Elementor\Controls_Manager::SWITCHER,
+            'default'     => 'yes',
+            'description' => 'On a destination page, show only the activities its trips actually offer.',
+        ));
+
         $this->add_control('hide_empty', array(
             'label'       => 'Hide empty',
             'type'        => \Elementor\Controls_Manager::SWITCHER,
@@ -185,13 +192,34 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
      * @return WP_Term[]
      */
     protected function terms($settings) {
-        $terms = get_terms(array(
+        $args = array(
             'taxonomy'   => $settings['taxonomy'],
             'hide_empty' => false,
             'pad_counts' => true,
             'orderby'    => 'name',
             'order'      => 'ASC',
-        ));
+        );
+
+        // On a destination archive, "things to do" means things you can do
+        // THERE. Listing the global activity set on every destination page is
+        // both wrong and useless — Botswana does not offer gorilla trekking.
+        // So restrict to the activities actually attached to trips in the
+        // destination being viewed.
+        if ('yes' === $settings['scope_to_archive'] && is_tax()) {
+            $queried = get_queried_object();
+
+            if ($queried instanceof WP_Term && $queried->taxonomy !== $settings['taxonomy']) {
+                $ids = $this->terms_present_in($queried, $settings['taxonomy']);
+
+                if (!$ids) {
+                    return array();
+                }
+
+                $args['include'] = $ids;
+            }
+        }
+
+        $terms = get_terms($args);
 
         if (is_wp_error($terms) || !$terms) {
             return array();
@@ -204,6 +232,59 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
         }
 
         return array_slice(array_values($terms), 0, max(1, min(24, (int) $settings['count'])));
+    }
+
+    /**
+     * Which terms of $taxonomy appear on trips filed under $context_term.
+     *
+     * One query for the trip ids, then one for their terms. Cached per request
+     * because a page may hold more than one instance of this widget.
+     *
+     * @return int[]
+     */
+    protected function terms_present_in($context_term, $taxonomy) {
+        static $cache = array();
+
+        $key = $context_term->term_id . ':' . $taxonomy;
+
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $cache[$key] = array();
+
+        if (!class_exists('WTA_Trip') || !WTA_Trip::is_available()) {
+            return $cache[$key];
+        }
+
+        $trip_ids = get_posts(array(
+            'post_type'              => WTA_Trip::post_type(),
+            'post_status'            => 'publish',
+            'posts_per_page'         => 200,
+            'fields'                 => 'ids',
+            'no_found_rows'          => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+            'tax_query'              => array(array(
+                'taxonomy'         => $context_term->taxonomy,
+                'field'            => 'term_id',
+                'terms'            => $context_term->term_id,
+                // A region archive covers its countries' trips too.
+                'include_children' => true,
+            )),
+        ));
+
+        if (!$trip_ids) {
+            return $cache[$key];
+        }
+
+        $found = wp_get_object_terms($trip_ids, $taxonomy, array('fields' => 'ids'));
+
+        if (!is_wp_error($found)) {
+            $cache[$key] = array_values(array_unique(array_map('intval', $found)));
+        }
+
+        return $cache[$key];
     }
 
     /**

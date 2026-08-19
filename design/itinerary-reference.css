@@ -98,7 +98,7 @@
 }
 .wta-gradient-bar{
   height:5px;margin-top:clamp(28px,5vw,56px);
-  background:linear-gradient(90deg,var(--navy) 0%,var(--navy-lift) 22%,var(--bush) 48%,var(--gold-deep) 74%,var(--gold) 100%);
+  background:linear-gradient(90deg,var(--navy) 0%,var(--navy) 18%,var(--gold-deep) 62%,var(--gold) 100%);
 }
 
 /* ── SECTION SHELL ──────────────────────────────────────────────────────── */
@@ -368,24 +368,24 @@
   transform:scale(1);transition:transform .5s ease;
 }
 .wta-card:hover .wta-card-img,.wta-card-link:focus-visible .wta-card-img{transform:scale(1.06)}
-.wta-card-noimg{display:block;width:100%;height:100%;background:linear-gradient(135deg,var(--navy) 0%,var(--bush) 100%)}
+.wta-card-noimg{display:block;width:100%;height:100%;background:linear-gradient(135deg,var(--navy) 0%,var(--gold-deep) 100%)}
 
 .wta-card-place{
   position:absolute;left:10px;top:10px;
-  font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
   background:rgba(8,26,21,.82);color:var(--bleach);padding:5px 10px;border-radius:2px;
 }
 
 .wta-card-body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:7px}
 .wta-card-title{
-  font-family:var(--display);font-weight:700;font-size:18px;
-  line-height:1.25;letter-spacing:-.015em;margin:0;color:var(--ink);
+  font-family:var(--display);font-weight:700;font-size:16px;
+  line-height:1.3;letter-spacing:-.01em;margin:0;color:var(--ink);
 }
-.wta-card-excerpt{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+.wta-card-excerpt{margin:0;font-size:14px;color:var(--ink-soft);line-height:1.55}
 .wta-card-meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin-top:2px}
-.wta-card-dur{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
-.wta-card-price{margin-left:auto;font-family:var(--display);font-weight:700;font-size:17px;color:var(--dust-deep);letter-spacing:-.01em}
-.wta-card-price small{font-family:var(--body);font-weight:400;font-size:11px;color:var(--ink-soft);letter-spacing:0}
+.wta-card-dur{font-family:var(--mono);font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
+.wta-card-price{margin-left:auto;font-family:var(--display);font-weight:700;font-size:16px;color:var(--dust-deep);letter-spacing:-.01em}
+.wta-card-price small{font-family:var(--body);font-weight:400;font-size:12px;color:var(--ink-soft);letter-spacing:0}
 .wta-card-cta{
   align-self:flex-start;margin-top:8px;
   border:1px solid var(--rule);border-radius:999px;padding:8px 18px;
@@ -420,7 +420,7 @@
 /* Price on request. Deliberately quieter than a real price — it is a prompt,
    not a number, and should not compete with cards that do show one. */
 .wta-card-price.is-request{
-  font-family:var(--body);font-weight:500;font-size:13px;
+  font-family:var(--body);font-weight:500;font-size:13.5px;
   color:var(--ink-soft);letter-spacing:0;
 }
 .wta-cards-grid[data-style="overlay"] .wta-card-price.is-request{color:rgba(232,220,192,.8)}

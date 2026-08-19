@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/wp-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility guards. By Nyuchi Web Services.
- * Version:     1.0.0
+ * Version:     1.3.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -42,6 +42,7 @@ require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-rest.php';
 require_once WTA_DIR . 'includes/class-wta-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-admin.php';
+require_once WTA_DIR . 'includes/class-wta-updater.php';
 
 /**
  * Bootstrap.
@@ -143,6 +144,12 @@ final class WP_Travel_Addons {
         // Dynamic tags are what let an Elementor archive template reach term
         // meta at all, so they load regardless of the Elementor module switch.
         $this->modules['tags'] = new WTA_Elementor_Tags();
+
+        // Update checking is admin-only work; no reason to carry it on every
+        // front-end request.
+        if (is_admin()) {
+            $this->modules['updater'] = new WTA_Updater();
+        }
         $this->modules['admin'] = new WTA_Admin($this);
     }
 

@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint and version check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 7.4 is the declared floor; 8.3 is what the target host runs. Both
+        # must pass, because a syntax that is fine on 8.3 can be fatal on 7.4.
+        php: ['7.4', '8.3']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Syntax check every PHP file
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! php -l "$f" > /dev/null 2>&1; then
+              echo "::error file=$f::PHP syntax error"
+              php -l "$f" || true
+              fail=1
+            fi
+          done < <(find . -name '*.php' -not -path './vendor/*' -not -path './.git/*' -print0)
+          exit $fail
+
+      - name: Check JavaScript parses
+        run: |
+          set -e
+          for f in $(find assets/js -name '*.js' 2>/dev/null); do
+            node --check "$f"
+          done
+
+      - name: Versions must agree
+        # The plugin header, the WTA_VERSION constant and readme.txt's stable
+        # tag are three places one number lives. They drift silently, and a
+        # mismatch means the update checker offers a version that is not the
+        # one users receive.
+        run: |
+          set -e
+          header=$(grep -m1 '^ \* Version:' wp-travel-addons.php | sed -E 's/.*Version:[[:space:]]*//' | tr -d '\r')
+          const=$(grep -m1 "define('WTA_VERSION'" wp-travel-addons.php | sed -E "s/.*'([0-9.]+)'.*/\1/")
+          stable=$(grep -m1 '^Stable tag:' readme.txt | sed -E 's/.*Stable tag:[[:space:]]*//' | tr -d '\r')
+          echo "header=$header const=$const readme=$stable"
+          if [ "$header" != "$const" ] || [ "$header" != "$stable" ]; then
+            echo "::error::Version mismatch - header=$header WTA_VERSION=$const readme.txt=$stable"
+            exit 1
+          fi
+
+      - name: Guard against debug leftovers
+        run: |
+          set -e
+          if grep -rn --include='*.php' -E '\b(var_dump|print_r\s*\(|error_log\s*\()' . \
+              --exclude-dir=vendor --exclude-dir=.git | grep -v '^\./\.github/'; then
+            echo "::error::Debug output left in the source"
+            exit 1
+          fi

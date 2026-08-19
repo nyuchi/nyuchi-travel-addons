@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build, e.g. v1.3.0'
+        required: true
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+
+      - name: Syntax check
+        run: |
+          set -e
+          find . -name '*.php' -not -path './.git/*' -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Read the version
+        id: v
+        run: |
+          set -e
+          version=$(grep -m1 "define('WTA_VERSION'" wp-travel-addons.php | sed -E "s/.*'([0-9.]+)'.*/\1/")
+          tag="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          # A tag that disagrees with the code produces a release users cannot
+          # trust, so refuse rather than publish a mislabelled zip.
+          if [ "v$version" != "$tag" ]; then
+            echo "::error::Tag $tag does not match WTA_VERSION $version"
+            exit 1
+          fi
+
+      - name: Build the plugin zip
+        run: |
+          set -e
+          slug=nyuchi-travel-addons
+          rm -rf build && mkdir -p "build/$slug"
+          # Ship only what runs. Everything below is development apparatus and
+          # would be dead weight in every install.
+          rsync -a ./ "build/$slug/" \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.claude' \
+            --exclude 'build' \
+            --exclude 'design' \
+            --exclude 'templates/elementor/README.md' \
+            --exclude '.gitignore' \
+            --exclude '.DS_Store' \
+            --exclude 'CHANGELOG.md'
+          # design/ holds the reference stylesheet the widgets enqueue, so it
+          # is the one "dev-looking" directory that must ship.
+          mkdir -p "build/$slug/design"
+          cp design/itinerary-reference.css "build/$slug/design/"
+          cd build && zip -qr "../$slug.zip" "$slug"
+          cd .. && unzip -l "$slug.zip" | tail -3
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.v.outputs.tag }}
+          name: Nyuchi Travel Addons ${{ steps.v.outputs.version }}
+          generate_release_notes: true
+          files: nyuchi-travel-addons.zip

@@ -494,6 +494,14 @@
     var addons = Array.isArray(data.addons) ? data.addons : [];
     var fees = Number(data.fees) || 0;
     var fmt = money(data.currency);
+    var seasons = Array.isArray(data.seasons) ? data.seasons : [];
+    var perNight = data.basis === 'per_night';
+    var nights = Math.max(0, parseInt(data.nights, 10) || 0);
+    var buffer = Number(data.buffer_percent);
+
+    if (isNaN(buffer)) {
+      buffer = 25;
+    }
 
     var readout = root.querySelector('.wta-readout');
     var amtEl = root.querySelector('.wta-amt');
@@ -503,6 +511,7 @@
 
     var state = {
       tier: 0,
+      season: 0,
       addon: addons.map(function () {
         return 0;
       }),
@@ -516,6 +525,7 @@
      */
     var groups = all(root, '.wta-seg');
     var tierGroup = null;
+    var seasonGroup = null;
     var addonGroups = [];
 
     groups.forEach(function (group) {
@@ -523,6 +533,8 @@
 
       if (group.getAttribute('data-role') === 'tier') {
         tierGroup = group;
+      } else if (group.getAttribute('data-role') === 'season') {
+        seasonGroup = group;
       } else if (addonAttr !== null && addonAttr !== '') {
         addonGroups[parseInt(addonAttr, 10)] = group;
       } else if (!tierGroup) {
@@ -546,17 +558,46 @@
       return row;
     }
 
+    /*
+     * The land base for the current selection. Mirrors derive_cost(): a
+     * per-night rate is multiplied by the trip's own night count, and the
+     * season multiplies that and nothing else — flights are ticketed at their
+     * own fares and permits are set by the park authority, so neither moves
+     * with the weather.
+     */
+    function landBase() {
+      var tier = tiers[state.tier] || {};
+      var land = Number(tier.land) || 0;
+      var season = seasons[state.season];
+      var multiplier = season ? Number(season.multiplier) : 1;
+      var base = perNight ? (nights > 0 ? land * nights : land) : land;
+
+      if (!multiplier || isNaN(multiplier)) {
+        multiplier = 1;
+      }
+
+      return base * multiplier;
+    }
+
     function perPerson() {
       var tier = tiers[state.tier] || {};
-      var total = (Number(tier.land) || 0) + (Number(tier.flights) || 0) + fees;
+      var subtotal = landBase() + (Number(tier.flights) || 0) + fees;
 
       addons.forEach(function (addon, i) {
         var choice = (addon.choices || [])[state.addon[i]];
 
-        total += choice ? Number(choice.price) || 0 : 0;
+        subtotal += choice ? Number(choice.price) || 0 : 0;
       });
 
-      return total;
+      // Buffer on the derived subtotal, then to the nearest ten: an estimate
+      // quoted to the unit claims a precision it does not have.
+      return Math.round((subtotal + subtotal * (buffer / 100)) / 10) * 10;
+    }
+
+    function landLabel(tier) {
+      var name = tier.name || 'Land arrangements';
+
+      return perNight && nights > 0 ? name + ' — land, ' + nights + ' nights' : name + ' — land';
     }
 
     function render() {
@@ -565,7 +606,7 @@
 
       if (readout) {
         readout.textContent = '';
-        readout.appendChild(line((tier.name || 'Land arrangements') + ' — land', fmt(Number(tier.land) || 0)));
+        readout.appendChild(line(landLabel(tier), fmt(landBase())));
         readout.appendChild(line('Internal flights', fmt(Number(tier.flights) || 0)));
 
         if (fees) {
@@ -604,6 +645,20 @@
           state.tier = i;
 
           all(tierGroup, 'button').forEach(function (o, n) {
+            o.setAttribute('aria-pressed', n === i ? 'true' : 'false');
+          });
+
+          render();
+        });
+      });
+    }
+
+    if (seasonGroup) {
+      all(seasonGroup, 'button').forEach(function (b, i) {
+        b.addEventListener('click', function () {
+          state.season = i;
+
+          all(seasonGroup, 'button').forEach(function (o, n) {
             o.setAttribute('aria-pressed', n === i ? 'true' : 'false');
           });
 
@@ -665,6 +720,20 @@
       all(tierGroup, 'button').some(function (b, i) {
         if (b.getAttribute('aria-pressed') === 'true') {
           state.tier = i;
+
+          return true;
+        }
+
+        return false;
+      });
+    }
+
+    // The server already chose the season for the current month; adopting it
+    // keeps the first paint identical to the mark-up it replaces.
+    if (seasonGroup) {
+      all(seasonGroup, 'button').some(function (b, i) {
+        if (b.getAttribute('aria-pressed') === 'true') {
+          state.season = i;
 
           return true;
         }

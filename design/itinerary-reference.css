@@ -557,3 +557,26 @@
 /* Day body needed more room inside the accordion. */
 .wta-itin .wta-dbody{padding:6px 22px 22px 104px;line-height:1.62}
 @media (max-width:640px){ .wta-itin .wta-dbody{padding:6px 18px 20px 18px} }
+
+/* ── SEASONAL ESTIMATE ──────────────────────────────────────────────────────
+ * The season control is the same segmented group as comfort level, because it
+ * is the same kind of choice: one of a short list, exactly one active. It gets
+ * its own rules only for width — season names run longer than tier names and
+ * wrapped buttons make the group read as two rows of unrelated controls.
+ *
+ * The caption sits between the figure and the enquiry button on purpose. An
+ * estimate is a reason to make contact, not a substitute for it, so the button
+ * stays on the page even once a number is shown.
+ */
+.wta-seasonseg button{min-width:96px}
+.wta-estimate{margin-top:14px;padding-top:16px;border-top:1px solid rgba(232,220,192,.14)}
+.wta-estnote{
+  margin:0 0 16px;font-size:13px;line-height:1.55;
+  color:rgba(232,220,192,.62);max-width:46ch;
+}
+.wta-estcta{font-size:13.5px;padding:11px 24px}
+.wta-total .wta-lab{white-space:nowrap}
+
+/* Same reason as the HOST THEME RESET above: these are plain <button> elements,
+   so the theme's global pill radius reaches them through the element selector. */
+.wta-itin .wta-seasonseg button{border-radius:2px !important;text-align:center}

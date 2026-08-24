@@ -114,10 +114,15 @@ class WTA_Itinerary_Schema {
                             'subtitle' => array('type' => 'string'),
                             'nights'   => array('type' => 'integer'),
                             'leg'      => array('type' => 'integer', 'description' => 'Index into legs.'),
-                            'lat'      => array('type' => 'number', 'description' => 'Latitude. The same coordinate system WP Travel already uses for the trip map.'),
-                            'lng'      => array('type' => 'number', 'description' => 'Longitude.'),
-                            'x'        => array('type' => 'number', 'description' => 'Optional manual horizontal position, 0-100. Leave null to derive from lat/lng.'),
-                            'y'        => array('type' => 'number', 'description' => 'Optional manual vertical position, 0-100. Leave null to derive from lat/lng.'),
+                            // Null is a real, meaningful value here, not an
+                            // absence: an unset x/y is what tells the renderer
+                            // to derive the position from lat/lng. Declaring
+                            // these as plain numbers made REST reject every
+                            // route that had not been positioned by hand.
+                            'lat'      => array('type' => array('number', 'null'), 'description' => 'Latitude. The same coordinate system WP Travel already uses for the trip map.'),
+                            'lng'      => array('type' => array('number', 'null'), 'description' => 'Longitude.'),
+                            'x'        => array('type' => array('number', 'null'), 'description' => 'Optional manual horizontal position, 0-100. Leave null to derive from lat/lng.'),
+                            'y'        => array('type' => array('number', 'null'), 'description' => 'Optional manual vertical position, 0-100. Leave null to derive from lat/lng.'),
                             'arrive'   => array('type' => 'string', 'enum' => array('fly', 'drive', 'start'), 'description' => 'How the traveller reaches this stop from the previous one.'),
                         ),
                     ),
@@ -148,7 +153,14 @@ class WTA_Itinerary_Schema {
                             'items'       => array(
                                 'type'       => 'object',
                                 'properties' => array(
-                                    'scores'  => array('type' => 'object', 'description' => 'Row key => 0 (avoid) to 3 (ideal).'),
+                                    'scores'  => array(
+                                        'type'                 => 'object',
+                                        'description'          => 'Row key => 0 (avoid) to 3 (ideal).',
+                                        // The keys are defined by `rows`, not
+                                        // fixed here, so they must be allowed
+                                        // explicitly rather than left implicit.
+                                        'additionalProperties' => array('type' => 'integer'),
+                                    ),
                                     'rank'    => array('type' => 'string', 'enum' => array('', 'primary', 'alternative')),
                                     'tags'    => array('type' => 'array', 'items' => array('type' => 'string')),
                                     'verdict' => array('type' => 'string'),
@@ -301,16 +313,62 @@ class WTA_Itinerary_Schema {
             return;
         }
 
-        foreach (array_keys(self::fields()) as $key) {
-            register_post_meta(WTA_Trip::post_type(), $key, array(
-                'type'          => 'array',
-                'single'        => true,
-                'show_in_rest'  => false,
-                'auth_callback' => function ($allowed, $meta_key, $post_id) {
+        foreach (self::fields() as $meta_key => $field) {
+            // The typed schema is attached here as well as to the REST field.
+            // Registering with show_in_rest puts each value inside the response's
+            // `meta` object, which is the only surface generic tooling can write
+            // to: wp-admin custom fields, ACF, and any client whose write path is
+            // a `meta` parameter. Without it these fields are readable but not
+            // writable by anything except a bespoke request, which is how 83 of
+            // 84 trips ended up empty.
+            //
+            // The storage key is unchanged, so this is an additional view of the
+            // same data rather than a second place to put it.
+            register_post_meta(WTA_Trip::post_type(), $meta_key, array(
+                // 'object' for hero/seasonality/cost/options, 'array' for the
+                // rest. Declaring them all as 'array' would make REST reject a
+                // perfectly valid object on write.
+                'type'              => isset($field['schema']['type']) ? $field['schema']['type'] : 'object',
+                'single'            => true,
+                'show_in_rest'      => array(
+                    'schema' => array_merge(
+                        array('description' => $field['description']),
+                        $field['schema']
+                    ),
+                ),
+                'sanitize_callback' => array(__CLASS__, 'sanitize_meta_value'),
+                'auth_callback'     => function ($allowed, $key, $post_id) {
                     return current_user_can('edit_post', $post_id);
                 },
             ));
         }
+    }
+
+    /**
+     * Sanitiser for the meta write path.
+     *
+     * register_post_meta hands us the key, so the same per-field sanitisers the
+     * REST field already uses can be reached from one callback. They are
+     * structure-preserving by design: nested arrays survive, strings are
+     * cleaned, and HTML-bearing fields such as a note body keep their markup
+     * through wp_kses_post rather than being flattened.
+     *
+     * @param mixed  $value
+     * @param string $meta_key
+     * @return mixed
+     */
+    public static function sanitize_meta_value($value, $meta_key = '') {
+        $fields = self::fields();
+
+        if (!isset($fields[$meta_key]['sanitize'])) {
+            return $value;
+        }
+
+        $clean = call_user_func(array(__CLASS__, $fields[$meta_key]['sanitize']), $value);
+
+        // A sanitiser may reject outright. Meta has no error channel, so fall
+        // back to storing nothing rather than storing the rejected input.
+        return is_wp_error($clean) ? array() : $clean;
     }
 
     public function register_rest_fields() {

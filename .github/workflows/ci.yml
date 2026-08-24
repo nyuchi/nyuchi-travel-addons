@@ -42,9 +42,13 @@ jobs:
       - name: Check JavaScript parses
         run: |
           set -e
-          for f in $(find assets/js -name '*.js' 2>/dev/null); do
+          # -print0 with a read loop rather than iterating find's output: a
+          # filename containing a space would otherwise split into two paths
+          # and node --check would report a missing file instead of a syntax
+          # error, which is a confusing way to fail.
+          while IFS= read -r -d '' f; do
             node --check "$f"
-          done
+          done < <(find assets/js -name '*.js' -print0 2>/dev/null)
 
       - name: Versions must agree
         # The plugin header, the WTA_VERSION constant and readme.txt's stable

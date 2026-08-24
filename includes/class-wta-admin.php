@@ -34,6 +34,11 @@ class WTA_Admin {
 
         add_action('admin_menu', array($this, 'add_menu'));
 
+        // WordPress picks the highlighted submenu by matching the registered
+        // slug, and every one of ours differs only by &tab=. Without this it
+        // matches the first and leaves Overview bold on every screen.
+        add_filter('submenu_file', array($this, 'current_submenu'), 10, 2);
+
         // Saving happens on admin_init so wp_safe_redirect() runs before any
         // admin markup has been sent.
         add_action('admin_init', array($this, 'handle_post'));
@@ -82,6 +87,36 @@ class WTA_Admin {
         if (isset($submenu[self::SLUG][0][0])) {
             $submenu[self::SLUG][0][0] = 'Overview';
         }
+    }
+
+    /**
+     * Tell WordPress which submenu item the current screen belongs to.
+     *
+     * Each submenu registers as `wp-travel-addons&tab=x`, and WordPress
+     * compares that against $submenu_file - which by default holds only the
+     * `page` query var, identical for all of them. So the first entry matches
+     * every time and the highlight never moves off Overview.
+     *
+     * Rebuilding the slug from the tab makes the comparison meaningful again.
+     *
+     * @param string|null $submenu_file Current submenu file.
+     * @param string      $parent_file  Current parent file.
+     * @return string|null
+     */
+    public function current_submenu($submenu_file, $parent_file = '') {
+        if (self::SLUG !== $parent_file) {
+            return $submenu_file;
+        }
+
+        $tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'overview';
+
+        // An unknown tab renders as Overview, so it should highlight as Overview
+        // too rather than leaving nothing marked current.
+        if ('overview' === $tab || !array_key_exists($tab, self::tabs())) {
+            return self::SLUG;
+        }
+
+        return self::SLUG . '&tab=' . $tab;
     }
 
     /**

@@ -111,6 +111,12 @@ already uses. The duration mirror is kept in sync because leaving it stale is a 
   visible colour, so removing it would make focus invisible to the people who
   most depend on seeing it.
 * Tabs take the same pill radius as the buttons beside them.
+* The admin submenu highlight no longer sticks on Overview. Every submenu item
+  registers as the same page slug with a different &tab=, and WordPress decides
+  which one is current by comparing that slug against a value holding only the
+  page query var - identical for all of them - so the first entry matched every
+  time. The plugin now tells WordPress which item the current screen belongs
+  to.
 * The Nyuchi wordmark is capitalised. It was being lowercased in CSS, which
   rendered the company name as a styling choice rather than a name.
 

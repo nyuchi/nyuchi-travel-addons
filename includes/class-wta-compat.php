@@ -56,6 +56,10 @@ class WTA_Compat {
         // at 10 sees the already-escaped string and cannot reintroduce a raw '%'
         // after we have run.
         add_filter(self::PRINTF_FILTER, array($this, 'escape_printf_format'), 9, 1);
+
+        // WP Travel's own itinerary timeline. A trip rendered without an
+        // Elementor template still has to look like the same website.
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_timeline_css'));
     }
 
     public static function guard_enabled() {
@@ -261,5 +265,34 @@ class WTA_Compat {
         $snippet = substr($plain, $start, 120);
 
         return ($start > 0 ? '…' : '') . $snippet . (strlen($plain) > $start + 120 ? '…' : '');
+    }
+
+    /**
+     * Style WP Travel's itinerary timeline on single trips.
+     *
+     * Loaded only on a trip: these selectors are WP Travel's, and applying them
+     * site-wide would let them reach markup that happens to share a class name.
+     *
+     * Switchable with the compatibility guards, because it is the same kind of
+     * thing - correcting another plugin's output - and should be as easy to
+     * turn off if WP Travel changes its template.
+     *
+     * @return void
+     */
+    public function enqueue_timeline_css() {
+        if (!is_singular(WTA_Trip::post_type())) {
+            return;
+        }
+
+        if (!apply_filters('wta_compat_timeline_css', true)) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'wta-wt-timeline',
+            WTA_URL . 'assets/css/wt-timeline.css',
+            array(),
+            WTA_VERSION
+        );
     }
 }

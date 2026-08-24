@@ -1,0 +1,94 @@
+/*
+ * Polish for WP Travel's own itinerary timeline.
+ *
+ * These class names - .itenary, .tc-content, .tc-heading - are WP Travel's,
+ * not ours, and the misspelling is theirs too. This styles the timeline the
+ * plugin renders on a trip that is not using an Elementor template, so the two
+ * routes through a trip page look like the same website.
+ *
+ * Replaces a block that was living in Customizer > Additional CSS, where it
+ * carried a media query missing its opening brace. A CSS parser cannot recover
+ * from that: the selector is absorbed into the media condition, the condition
+ * becomes invalid, and the rule never applies at any width. The mobile padding
+ * it was meant to set had silently never worked.
+ */
+
+:root {
+    --wt-navy: #152744;
+    --wt-gold: #C5A572;
+    --wt-sand: #E0CFB3;
+}
+
+.itenary .col {
+    position: relative;
+    border-left: 2px solid var(--wt-sand);
+    margin: 0 0 0 12px;
+    display: block;
+}
+
+/* The spine was declared as `border-left: 2px solid` with no colour, which
+   resolves to currentColor - so the line took whatever colour the surrounding
+   text happened to be, and changed with it. */
+.itenary .col .image {
+    border: 2px solid var(--wt-gold);
+}
+
+.itenary .tc-content {
+    /* WP Travel positions this absolutely for its alternating layout. */
+    position: initial !important;
+    width: 100%;
+}
+
+/*
+ * Left and right both collapse to one left-aligned column.
+ *
+ * The alternating left/right timeline needs width to read as deliberate. In a
+ * narrower container it becomes half-width text beside an empty gutter, which
+ * looks like a rendering fault rather than a design. One column is honest at
+ * every width.
+ */
+.itenary .tc-heading.left,
+.itenary .tc-heading.right,
+.itenary .tc-heading.left.clearfix,
+.itenary .tc-heading.right.clearfix,
+.itenary .tc-content.left,
+.itenary .tc-content.right {
+    text-align: left;
+    margin-top: 0;
+    left: 0;
+    padding: 0 0 12px 36px;
+    border-left: none !important;
+    border-right: none !important;
+}
+
+.itenary .left,
+.itenary .right {
+    float: none;
+    width: 100%;
+    text-align: left;
+}
+
+.itenary .left {
+    border-left: none;
+}
+
+.itenary .row-reverse .image {
+    left: -13px !important;
+    right: initial;
+}
+
+.itenary .tc-heading {
+    color: var(--wt-navy);
+}
+
+@media (max-width: 992px) {
+    .itenary .timeline-contents .tc-content.left {
+        justify-content: left;
+    }
+}
+
+@media screen and (max-width: 575px) {
+    .itenary .tc-content {
+        padding: 0 0 12px 36px;
+    }
+}

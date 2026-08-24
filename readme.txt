@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.6
+Stable tag: 1.3.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,20 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.3.7 =
+* Styles WP Travel's own itinerary timeline on single trips, so a trip rendered
+  without an Elementor template looks like the same website as one that is.
+* Replaces a block that had been living in Customizer > Additional CSS. That
+  copy carried a media query missing its opening brace, which a CSS parser
+  cannot recover from - the selector is absorbed into the media condition, the
+  condition becomes invalid, and the rule never applies at any width. The
+  mobile padding it set had silently never worked.
+* The timeline spine was declared `border-left: 2px solid` with no colour, so
+  it resolved to currentColor and changed with the surrounding text. It now
+  takes a brand colour.
+* Switchable through the wta_compat_timeline_css filter, and loaded only on a
+  trip rather than site-wide.
 
 = 1.3.6 =
 * Licensed GPLv2 or later, which is what wordpress.org expects of a plugin in

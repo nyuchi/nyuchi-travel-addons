@@ -54,7 +54,7 @@ if (!function_exists('wta_switch')) {
 
     <header class="nyx-head">
         <div class="nyx-head-id">
-            <span class="nyx-wordmark">nyuchi</span>
+            <span class="nyx-wordmark">Nyuchi</span>
             <h1 class="nyx-title">WP Travel Addons</h1>
             <span class="nyx-version">v<?php echo esc_html(defined('WTA_VERSION') ? WTA_VERSION : '1.0.0'); ?></span>
         </div>
@@ -518,7 +518,7 @@ if (!function_exists('wta_switch')) {
     --nyx-base:      #F3F3F1;
     --nyx-r-card:    14px;
     --nyx-r-sm:      7px;
-    --nyx-r-tab:     17px;
+    --nyx-r-tab:     999px;
 
     max-width: 1180px;
     color: var(--nyx-ink);
@@ -542,7 +542,7 @@ if (!function_exists('wta_switch')) {
 .nyx-head-id { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; }
 .nyx-wordmark {
     font-weight: 700; font-size: 13px; letter-spacing: 0.14em;
-    text-transform: lowercase; color: var(--nyx-gold);
+    text-transform: none; color: var(--nyx-gold);
     border: 1px solid var(--nyx-border); border-radius: 999px;
     padding: 3px 11px; background: var(--nyx-sunken);
 }
@@ -581,11 +581,29 @@ if (!function_exists('wta_switch')) {
 .nyx-tab.is-active {
     background: var(--nyx-primary); border-color: var(--nyx-primary);
     color: #fff; font-weight: 600;
+    /* Stated again rather than inherited: the active tab is also the focused
+       one, and anything reaching it at equal specificity would win on source
+       order and square off the only filled tab. */
+    border-radius: var(--nyx-r-tab);
 }
 .nyx-tab .dashicons { font-size: 17px; width: 17px; height: 17px; }
+/*
+ * Focus ring drawn with box-shadow rather than outline.
+ *
+ * outline has only followed border-radius since Safari 16.4, and not at all in
+ * some older engines - so on a pill it paints a rectangle, which on the active
+ * tab reads as though that one tab lost its rounding. box-shadow has always
+ * followed the radius.
+ *
+ * The transparent outline stays on purpose: Windows High Contrast Mode drops
+ * box-shadow entirely and forces transparent outlines to a visible colour.
+ * Without it, focus would be invisible to the people who most need to see it.
+ */
 .nyx-tab:focus-visible, .nyx a:focus-visible, .nyx button:focus-visible,
 .nyx input:focus-visible, .nyx select:focus-visible, .nyx label:focus-within {
-    outline: 2px solid var(--nyx-info); outline-offset: 2px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--nyx-base), 0 0 0 4px var(--nyx-info);
 }
 
 /* Layout */

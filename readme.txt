@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,20 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.3.8 =
+* The active tab in the admin rendered square while every other tab and button
+  was a pill. After a click the active tab is also the focused one, and the
+  focus ring used outline - which has only followed border-radius since Safari
+  16.4 and not at all in some older engines, so it painted a rectangle around a
+  pill. The ring now uses box-shadow, which has always followed the radius.
+* A transparent outline is kept alongside it deliberately: Windows High
+  Contrast Mode drops box-shadow entirely and forces transparent outlines to a
+  visible colour, so removing it would make focus invisible to the people who
+  most depend on seeing it.
+* Tabs take the same pill radius as the buttons beside them.
+* The Nyuchi wordmark is capitalised. It was being lowercased in CSS, which
+  rendered the company name as a styling choice rather than a name.
 
 = 1.3.7 =
 * Styles WP Travel's own itinerary timeline on single trips, so a trip rendered

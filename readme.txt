@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,34 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.3.3 =
+* Bring the changelog up to date: 1.3.0 through 1.3.2 shipped without readme entries,
+  so the "View details" panel in WordPress showed nothing for three releases.
+* No functional change. This release also verifies the update path end to end -
+  every prior version was installed by hand, so the GitHub release feed had never
+  actually delivered an update to a site.
+
+= 1.3.2 =
+* Trip schema fields registered as post meta rather than REST-only fields, so
+  automation clients can write them through the standard `meta` object.
+* Route coordinates accept null, which is meaningful - it triggers position
+  derivation from latitude and longitude rather than fixed placement.
+* Seasonality scores allow dynamic month keys instead of a fixed schema.
+
+= 1.3.1 =
+* Activity cards for experiences such as ballooning, birding and wine tasting,
+  carrying duration, difficulty and typical cost.
+* Term images fall back to a trip within the term when the term has none of its own.
+* "Best selling" scoped to featured trips within the current destination.
+
+= 1.3.0 =
+* Continuous integration across PHP 7.4 and 8.3, with a guard against version drift
+  between the plugin header, WTA_VERSION and the readme stable tag.
+* Release pipeline builds the distributable zip on tag and refuses to publish when
+  the tag disagrees with the version in the code.
+* Updates delivered through GitHub Releases, so sites see update notices and the
+  one-click update works as it does for a directory plugin.
 
 = 1.0.0 =
 * Initial release.

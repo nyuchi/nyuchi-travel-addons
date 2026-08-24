@@ -60,6 +60,10 @@ jobs:
             --exclude 'design' \
             --exclude 'templates/elementor/README.md' \
             --exclude '.gitignore' \
+            --exclude '.markdownlint-cli2.jsonc' \
+            --exclude '.prettierignore' \
+            --exclude '.prettierrc.json' \
+            --exclude '.yamllint.yml' \
             --exclude '.DS_Store' \
             --exclude 'CHANGELOG.md'
           # design/ holds the reference stylesheet the widgets enqueue, so it

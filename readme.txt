@@ -4,9 +4,9 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.5
-License: MIT
-License URI: https://opensource.org/licenses/MIT
+Stable tag: 1.3.6
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Adds a REST-accessible trip schema, draft state for taxonomy terms, and classification diagnostics to sites running WP Travel.
 
@@ -99,6 +99,12 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.3.6 =
+* Licensed GPLv2 or later, which is what wordpress.org expects of a plugin in
+  the directory. 1.3.4 moved to MIT; MIT is GPL-compatible, but GPLv2-or-later
+  is the convention for WordPress plugins and the safe answer for a submission.
+* Full licence text added to the repository.
 
 = 1.3.5 =
 * Legs are chosen by day, not by index. A leg stores a position in WP Travel's

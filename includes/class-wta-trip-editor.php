@@ -390,23 +390,75 @@ class WTA_Trip_Editor {
         });
     }
 
-    protected function panel_legs($post_id) {
-        $legs = $this->value($post_id, WTA_Itinerary_Schema::LEGS);
+    /**
+     * Day choices for a leg, labelled the way the operator sees them.
+     *
+     * A leg stores an index into WP Travel's itinerary array, but that index is
+     * not the day number. An entry labelled "Day 8 & 9" occupies one slot and
+     * covers two days, so from that point on the index trails the day number.
+     * Asking anyone to work that out by hand invites an off-by-two that renders
+     * as the wrong country heading over the wrong days, with nothing to warn
+     * them. Presenting the real labels removes the arithmetic entirely.
+     *
+     * @return array<int, string> index => label
+     */
+    protected function day_choices($post_id) {
         $days = get_post_meta($post_id, WTA_Trip::ITINERARY_META, true);
-        $days = is_array($days) ? count($days) : 0;
+
+        if (!is_array($days) || empty($days)) {
+            return array();
+        }
+
+        $out = array();
+
+        foreach (array_values($days) as $i => $day) {
+            $label = isset($day['label']) ? wp_specialchars_decode((string) $day['label'], ENT_QUOTES) : '';
+            $title = isset($day['title']) ? wp_specialchars_decode((string) $day['title'], ENT_QUOTES) : '';
+            $label = trim($label) !== '' ? trim($label) : sprintf('Entry %d', $i + 1);
+            $title = trim($title);
+
+            $out[$i] = $title !== '' ? $label . ' - ' . $title : $label;
+        }
+
+        return $out;
+    }
+
+    protected function panel_legs($post_id) {
+        $legs    = $this->value($post_id, WTA_Itinerary_Schema::LEGS);
+        $choices = $this->day_choices($post_id);
+        $days    = count($choices);
 
         $hint = $days
-            ? sprintf('This trip currently has %d day%s in the WP Travel itinerary.', $days, 1 === $days ? '' : 's')
-            : 'This trip has no WP Travel itinerary days yet.';
+            ? sprintf('This trip has %d entr%s in the WP Travel itinerary.', $days, 1 === $days ? 'y' : 'ies')
+            : 'This trip has no WP Travel itinerary days yet, so there is nothing for a leg to cover.';
+
+        // A leg pointing past the end of the day list renders the wrong days, or
+        // none. Say so here rather than letting it fail quietly on the front end.
+        $stale = array();
+
+        foreach ($legs as $i => $leg) {
+            $from = isset($leg['day_from']) ? (int) $leg['day_from'] : 0;
+            $to   = isset($leg['day_to']) ? (int) $leg['day_to'] : 0;
+
+            if ($days === 0 || $from > $days - 1 || $to > $days - 1 || $from < 0 || $to < $from) {
+                $title   = isset($leg['title']) && '' !== $leg['title'] ? $leg['title'] : 'Leg ' . ($i + 1);
+                $stale[] = sprintf('%s (%d to %d)', $title, $from, $to);
+            }
+        }
+
+        // section() escapes its note, so this stays plain text by design.
+        if ($stale) {
+            $hint .= ' Warning: these legs no longer match the itinerary and will render incorrectly - '
+                . implode('; ', $stale) . '. Days were most likely added, removed or reordered in'
+                . ' WP Travel after the legs were set.';
+        }
 
         $this->section(
             'Stages of the journey',
-            $hint . ' Day numbers are zero-based indexes into that itinerary, so the first day is 0'
-                . ($days ? ' and the last is ' . ($days - 1) : '')
-                . '. Days are referenced, never copied.'
+            $hint . ' Days are referenced, never copied - editing a day in WP Travel updates it here too.'
         );
 
-        $this->repeater('wta[legs]', array_values($legs), 'Add leg', function ($row, $prefix) {
+        $this->repeater('wta[legs]', array_values($legs), 'Add leg', function ($row, $prefix) use ($choices) {
             $this->field(array(
                 'name'  => $prefix . '[title]',
                 'key'   => '[title]',
@@ -431,23 +483,25 @@ class WTA_Trip_Editor {
             ));
 
             $this->field(array(
-                'type'  => 'number',
-                'name'  => $prefix . '[day_from]',
-                'key'   => '[day_from]',
-                'label' => 'First day',
-                'value' => self::pick($row, 'day_from', 0),
-                'min'   => '0',
-                'step'  => '1',
+                'type'    => $choices ? 'select' : 'number',
+                'name'    => $prefix . '[day_from]',
+                'key'     => '[day_from]',
+                'label'   => 'First day',
+                'value'   => self::pick($row, 'day_from', 0),
+                'options' => $choices,
+                'min'     => '0',
+                'step'    => '1',
             ));
 
             $this->field(array(
-                'type'  => 'number',
-                'name'  => $prefix . '[day_to]',
-                'key'   => '[day_to]',
-                'label' => 'Last day',
-                'value' => self::pick($row, 'day_to', 0),
-                'min'   => '0',
-                'step'  => '1',
+                'type'    => $choices ? 'select' : 'number',
+                'name'    => $prefix . '[day_to]',
+                'key'     => '[day_to]',
+                'label'   => 'Last day',
+                'value'   => self::pick($row, 'day_to', 0),
+                'options' => $choices,
+                'min'     => '0',
+                'step'    => '1',
             ));
         });
     }

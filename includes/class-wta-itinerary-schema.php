@@ -1022,6 +1022,62 @@ class WTA_Itinerary_Schema {
      *
      * An explicitly set term_id always wins.
      */
+    /**
+     * Keep a leg inside the day list it points at.
+     *
+     * Legs hold indexes into WP Travel's itinerary array, and that array is
+     * edited independently. Adding, deleting or reordering a day leaves the
+     * stored indexes pointing somewhere else, so a leg can run past the end of
+     * the list. Rendering that produces either the wrong days under a heading
+     * or an empty stage, with nothing said about it.
+     *
+     * Clamping cannot recover the operator's intent - only they know which days
+     * a stage was meant to cover - so this limits the damage to a visible one:
+     * a leg is trimmed to the days that exist, and a leg with nothing left to
+     * show is dropped rather than rendered blank. The trip editor reports the
+     * same mismatch so it can actually be corrected at the source.
+     *
+     * @param array $legs      Resolved legs.
+     * @param int   $day_count Days currently in the WP Travel itinerary.
+     * @return array
+     */
+    public static function clamp_legs($legs, $day_count) {
+        if (!is_array($legs) || empty($legs)) {
+            return array();
+        }
+
+        $day_count = (int) $day_count;
+
+        if ($day_count < 1) {
+            return array();
+        }
+
+        $last = $day_count - 1;
+        $out  = array();
+
+        foreach ($legs as $leg) {
+            if (!is_array($leg)) {
+                continue;
+            }
+
+            $from = isset($leg['day_from']) ? (int) $leg['day_from'] : 0;
+            $to   = isset($leg['day_to']) ? (int) $leg['day_to'] : $from;
+
+            if ($from > $last) {
+                // Nothing of this stage survives in the current itinerary.
+                continue;
+            }
+
+            $leg['day_from']  = max(0, min($from, $last));
+            $leg['day_to']    = max($leg['day_from'], min($to, $last));
+            $leg['wta_stale'] = ($leg['day_from'] !== $from || $leg['day_to'] !== $to);
+
+            $out[] = $leg;
+        }
+
+        return $out;
+    }
+
     public static function resolve_leg_terms($legs, $post_id) {
         if (empty($legs) || !is_array($legs)) {
             return $legs;
@@ -1108,7 +1164,7 @@ class WTA_Itinerary_Schema {
         }
 
         $data['route'] = self::project_route($data['route']);
-        $data['legs']  = self::resolve_leg_terms($data['legs'], $post_id);
+        $data['legs']  = self::clamp_legs(self::resolve_leg_terms($data['legs'], $post_id), count($data['days']));
 
         // A trip with no authored hero still deserves a headline block.
         if (empty($data['hero']['stats'])) {

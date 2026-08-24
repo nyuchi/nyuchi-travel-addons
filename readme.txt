@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.4
+Stable tag: 1.3.5
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -99,6 +99,18 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.3.5 =
+* Legs are chosen by day, not by index. A leg stores a position in WP Travel's
+  itinerary array, and that position is not the day number - an entry labelled
+  "Day 8 & 9" fills one slot but covers two days, so from there on the index
+  trails the day. The editor now lists the real day labels to pick from, which
+  removes the arithmetic that made an off-by-two easy and invisible.
+* The trip editor reports legs that no longer fit the itinerary, which happens
+  whenever days are added, removed or reordered after the legs were set.
+* A leg that runs past the end of the itinerary is trimmed to the days that
+  exist, and one with nothing left to show is dropped rather than rendered as
+  an empty stage.
 
 = 1.3.4 =
 * Relicensed under MIT. MIT is GPL-compatible, so this remains valid for

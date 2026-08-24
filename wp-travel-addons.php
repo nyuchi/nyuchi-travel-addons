@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
- * Plugin URI:  https://github.com/nyuchi/wp-travel-addons
+ * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility guards. By Nyuchi Web Services.
- * Version:     1.3.3
+ * Version:     1.3.4
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
- * License:     GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License:     MIT
+ * License URI: https://opensource.org/licenses/MIT
  * Text Domain: nyuchi-travel-addons
  * Requires at least: 5.9
  * Requires PHP: 7.4
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.3.3');
+define('WTA_VERSION', '1.3.4');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));

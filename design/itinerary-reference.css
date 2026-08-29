@@ -358,11 +358,16 @@
 .wta-card-link:focus-visible{outline:2px solid var(--dust);outline-offset:2px}
 
 /* The clipping container. This is the element that must own overflow. */
-.wta-card-media{position:relative;overflow:hidden;background:var(--forest-deep)}
-.wta-cards-grid[data-ratio="1-1"]  .wta-card-media{aspect-ratio:1/1}
-.wta-cards-grid[data-ratio="4-3"]  .wta-card-media{aspect-ratio:4/3}
-.wta-cards-grid[data-ratio="3-4"]  .wta-card-media{aspect-ratio:3/4}
-.wta-cards-grid[data-ratio="16-9"] .wta-card-media{aspect-ratio:16/9}
+/* The ratio is a default, not a rule. Setting aspect-ratio directly on a
+   descendant selector outranks the CSS Elementor generates for a widget
+   control, so the control would appear to work in the editor and change
+   nothing on the page. Holding the value in a custom property keeps this at
+   one class of specificity, which a control can then override. */
+.wta-card-media{position:relative;overflow:hidden;background:var(--forest-deep);aspect-ratio:var(--wta-card-ratio,3/4)}
+.wta-cards-grid[data-ratio="1-1"]  {--wta-card-ratio:1/1}
+.wta-cards-grid[data-ratio="4-3"]  {--wta-card-ratio:4/3}
+.wta-cards-grid[data-ratio="3-4"]  {--wta-card-ratio:3/4}
+.wta-cards-grid[data-ratio="16-9"] {--wta-card-ratio:16/9}
 .wta-card-img{
   width:100%;height:100%;object-fit:cover;
   transform:scale(1);transition:transform .5s ease;

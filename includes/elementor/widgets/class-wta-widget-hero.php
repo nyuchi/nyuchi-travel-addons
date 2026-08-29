@@ -15,6 +15,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Hero extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-hero';
     }
@@ -67,6 +69,22 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_media_style_section(
+            'hero', 'Feature image', '.wta-hero-art', '.wta-panel-img'
+        );
+
+        $this->wta_box_style_section('hero', 'Hero panel', '.wta-hero');
+
+        $this->wta_text_style_section('hero', 'Hero text', array(
+            'line'    => array('label' => 'Headline', 'selector' => '.wta-line',       'spacing' => true),
+            'sub'     => array('label' => 'Subtitle', 'selector' => '.wta-hero-sub',   'spacing' => true),
+            'stats'   => array('label' => 'Stats',    'selector' => '.wta-hero-stats'),
+            'eyebrow' => array('label' => 'Eyebrow',  'selector' => '.wta-eyebrow'),
+        ));
+
     }
 
     /**

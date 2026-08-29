@@ -22,6 +22,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-trip-cards';
     }
@@ -196,6 +198,24 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_media_style_section(
+            'card', 'Image', '.wta-card-media', '.wta-card-img', array('hover' => '.wta-card')
+        );
+
+        $this->wta_box_style_section(
+            'card', 'Card', '.wta-card', array('grid' => '.wta-cards-grid')
+        );
+
+        $this->wta_text_style_section('card', 'Card text', array(
+            'title'   => array('label' => 'Title',   'selector' => '.wta-card-title',   'spacing' => true),
+            'meta'    => array('label' => 'Meta',    'selector' => '.wta-card-meta'),
+            'excerpt' => array('label' => 'Excerpt', 'selector' => '.wta-card-excerpt', 'spacing' => true),
+            'price'   => array('label' => 'Price',   'selector' => '.wta-card-price'),
+        ));
+
     }
 
     /**

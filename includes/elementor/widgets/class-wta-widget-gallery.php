@@ -27,6 +27,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Gallery extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     /**
      * Whether the gallery CSS has already gone out this request.
      *
@@ -129,6 +131,17 @@ class WTA_Widget_Gallery extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_media_style_section(
+            'gal', 'Image', '.wta-gallery-media', '.wta-gallery-media img'
+        );
+
+        $this->wta_box_style_section(
+            'gal', 'Grid', '.wta-gallery-item', array('grid' => '.wta-gallery-grid')
+        );
+
     }
 
     /**
@@ -280,11 +293,11 @@ class WTA_Widget_Gallery extends \Elementor\Widget_Base {
             . '@media (max-width:640px){.wta-itin .wta-gallery-grid{grid-template-columns:minmax(0,1fr)}}'
             . '.wta-itin .wta-gallery-item{margin:0;min-width:0;display:flex;flex-direction:column;gap:6px}'
             /* The tile owns the ratio and the overflow. */
-            . '.wta-itin .wta-gallery-media{position:relative;display:block;overflow:hidden;border-radius:4px;background:var(--forest-deep);line-height:0}'
-            . '.wta-itin .wta-gallery-grid[data-aspect="3-4"] .wta-gallery-media{aspect-ratio:3/4}'
-            . '.wta-itin .wta-gallery-grid[data-aspect="4-3"] .wta-gallery-media{aspect-ratio:4/3}'
-            . '.wta-itin .wta-gallery-grid[data-aspect="1-1"] .wta-gallery-media{aspect-ratio:1/1}'
-            . '.wta-itin .wta-gallery-grid[data-aspect="16-9"] .wta-gallery-media{aspect-ratio:16/9}'
+            . '.wta-itin .wta-gallery-media{aspect-ratio:var(--wta-gal-ratio,3/4);position:relative;display:block;overflow:hidden;border-radius:4px;background:var(--forest-deep);line-height:0}'
+            . '.wta-itin .wta-gallery-grid[data-aspect="3-4"]{--wta-gal-ratio:3/4}'
+            . '.wta-itin .wta-gallery-grid[data-aspect="4-3"]{--wta-gal-ratio:4/3}'
+            . '.wta-itin .wta-gallery-grid[data-aspect="1-1"]{--wta-gal-ratio:1/1}'
+            . '.wta-itin .wta-gallery-grid[data-aspect="16-9"]{--wta-gal-ratio:16/9}'
             /* The image is what moves, so the crop stays inside the tile. */
             . '.wta-itin .wta-gallery-img{width:100%;height:100%;object-fit:cover;transform:scale(1);transition:transform .5s ease}'
             . '.wta-itin .wta-gallery-media:hover .wta-gallery-img,'

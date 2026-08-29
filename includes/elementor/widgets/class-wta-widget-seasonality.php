@@ -16,6 +16,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Seasonality extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-seasonality';
     }
@@ -61,6 +63,17 @@ class WTA_Widget_Seasonality extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('seas', 'Matrix', '.wta-matrix');
+
+        $this->wta_text_style_section('seas', 'Matrix text', array(
+            'rowlabel' => array('label' => 'Row label', 'selector' => '.wta-rowlabel'),
+            'month'    => array('label' => 'Month',     'selector' => '.wta-monthbtn'),
+            'legend'   => array('label' => 'Legend',    'selector' => '.wta-legend'),
+        ));
+
     }
 
     /**

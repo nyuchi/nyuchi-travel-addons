@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,22 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.6.0 =
+* Expose WP Travel and WP Travel Pro through the Abilities API: trips, pricing,
+  dates, taxonomies, Pro module detection and diagnostics.
+* Pricing and dates are read by discovering the real table columns at call time
+  rather than assuming a shape. A schema copied from one WP Travel version is
+  correct until the day it changes and then fails silently.
+* WP Travel's own storage is read and written in place. This plugin adds the
+  trip data WP Travel does not hold; it does not keep a second copy of the data
+  WP Travel does.
+* WP Travel is not a hard dependency. Every ability reports its absence rather
+  than fataling, and Pro is detected by whether its class actually loaded, not
+  merely whether WordPress was told to activate it.
+* Diagnostics distinguish WP Travel from WP Travel Engine, a different plugin
+  that leaves a similarly named option behind. Reporting one as the other was a
+  real defect during development.
 
 = 1.5.0 =
 * Widgets can choose which image size to load. Every widget asked for 'large'

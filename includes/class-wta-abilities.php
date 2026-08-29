@@ -50,7 +50,7 @@ class WTA_Abilities {
 
         wp_register_ability_category(self::CATEGORY, array(
             'label'       => 'Nyuchi Travel',
-            'description' => 'Read and write WP Travel trip content: the structured itinerary (legs, route stops, month-by-month suitability, cost tiers), the taxonomy terms trips are classified under and their live/draft state, plus diagnostics that report classification problems and trips whose content would crash the vendor itinerary widget.',
+            'description' => 'Read and write WP Travel trip content: the structured itinerary (legs, route stops, month-by-month suitability, traveller choices), the taxonomy terms trips are classified under and their live/draft state, plus diagnostics that report classification problems and trips whose content would crash the vendor itinerary widget.',
         ));
     }
 
@@ -994,7 +994,7 @@ class WTA_Abilities {
      * Shape of a whole trip as get-trip returns it.
      *
      * The authored groups reuse the schemas the REST fields already advertise,
-     * so the description of a leg or a cost tier exists in exactly one place;
+     * so the description of a leg or a route stop exists in exactly one place;
      * days and facts are appended because they come from WP Travel rather than
      * from this plugin's own meta.
      */
@@ -1037,7 +1037,7 @@ class WTA_Abilities {
         return array(
             'type'       => 'object',
             'properties' => $properties,
-            'required'   => array('hero', 'legs', 'route', 'seasonality', 'options', 'cost', 'checklist', 'notes', 'days', 'facts'),
+            'required'   => array('hero', 'legs', 'route', 'seasonality', 'options', 'checklist', 'notes', 'days', 'facts'),
         );
     }
 }

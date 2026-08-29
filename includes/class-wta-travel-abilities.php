@@ -1301,16 +1301,6 @@ class WTA_Travel_Abilities {
                     $notes[] = 'The pricing table does not exist on this site, so pricing is not held relationally here. Fall back to the post meta price.';
                 }
 
-                // This plugin carries its own cost block, which shadows WP
-                // Travel's pricing table. Reporting the overlap is in scope
-                // here; writing to that block is not, and no ability in this
-                // file does. Pricing belongs to WP Travel.
-                $shadow = get_post_meta($trip_id, 'wta_cost', true);
-
-                if (!empty($shadow) && is_array($shadow)) {
-                    $notes[] = 'This trip also carries a wta_cost block, a second cost model held by Nyuchi Travel Addons alongside WP Travel\'s pricing table. Two homes for one price will drift. WP Travel\'s table is the owner; treat wta_cost as presentation input under review, and never as the price.';
-                }
-
                 return array(
                     'trip_id'    => $trip_id,
                     'tables'     => array(

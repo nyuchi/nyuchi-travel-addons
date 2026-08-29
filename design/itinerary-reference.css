@@ -258,45 +258,6 @@
   letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:7px;
 }
 
-/* ── COST ESTIMATOR ─────────────────────────────────────────────────────── */
-.wta-calc{background:var(--forest-deep);color:var(--bleach)}
-.wta-calc .wta-sec-head{border-color:rgba(232,220,192,.2)}
-.wta-calc .wta-sec-head h2{color:var(--bleach)}
-.wta-calc .wta-sec-head p{color:rgba(232,220,192,.6)}
-.wta-calcgrid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,56px);align-items:start}
-.wta-field{margin-bottom:24px}
-.wta-field > label{
-  display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
-  text-transform:uppercase;color:rgba(232,220,192,.55);margin-bottom:9px;
-}
-.wta-seg{display:flex;gap:5px;flex-wrap:wrap}
-.wta-seg button{
-  flex:1 1 auto;min-width:72px;background:transparent;
-  border:1px solid rgba(232,220,192,.26);color:rgba(232,220,192,.8);
-  padding:10px 12px;border-radius:2px;font-size:13.5px;
-  transition:background .16s ease,color .16s ease,border-color .16s ease;
-}
-.wta-seg button:hover{border-color:var(--dust)}
-.wta-seg button[aria-pressed="true"]{background:var(--dust);border-color:var(--dust);color:var(--forest-deep);font-weight:600}
-.wta-stepper{display:flex;align-items:center;border:1px solid rgba(232,220,192,.26);border-radius:2px;width:fit-content}
-.wta-stepper button{background:none;border:0;padding:9px 17px;color:var(--bleach);font-family:var(--mono);font-size:17px;line-height:1}
-.wta-stepper button:hover{background:rgba(200,147,63,.24)}
-.wta-stepper output{
-  font-family:var(--mono);font-size:15px;min-width:44px;text-align:center;padding:9px 0;
-  border-left:1px solid rgba(232,220,192,.26);border-right:1px solid rgba(232,220,192,.26);
-}
-.wta-readout{border-top:1px solid rgba(232,220,192,.2)}
-/* Cost readout row. Renamed from .wta-line, which collided with the hero
-   headline lines and was forcing 14px text and an underline onto them. */
-.wta-costline{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(232,220,192,.12);font-size:14px}
-.wta-costline span:first-child{color:rgba(232,220,192,.72)}
-.wta-costline span:last-child{font-family:var(--mono);font-size:13.5px}
-.wta-total{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:22px 0 6px}
-.wta-total .wta-lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,220,192,.55)}
-.wta-total .wta-amt{font-family:var(--display);font-weight:800;font-size:clamp(34px,5.6vw,60px);line-height:.9;letter-spacing:-.035em;color:var(--dust)}
-.wta-groupline{font-family:var(--mono);font-size:12px;color:rgba(232,220,192,.6);padding-bottom:6px}
-.wta-disc{font-size:12.5px;color:rgba(232,220,192,.5);margin-top:16px;line-height:1.5}
-
 /* ── CHECKLIST ──────────────────────────────────────────────────────────── */
 .wta-progressbar{height:3px;background:var(--rule);margin-bottom:22px;position:relative}
 .wta-progressbar i{position:absolute;left:0;top:0;bottom:0;background:var(--dust);width:0;transition:width .32s ease}
@@ -324,7 +285,7 @@
 
 /* ── RESPONSIVE ─────────────────────────────────────────────────────────── */
 @media (max-width:900px){
-  .wta-hero-grid,.wta-mapwrap,.wta-calcgrid,.wta-verdict{grid-template-columns:1fr}
+  .wta-hero-grid,.wta-mapwrap,.wta-verdict{grid-template-columns:1fr}
   .wta-verdict-month{font-size:52px}
   .wta-options{grid-template-columns:1fr}
   .wta-leghead{grid-template-columns:auto 1fr}
@@ -484,34 +445,13 @@
 .wta-itin .wta-check[aria-pressed="true"] .wta-box{background:var(--ink) !important;color:var(--shell) !important}
 .wta-itin .wta-option{border:1px solid var(--rule) !important;border-radius:2px !important;background:#fff !important;width:100%;padding:16px}
 .wta-itin .wta-option[aria-pressed="true"]{background:var(--ocean) !important;border-color:var(--ocean) !important;color:var(--shell) !important}
-.wta-itin .wta-seg button{border:1px solid rgba(232,220,192,.26) !important;border-radius:2px !important;padding:10px 12px}
-.wta-itin .wta-seg button[aria-pressed="true"]{background:var(--dust) !important;border-color:var(--dust) !important;color:var(--forest-deep) !important}
-.wta-itin .wta-stepper button{padding:9px 17px}
 .wta-itin .wta-card-cta{border:1px solid var(--rule) !important;border-radius:999px !important}
 
-/* Priced on request. Same weight as a real cost panel — a quoted trip is not a
-   lesser trip, and burying it would lose the one section that names the next step. */
-.wta-onrequest{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,3vw,44px);align-items:start}
-.wta-onrequest-lead{
-  font-family:var(--display);font-weight:800;
-  font-size:clamp(28px,4.6vw,52px);line-height:.95;letter-spacing:-.03em;color:var(--gold);max-width:9ch;
-}
-.wta-onrequest-body p{margin:0 0 20px;font-size:clamp(15px,1.7vw,19px);line-height:1.55;color:rgba(234,221,199,.9);max-width:52ch}
-.wta-onrequest-cta{
-  display:inline-block;text-decoration:none;
-  background:var(--gold);color:var(--navy-deep);
-  font-weight:600;font-size:14px;padding:12px 26px;border-radius:999px;
-  transition:background .18s ease;
-}
-.wta-onrequest-cta:hover{background:var(--sand);color:var(--navy-deep)}
-@media (max-width:900px){ .wta-onrequest{grid-template-columns:1fr} .wta-onrequest-lead{max-width:none} }
-
-/* Section rhythm. The widgets emit <section class="wta-calc|wta-season|wta-notes">
+/* Section rhythm. The widgets emit <section class="wta-season|wta-notes">
    without the .wta-section helper, so the vertical padding has to be attached to
    the section classes themselves or the content sits flush against the colour
-   change — which is what happened to the cost panel. */
+   change. */
 .wta-itin .wta-season,
-.wta-itin .wta-calc,
 .wta-itin .wta-notes,
 .wta-itin .wta-route-section{
   padding-top:clamp(48px,7vw,96px);
@@ -573,25 +513,3 @@
 .wta-itin .wta-dbody{padding:6px 22px 22px 104px;line-height:1.62}
 @media (max-width:640px){ .wta-itin .wta-dbody{padding:6px 18px 20px 18px} }
 
-/* ── SEASONAL ESTIMATE ──────────────────────────────────────────────────────
- * The season control is the same segmented group as comfort level, because it
- * is the same kind of choice: one of a short list, exactly one active. It gets
- * its own rules only for width — season names run longer than tier names and
- * wrapped buttons make the group read as two rows of unrelated controls.
- *
- * The caption sits between the figure and the enquiry button on purpose. An
- * estimate is a reason to make contact, not a substitute for it, so the button
- * stays on the page even once a number is shown.
- */
-.wta-seasonseg button{min-width:96px}
-.wta-estimate{margin-top:14px;padding-top:16px;border-top:1px solid rgba(232,220,192,.14)}
-.wta-estnote{
-  margin:0 0 16px;font-size:13px;line-height:1.55;
-  color:rgba(232,220,192,.62);max-width:46ch;
-}
-.wta-estcta{font-size:13.5px;padding:11px 24px}
-.wta-total .wta-lab{white-space:nowrap}
-
-/* Same reason as the HOST THEME RESET above: these are plain <button> elements,
-   so the theme's global pill radius reaches them through the element selector. */
-.wta-itin .wta-seasonseg button{border-radius:2px !important;text-align:center}

@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility guards. By Nyuchi Web Services.
- * Version:     1.7.0
+ * Version:     1.8.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.7.0');
+define('WTA_VERSION', '1.8.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -87,7 +87,7 @@ final class WP_Travel_Addons {
             'itinerary' => array(
                 'class'  => 'WTA_Itinerary_Schema',
                 'label'  => 'Itinerary schema',
-                'detail' => 'Adds the trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, cost tiers, booking order and field notes.',
+                'detail' => 'Adds the trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, booking order and field notes.',
             ),
             'trip_editor' => array(
                 'class'  => 'WTA_Trip_Editor',

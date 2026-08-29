@@ -70,6 +70,11 @@ class WTA_Elementor {
      * @param \Elementor\Widgets_Manager $widgets_manager
      */
     public function register_widgets($widgets_manager) {
+        // Loaded before the widgets because they use it, and kept outside the
+        // widgets directory because the glob below treats everything in there
+        // as a widget class to instantiate.
+        require_once WTA_DIR . 'includes/elementor/trait-wta-widget-styles.php';
+
         $files = glob(WTA_DIR . 'includes/elementor/widgets/*.php');
 
         if (!is_array($files)) {

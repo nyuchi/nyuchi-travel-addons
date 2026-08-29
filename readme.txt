@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.8
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,28 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.4.0 =
+* Style controls on all thirteen widgets. Every widget shipped with its
+  controls in the Content tab and its appearance fixed in a stylesheet, so
+  there was nothing to adjust without editing CSS.
+* Responsive throughout. Nothing was registered responsively before, so a
+  setting applied at every screen width - the tablet and mobile switches in
+  the editor had no effect on any of these widgets.
+* Control over how an image sits inside its frame, not just the frame. The
+  frame owns the aspect ratio; the image now has its own object-fit and
+  object-position, so a landscape photo in a portrait card can keep the sky
+  instead of being cropped from the centre with no way to say otherwise.
+* Aspect ratio, corner radius, CSS filters and hover zoom per device.
+* Typography, colour and spacing per text element, plus padding, background,
+  border, radius, shadow and grid gap on the repeating boxes.
+* Registered once in a shared trait rather than copied into each widget, so
+  the same control cannot come to mean different things in different widgets.
+* Fixed the reason none of this would have worked: the stylesheet set
+  aspect-ratio through descendant selectors that outrank the CSS Elementor
+  generates for a control. Those are now defaults held in custom properties,
+  which a control can override. The controls would otherwise have appeared to
+  work in the editor and changed nothing on the page.
 
 = 1.3.8 =
 * The active tab in the admin rendered square while every other tab and button

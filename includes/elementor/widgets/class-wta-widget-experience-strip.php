@@ -24,6 +24,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     /**
      * Whether the strip CSS has already gone out this request.
      *
@@ -134,6 +136,23 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_media_style_section(
+            'exp', 'Image', '.wta-exp-media', '.wta-exp-img', array('hover' => '.wta-exp-item')
+        );
+
+        $this->wta_box_style_section(
+            'exp', 'Item', '.wta-exp-item', array('grid' => '.wta-exp-row')
+        );
+
+        $this->wta_text_style_section('exp', 'Item text', array(
+            'name'  => array('label' => 'Name', 'selector' => '.wta-exp-name', 'spacing' => true),
+            'desc'  => array('label' => 'Description', 'selector' => '.wta-exp-desc'),
+            'count' => array('label' => 'Trip count',  'selector' => '.wta-exp-count'),
+        ));
+
     }
 
     /**

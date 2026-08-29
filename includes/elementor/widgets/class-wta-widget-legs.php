@@ -15,6 +15,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Legs extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-legs';
     }
@@ -66,6 +68,18 @@ class WTA_Widget_Legs extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('legs', 'Stage', '.wta-leghead', array('grid' => '.wta-days'));
+
+        $this->wta_text_style_section('legs', 'Stage text', array(
+            'legno'  => array('label' => 'Stage number', 'selector' => '.wta-legno'),
+            'title'  => array('label' => 'Day title',    'selector' => '.wta-dtitle', 'spacing' => true),
+            'body'   => array('label' => 'Day text',     'selector' => '.wta-dbody'),
+            'dnum'   => array('label' => 'Day number',   'selector' => '.wta-dnum'),
+        ));
+
     }
 
     /**

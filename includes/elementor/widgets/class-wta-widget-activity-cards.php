@@ -18,6 +18,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Activity_Cards extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     /** @var bool CSS is identical for every instance, so print it once. */
     protected static $printed_css = false;
 
@@ -100,6 +102,23 @@ class WTA_Widget_Activity_Cards extends \Elementor\Widget_Base {
         }
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_media_style_section(
+            'act', 'Image', '.wta-act-media', '.wta-act-img', array('hover' => '.wta-act')
+        );
+
+        $this->wta_box_style_section(
+            'act', 'Card', '.wta-act', array('grid' => '.wta-acts-grid')
+        );
+
+        $this->wta_text_style_section('act', 'Card text', array(
+            'name'  => array('label' => 'Name',        'selector' => '.wta-act-name', 'spacing' => true),
+            'desc'  => array('label' => 'Description', 'selector' => '.wta-act-desc'),
+            'facts' => array('label' => 'Facts',       'selector' => '.wta-act-fact'),
+        ));
+
     }
 
     /**
@@ -348,7 +367,7 @@ class WTA_Widget_Activity_Cards extends \Elementor\Widget_Base {
 .wta-itin .wta-act{min-width:0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:#fff}
 .wta-itin .wta-act-link{display:block;text-decoration:none;color:inherit;height:100%}
 .wta-itin .wta-act-link:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.wta-itin .wta-act-media{position:relative;display:block;aspect-ratio:3/4;overflow:hidden;background:var(--navy)}
+.wta-itin .wta-act-media{position:relative;display:block;aspect-ratio:var(--wta-act-ratio,3/4);overflow:hidden;background:var(--navy)}
 .wta-itin .wta-act-img{position:absolute;inset:0;background-size:cover;background-position:center;transform:scale(1);transition:transform .5s ease}
 .wta-itin .wta-act:hover .wta-act-img{transform:scale(1.05)}
 .wta-itin .wta-act-veil{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,26,46,.55) 0%,rgba(13,26,46,0) 55%)}

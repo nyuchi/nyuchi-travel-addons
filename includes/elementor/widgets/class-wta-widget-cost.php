@@ -20,6 +20,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Cost extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     /** Guard rails for the party-size stepper. */
     const MIN_TRAVELLERS = 1;
     const MAX_TRAVELLERS = 12;
@@ -116,6 +118,18 @@ class WTA_Widget_Cost extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('cost', 'Estimate panel', '.wta-estimate', array('grid' => '.wta-calcgrid'));
+
+        $this->wta_text_style_section('cost', 'Estimate text', array(
+            'amt'      => array('label' => 'Amount',   'selector' => '.wta-amt', 'spacing' => true),
+            'costline' => array('label' => 'Breakdown row', 'selector' => '.wta-costline'),
+            'estnote'  => array('label' => 'Note',     'selector' => '.wta-estnote'),
+            'field'    => array('label' => 'Field label', 'selector' => '.wta-field'),
+        ));
+
     }
 
     /**

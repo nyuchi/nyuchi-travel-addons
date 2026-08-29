@@ -15,6 +15,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Notes extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-notes';
     }
@@ -70,6 +72,23 @@ class WTA_Widget_Notes extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('notes', 'Note', '.wta-note', array('grid' => '.wta-notegrid'));
+
+        $this->wta_text_style_section('notes', 'Note text', array(
+            'note'    => array('label' => 'Body',    'selector' => '.wta-note'),
+            'eyebrow' => array('label' => 'Eyebrow', 'selector' => '.wta-eyebrow'),
+        ));
+
+        $this->start_controls_section('notes_align_style', array(
+            'label' => 'Alignment',
+            'tab'   => \Elementor\Controls_Manager::TAB_STYLE,
+        ));
+        $this->wta_align_control('notes', '.wta-note');
+        $this->end_controls_section();
+
     }
 
     public function render() {

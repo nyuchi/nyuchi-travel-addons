@@ -17,6 +17,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Checklist extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-checklist';
     }
@@ -61,6 +63,16 @@ class WTA_Widget_Checklist extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('check', 'Checklist box', '.wta-box', array('grid' => '.wta-checks'));
+
+        $this->wta_text_style_section('check', 'Checklist text', array(
+            'ctext'   => array('label' => 'Item',    'selector' => '.wta-ctext'),
+            'eyebrow' => array('label' => 'Eyebrow', 'selector' => '.wta-eyebrow'),
+        ));
+
     }
 
     public function render() {

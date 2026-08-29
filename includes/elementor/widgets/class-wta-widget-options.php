@@ -20,6 +20,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Options extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     public function get_name() {
         return 'wta-options';
     }
@@ -65,6 +67,16 @@ class WTA_Widget_Options extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('opts', 'Option', '.wta-option', array('grid' => '.wta-options'));
+
+        $this->wta_text_style_section('opts', 'Option text', array(
+            'option'  => array('label' => 'Option',  'selector' => '.wta-option'),
+            'eyebrow' => array('label' => 'Eyebrow', 'selector' => '.wta-eyebrow'),
+        ));
+
     }
 
     public function render() {

@@ -25,6 +25,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Destination_Grid extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     /**
      * Whether the grid CSS has already gone out this request.
      *
@@ -136,6 +138,23 @@ class WTA_Widget_Destination_Grid extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_media_style_section(
+            'dest', 'Image', '.wta-dest-link', '.wta-dest-img'
+        );
+
+        $this->wta_box_style_section(
+            'dest', 'Tile', '.wta-dest-tile', array('grid' => '.wta-dest-grid')
+        );
+
+        $this->wta_text_style_section('dest', 'Tile text', array(
+            'name'  => array('label' => 'Name',  'selector' => '.wta-dest-name', 'spacing' => true),
+            'desc'  => array('label' => 'Description', 'selector' => '.wta-dest-desc'),
+            'count' => array('label' => 'Trip count',  'selector' => '.wta-dest-count'),
+        ));
+
     }
 
     /**
@@ -274,12 +293,12 @@ class WTA_Widget_Destination_Grid extends \Elementor\Widget_Base {
             . '@media (max-width:640px){.wta-itin .wta-dest-grid{grid-template-columns:minmax(0,1fr)}}'
             . '.wta-itin .wta-dest-tile{margin:0;min-width:0}'
             /* The tile owns the ratio and the overflow. */
-            . '.wta-itin .wta-dest-link{position:relative;display:block;overflow:hidden;border-radius:4px;'
+            . '.wta-itin .wta-dest-link{aspect-ratio:var(--wta-dest-ratio,3/4);position:relative;display:block;overflow:hidden;border-radius:4px;'
             . 'background:var(--forest-deep);color:var(--bleach);text-decoration:none;line-height:0}'
-            . '.wta-itin .wta-dest-grid[data-aspect="3-4"] .wta-dest-link{aspect-ratio:3/4}'
-            . '.wta-itin .wta-dest-grid[data-aspect="4-3"] .wta-dest-link{aspect-ratio:4/3}'
-            . '.wta-itin .wta-dest-grid[data-aspect="1-1"] .wta-dest-link{aspect-ratio:1/1}'
-            . '.wta-itin .wta-dest-grid[data-aspect="16-9"] .wta-dest-link{aspect-ratio:16/9}'
+            . '.wta-itin .wta-dest-grid[data-aspect="3-4"]{--wta-dest-ratio:3/4}'
+            . '.wta-itin .wta-dest-grid[data-aspect="4-3"]{--wta-dest-ratio:4/3}'
+            . '.wta-itin .wta-dest-grid[data-aspect="1-1"]{--wta-dest-ratio:1/1}'
+            . '.wta-itin .wta-dest-grid[data-aspect="16-9"]{--wta-dest-ratio:16/9}'
             /* The image is what moves, so the crop stays inside the tile. */
             . '.wta-itin .wta-dest-img{width:100%;height:100%;object-fit:cover;transform:scale(1);transition:transform .5s ease}'
             . '.wta-itin .wta-dest-link:hover .wta-dest-img,'

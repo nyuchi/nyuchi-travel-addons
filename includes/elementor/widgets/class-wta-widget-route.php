@@ -16,6 +16,8 @@ if (!defined('ABSPATH')) {
 
 class WTA_Widget_Route extends \Elementor\Widget_Base {
 
+    use WTA_Widget_Styles;
+
     /** The viewBox the coordinate percentages are scaled into. */
     const VIEW_W = 1000;
     const VIEW_H = 750;
@@ -73,6 +75,17 @@ class WTA_Widget_Route extends \Elementor\Widget_Base {
         ));
 
         $this->end_controls_section();
+
+        /* ---------------------------------------------------------- style */
+
+        $this->wta_box_style_section('route', 'Map panel', '.wta-mapwrap');
+
+        $this->wta_text_style_section('route', 'Stop text', array(
+            'name'    => array('label' => 'Stop name', 'selector' => '.wta-nm', 'spacing' => true),
+            'num'     => array('label' => 'Stop number', 'selector' => '.wta-n'),
+            'eyebrow' => array('label' => 'Eyebrow',   'selector' => '.wta-eyebrow'),
+        ));
+
     }
 
     /**

@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility guards. By Nyuchi Web Services.
- * Version:     1.5.0
+ * Version:     1.6.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.5.0');
+define('WTA_VERSION', '1.6.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -39,6 +39,7 @@ require_once WTA_DIR . 'includes/class-wta-term-media.php';
 require_once WTA_DIR . 'includes/class-wta-term-fields.php';
 require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
+require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-rest.php';
 require_once WTA_DIR . 'includes/class-wta-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-admin.php';
@@ -117,6 +118,11 @@ final class WP_Travel_Addons {
                 'class'  => 'WTA_Taxonomy_Audit',
                 'label'  => 'Classification diagnostics',
                 'detail' => 'Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates.',
+            ),
+            'travel_abilities' => array(
+                'class'  => 'WTA_Travel_Abilities',
+                'label'  => 'WP Travel abilities',
+                'detail' => 'Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies and diagnostics. Reads WP Travel\'s own storage rather than mirroring it, and reports rather than fails when WP Travel is absent.',
             ),
             'compat' => array(
                 'class'  => 'WTA_Compat',

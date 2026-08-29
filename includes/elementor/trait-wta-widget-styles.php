@@ -64,6 +64,14 @@ trait WTA_Widget_Styles {
 
         $this->start_controls_section($id . '_media_style', $section);
 
+        $this->add_control($id . '_size', array(
+            'label'       => 'Image size to load',
+            'type'        => \Elementor\Controls_Manager::SELECT,
+            'default'     => !empty($args['size_default']) ? $args['size_default'] : 'large',
+            'options'     => self::wta_image_size_options(),
+            'description' => 'Which file to fetch, as opposed to how it is displayed. A grid of small cards asking for the full-size image is the usual cause of a slow page.',
+        ));
+
         $this->add_responsive_control($id . '_ratio', array(
             'label'       => 'Aspect ratio',
             'type'        => \Elementor\Controls_Manager::SELECT,
@@ -320,5 +328,59 @@ trait WTA_Widget_Styles {
                 '{{WRAPPER}} ' . $selector => 'text-align: {{VALUE}};',
             ),
         ));
+    }
+
+    /**
+     * The image size this widget was told to load.
+     *
+     * Falls back rather than trusting the setting blindly: a widget placed
+     * before this control existed has no value stored, and a size removed from
+     * the theme since would otherwise resolve to nothing at all.
+     *
+     * @param string $id       Section id the control was registered under.
+     * @param array  $settings Widget settings.
+     * @param string $fallback Size to use when the setting is unusable.
+     */
+    protected function wta_image_size($id, $settings, $fallback = 'large') {
+        $size = isset($settings[$id . '_size']) ? $settings[$id . '_size'] : '';
+
+        if (!is_string($size) || '' === $size) {
+            return $fallback;
+        }
+
+        if ('full' !== $size && !in_array($size, get_intermediate_image_sizes(), true)) {
+            return $fallback;
+        }
+
+        return $size;
+    }
+
+    /**
+     * The image sizes this site offers, for a control that picks one.
+     *
+     * Labelled with their dimensions because "medium" tells nobody anything,
+     * and a person choosing a size for a card wants to know whether it is
+     * bigger than the card.
+     */
+    protected static function wta_image_size_options() {
+        $options = array();
+
+        foreach (get_intermediate_image_sizes() as $size) {
+            $label = ucwords(str_replace(array('-', '_'), ' ', $size));
+            $w     = (int) get_option($size . '_size_w');
+            $h     = (int) get_option($size . '_size_h');
+
+            // Sizes registered in code rather than in options carry their
+            // dimensions elsewhere; without them the plain name still works.
+            if ($w || $h) {
+                $label .= sprintf(' (%s x %s)', $w ? $w : 'auto', $h ? $h : 'auto');
+            }
+
+            $options[$size] = $label;
+        }
+
+        $options['full'] = 'Full size (original)';
+
+        return $options;
     }
 }

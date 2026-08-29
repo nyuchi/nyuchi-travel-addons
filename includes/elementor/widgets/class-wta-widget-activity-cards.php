@@ -229,14 +229,14 @@ class WTA_Widget_Activity_Cards extends \Elementor\Widget_Base {
         return (string) WTA_Term_Fields::best_months_label($term_id);
     }
 
-    protected function image_url($term_id) {
+    protected function image_url($term_id, $size = 'large') {
         if (class_exists('WTA_Term_Media')) {
-            return (string) WTA_Term_Media::get_image_url($term_id, 'large');
+            return (string) WTA_Term_Media::get_image_url($term_id, $size);
         }
 
         $id = (int) get_term_meta($term_id, 'wp_travel_trip_type_image_id', true);
 
-        return $id ? (string) wp_get_attachment_image_url($id, 'large') : '';
+        return $id ? (string) wp_get_attachment_image_url($id, $size) : '';
     }
 
     protected function render() {
@@ -274,7 +274,7 @@ class WTA_Widget_Activity_Cards extends \Elementor\Widget_Base {
                 $link = '#';
             }
 
-            $img        = $this->image_url($term->term_id);
+            $img        = $this->image_url($term->term_id, $this->wta_image_size('act', $s));
             $duration   = 'yes' === $s['show_duration'] ? $this->field($term->term_id, 'duration') : '';
             $difficulty = 'yes' === $s['show_difficulty'] ? $this->field($term->term_id, 'difficulty') : '';
             $months     = 'yes' === $s['show_months'] ? $this->months($term->term_id) : '';

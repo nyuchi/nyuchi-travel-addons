@@ -101,7 +101,7 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
             $legs = array(array('title' => '', 'accent' => 'forest'));
         }
 
-        $image = get_the_post_thumbnail_url(get_the_ID(), 'large');
+        $image = get_the_post_thumbnail_url(get_the_ID(), $this->wta_image_size('hero', $settings));
 
         echo '<div class="wta-hero-art" aria-hidden="true"><div class="wta-triptych" data-panels="' . count($legs) . '">';
 

@@ -358,7 +358,7 @@ class WTA_Widget_Destination_Grid extends \Elementor\Widget_Base {
                 continue;
             }
 
-            $image = $this->term_image_url($term->term_id);
+            $image = $this->term_image_url($term->term_id, $this->wta_image_size('dest', $s));
             $desc  = 'yes' === $s['show_description'] ? $this->term_summary($term->term_id) : '';
 
             echo '<article class="wta-dest-tile">';

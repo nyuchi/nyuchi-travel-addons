@@ -376,7 +376,7 @@ class WTA_Widget_Gallery extends \Elementor\Widget_Base {
                 $alt = $trip_title;
             }
 
-            $image = wp_get_attachment_image($id, 'large', false, array(
+            $image = wp_get_attachment_image($id, $this->wta_image_size('gal', $s), false, array(
                 'class'   => 'wta-gallery-img',
                 'loading' => 'lazy',
                 'alt'     => $alt,

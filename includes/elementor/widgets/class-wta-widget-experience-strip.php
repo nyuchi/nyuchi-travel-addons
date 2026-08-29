@@ -140,7 +140,8 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
         /* ---------------------------------------------------------- style */
 
         $this->wta_media_style_section(
-            'exp', 'Image', '.wta-exp-media', '.wta-exp-img', array('hover' => '.wta-exp-item')
+            'exp', 'Image', '.wta-exp-media', '.wta-exp-img',
+            array('hover' => '.wta-exp-item', 'size_default' => 'medium_large')
         );
 
         $this->wta_box_style_section(
@@ -431,7 +432,7 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
                 continue;
             }
 
-            $image = $this->term_image_url($term->term_id);
+            $image = $this->term_image_url($term->term_id, $this->wta_image_size('exp', $s, 'medium_large'));
             $desc  = 'yes' === $s['show_description'] ? $this->term_summary($term->term_id) : '';
 
             echo '<article class="wta-exp-item">';

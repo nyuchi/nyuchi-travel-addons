@@ -549,7 +549,7 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
             if (has_post_thumbnail($id)) {
                 // The wrapper clips; the image fills it. Scaling happens here,
                 // not on a permanently over-zoomed rest state.
-                echo get_the_post_thumbnail($id, 'large', array(
+                echo get_the_post_thumbnail($id, $this->wta_image_size('card', $s), array(
                     'class'   => 'wta-card-img',
                     'loading' => 'lazy',
                     'alt'     => esc_attr(get_the_title($id)),

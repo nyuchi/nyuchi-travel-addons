@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,19 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.7.0 =
+* Column counts are set per device. They were fixed at whatever the desktop
+  control said, and the tablet and phone counts were hardcoded in the
+  stylesheet, out of reach of anyone editing the page. A four-column grid that
+  stays four columns on a phone gives each card about eighty pixels.
+* Four grids had no stylesheet rules at all - activity cards, destinations,
+  gallery and the experience strip all rendered unstyled. They now share the
+  same grid model as the trip cards.
+* Gallery spacing is set per device for the same reason.
+* Columns are driven by a custom property rather than a data attribute. An
+  attribute carries one value for every screen, which is why the breakpoints
+  had to be written into the stylesheet in the first place.
 
 = 1.6.0 =
 * Expose WP Travel and WP Travel Pro through the Abilities API: trips, pricing,

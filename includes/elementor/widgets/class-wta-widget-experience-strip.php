@@ -100,12 +100,18 @@ class WTA_Widget_Experience_Strip extends \Elementor\Widget_Base {
             'description' => 'A strip suits a row inside a longer page; a grid suits the whole page being the list.',
         ));
 
-        $this->add_control('columns', array(
+        $this->add_responsive_control('columns', array(
             'label'     => 'Columns',
             'type'      => \Elementor\Controls_Manager::SELECT,
             'default'   => '4',
             'options'   => array('2' => '2', '3' => '3', '4' => '4'),
             'condition' => array('layout' => 'grid'),
+            'tablet_default' => '2',
+            'mobile_default' => '1',
+            'description'    => 'Set per device. A four-column grid that stays four columns on a phone gives each card about eighty pixels, so the tablet and mobile counts are the ones that matter most.',
+            'selectors'      => array(
+                '{{WRAPPER}} .wta-exp-row' => '--wta-cols: {{VALUE}};',
+            ),
         ));
 
         $this->add_control('scope_to_archive', array(

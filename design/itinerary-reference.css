@@ -317,7 +317,7 @@
 
 /* ── FIELD NOTES ────────────────────────────────────────────────────────── */
 .wta-notes{background:var(--bleach)}
-.wta-notegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--rule)}
+.wta-notegrid{display:grid;grid-template-columns:repeat(var(--wta-cols,3),minmax(0,1fr));gap:var(--wta-gap,2px);background:var(--rule)}
 .wta-note{background:var(--bleach);padding:22px}
 .wta-note h4{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dust-deep);margin:0 0 9px}
 .wta-note p{margin:0;font-size:14px;color:rgba(20,17,14,.8)}
@@ -326,7 +326,7 @@
 @media (max-width:900px){
   .wta-hero-grid,.wta-mapwrap,.wta-calcgrid,.wta-verdict{grid-template-columns:1fr}
   .wta-verdict-month{font-size:52px}
-  .wta-notegrid,.wta-options{grid-template-columns:1fr}
+  .wta-options{grid-template-columns:1fr}
   .wta-leghead{grid-template-columns:auto 1fr}
   .wta-legmark{display:none}
   .wta-matrix{grid-template-columns:1fr;gap:6px}
@@ -343,15 +343,25 @@
  * every thumbnail unpredictably and does not actually clip, because overflow
  * has no effect on a replaced element.
  */
-.wta-cards-grid{display:grid;gap:clamp(14px,2vw,22px)}
-.wta-cards-grid[data-cols="1"]{grid-template-columns:minmax(0,1fr)}
-.wta-cards-grid[data-cols="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
-.wta-cards-grid[data-cols="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
-.wta-cards-grid[data-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media (max-width:1024px){
-  .wta-cards-grid[data-cols="3"],.wta-cards-grid[data-cols="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Column count is a custom property, not a data attribute.
+ *
+ * An attribute carries one value for every screen, so the tablet and phone
+ * counts had to be hardcoded here in media queries - which put them out of
+ * reach of anyone editing the page. A property can be set once per breakpoint
+ * by an Elementor responsive control, so the editor owns all three.
+ *
+ * The fallbacks are what an old placement renders with, saved before the
+ * control existed. */
+.wta-cards-grid,.wta-acts-grid,.wta-dest-grid,.wta-gallery-grid,.wta-exp-row{
+  display:grid;
+  grid-template-columns:repeat(var(--wta-cols,3),minmax(0,1fr));
+  gap:var(--wta-gap,clamp(14px,2vw,22px));
+  min-width:0;
 }
-@media (max-width:640px){ .wta-cards-grid{grid-template-columns:minmax(0,1fr)} }
+.wta-acts-grid>*,.wta-dest-grid>*,.wta-gallery-grid>*,.wta-exp-row>*{min-width:0}
+
+/* A single-column strip is a row of one thing per line, not a grid of one. */
+.wta-exp-row[data-layout="list"]{grid-template-columns:minmax(0,1fr)}
 
 .wta-card{min-width:0;border-radius:10px;overflow:hidden;background:#fff;border:1px solid var(--rule)}
 .wta-card-link{display:block;color:inherit;text-decoration:none;height:100%}

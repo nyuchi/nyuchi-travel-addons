@@ -139,33 +139,6 @@
       "isInner": false
     },
     {
-      "id": "7ad81535",
-      "elType": "section",
-      "settings": {
-        "layout": "full_width",
-        "gap": "no"
-      },
-      "elements": [
-        {
-          "id": "a1a92300",
-          "elType": "column",
-          "settings": {
-            "_column_size": 100
-          },
-          "elements": [
-            {
-              "id": "1aad4ef7",
-              "elType": "widget",
-              "widgetType": "wta-cost",
-              "settings": {},
-              "elements": []
-            }
-          ]
-        }
-      ],
-      "isInner": false
-    },
-    {
       "id": "68a5a9d4",
       "elType": "section",
       "settings": {

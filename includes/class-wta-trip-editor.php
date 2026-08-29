@@ -37,7 +37,7 @@ class WTA_Trip_Editor {
     /* ---------------------------------------------------------------- groups */
 
     /**
-     * The eight panels, in schema order.
+     * The seven panels, in schema order.
      *
      * Derived from WTA_Itinerary_Schema::fields() rather than restated, so the
      * meta key and the sanitiser can never fall out of step with the schema.
@@ -53,7 +53,6 @@ class WTA_Trip_Editor {
             'route'       => 'Route',
             'seasonality' => 'Seasonality',
             'options'     => 'Choices',
-            'cost'        => 'Cost',
             'checklist'   => 'Booking order',
             'notes'       => 'Field notes',
         );
@@ -719,105 +718,6 @@ class WTA_Trip_Editor {
         });
     }
 
-    protected function panel_cost($post_id) {
-        $cost = $this->value($post_id, WTA_Itinerary_Schema::COST);
-
-        $this->section('Estimator inputs', 'Every figure is per person unless its label says otherwise.');
-
-        $this->field(array(
-            'name'  => 'wta[cost][currency]',
-            'label' => 'Currency',
-            'value' => self::pick($cost, 'currency', 'USD'),
-            'hint'  => 'Three-letter code.',
-        ));
-
-        $this->field(array(
-            'type'  => 'number',
-            'name'  => 'wta[cost][fees]',
-            'label' => 'Park and conservation fees',
-            'value' => self::pick($cost, 'fees', ''),
-            'min'   => '0',
-            'step'  => 'any',
-        ));
-
-        $this->field(array(
-            'type'  => 'textarea',
-            'name'  => 'wta[cost][note]',
-            'label' => 'Note',
-            'value' => self::pick($cost, 'note'),
-            'class' => 'is-wide',
-        ));
-
-        $this->subsection('Comfort tiers', 'Land cost and flights, per tier.');
-
-        $this->repeater('wta[cost][tiers]', self::rows($cost, 'tiers'), 'Add tier', function ($row, $prefix) {
-            $this->field(array(
-                'name'  => $prefix . '[name]',
-                'key'   => '[name]',
-                'label' => 'Name',
-                'value' => self::pick($row, 'name'),
-            ));
-
-            $this->field(array(
-                'type'  => 'number',
-                'name'  => $prefix . '[land]',
-                'key'   => '[land]',
-                'label' => 'Land',
-                'value' => self::pick($row, 'land', ''),
-                'min'   => '0',
-                'step'  => 'any',
-            ));
-
-            $this->field(array(
-                'type'  => 'number',
-                'name'  => $prefix . '[flights]',
-                'key'   => '[flights]',
-                'label' => 'Flights',
-                'value' => self::pick($row, 'flights', ''),
-                'min'   => '0',
-                'step'  => 'any',
-            ));
-        });
-
-        $this->subsection('Add-ons', 'Each add-on is a set of priced choices, rendered as one segmented control.');
-
-        $this->repeater('wta[cost][addons]', self::rows($cost, 'addons'), 'Add add-on', function ($row, $prefix) {
-            $this->field(array(
-                'name'  => $prefix . '[label]',
-                'key'   => '[label]',
-                'label' => 'Label',
-                'value' => self::pick($row, 'label'),
-            ));
-
-            // Nested repeater: its base is the parent row's path, so the JS has
-            // to renumber both levels when a row is added or removed.
-            $this->repeater(
-                $prefix . '[choices]',
-                self::rows($row, 'choices'),
-                'Add choice',
-                function ($choice, $choice_prefix) {
-                    $this->field(array(
-                        'name'  => $choice_prefix . '[name]',
-                        'key'   => '[name]',
-                        'label' => 'Choice',
-                        'value' => self::pick($choice, 'name'),
-                    ));
-
-                    $this->field(array(
-                        'type'  => 'number',
-                        'name'  => $choice_prefix . '[price]',
-                        'key'   => '[price]',
-                        'label' => 'Price',
-                        'value' => self::pick($choice, 'price', ''),
-                        'min'   => '0',
-                        'step'  => 'any',
-                    ));
-                },
-                '[choices]'
-            );
-        });
-    }
-
     protected function panel_checklist($post_id) {
         $this->section('What to book, in the order it must be booked', 'Permits first, then flights, then the rest.');
 
@@ -878,7 +778,7 @@ class WTA_Trip_Editor {
      * is never submitted, and the JS renumbers every name after a clone, so the
      * placeholder never reaches $_POST.
      *
-     * @param string   $base      Full name path, e.g. wta[cost][addons].
+     * @param string   $base      Full name path, e.g. wta[hero][stats].
      * @param array    $rows      Stored rows.
      * @param string   $add_label Button text.
      * @param callable $callback  Renders one row: ($row, $prefix).

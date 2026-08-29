@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.7.0
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,20 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.8.0 =
+* The wta_cost block is gone: the meta key, its REST field, the estimator
+  widget, the trip-editor panel and the front-end arithmetic. WP Travel already
+  owns pricing in its own pricing tables, and WP Travel Pro owns deposit terms.
+  A third cost model in this plugin's meta was a second home for a number that
+  can only have one, and two homes for one price drift apart.
+* This plugin exists to add the trip data WP Travel does not hold. Pricing is
+  not that data, so it does not belong here.
+* Nothing is migrated because nothing was stored. The block was empty on every
+  trip it was checked against, so there is no data to move and no shim to keep.
+* The Elementor template no longer carries a cost section, and the diagnostics
+  no longer report a wta_cost block shadowing WP Travel's pricing table, because
+  there is no longer a block to shadow it with.
 
 = 1.7.0 =
 * Column counts are set per device. They were fixed at whatever the desktop

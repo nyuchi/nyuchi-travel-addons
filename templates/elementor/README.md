@@ -1,8 +1,8 @@
 # Elementor template
 
-`single-itinerary.json` is an Elementor **section** template containing the eight
+`single-itinerary.json` is an Elementor **section** template containing the seven
 itinerary widgets in reading order: hero, seasonality, route, legs, options,
-cost, checklist, notes. Each widget sits in its own full-width section with no
+checklist, notes. Each widget sits in its own full-width section with no
 column gap, so the widgets' own full-bleed backgrounds run edge to edge.
 
 ## Importing

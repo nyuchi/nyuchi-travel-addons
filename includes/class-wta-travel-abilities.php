@@ -68,7 +68,7 @@ class WTA_Travel_Abilities {
      * this trip" versus "what does WP Travel itself hold" — and registering the
      * same category slug twice is a collision rather than a merge.
      */
-    const CATEGORY = 'nyuchi-wp-travel';
+    const CATEGORY = 'nyuchi-travel';
 
     /** Ability name prefix. Shared with WTA_Abilities so a client sees one set. */
     const NS = 'nyuchi-travel/';
@@ -118,22 +118,20 @@ class WTA_Travel_Abilities {
     public function __construct() {
         // Categories must exist before abilities reference them, which is why
         // the API fires two separate actions rather than one.
-        add_action('wp_abilities_api_categories_init', array($this, 'register_categories'));
         add_action('wp_abilities_api_init', array($this, 'register_abilities'));
     }
 
     /* ---------------------------------------------------------- registration */
 
-    public function register_categories() {
-        if (!function_exists('wp_register_ability_category')) {
-            return;
-        }
-
-        wp_register_ability_category(self::CATEGORY, array(
-            'label'       => 'WP Travel',
-            'description' => 'Read and write WP Travel\'s own trip data: trips as posts, their pricing and departure dates (which live in custom database tables rather than post meta), their taxonomy terms, the bookings and enquiries attached to them, and a diagnostic that reports what this install actually has before anything else is called.',
-        ));
-    }
+    /**
+     * No category registration here on purpose.
+     *
+     * These abilities are named nyuchi-travel/*, and WTA_Abilities already
+     * registers that category. Registering it a second time either does
+     * nothing or overwrites the label the sibling set, and an earlier version
+     * of this file declared a third category that no ability ever referenced -
+     * a group that could only ever render empty.
+     */
 
     public function register_abilities() {
         if (!function_exists('wp_register_ability')) {

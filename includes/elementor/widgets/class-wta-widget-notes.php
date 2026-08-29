@@ -60,7 +60,7 @@ class WTA_Widget_Notes extends \Elementor\Widget_Base {
             'default' => 'The practical detail that decides whether a trip runs smoothly.',
         ));
 
-        $this->add_control('columns', array(
+        $this->add_responsive_control('columns', array(
             'label'   => 'Columns',
             'type'    => \Elementor\Controls_Manager::SELECT,
             'default' => '3',
@@ -68,6 +68,12 @@ class WTA_Widget_Notes extends \Elementor\Widget_Base {
                 '2' => '2',
                 '3' => '3',
                 '4' => '4',
+            ),
+            'tablet_default' => '2',
+            'mobile_default' => '1',
+            'description'    => 'Set per device. A four-column grid that stays four columns on a phone gives each card about eighty pixels, so the tablet and mobile counts are the ones that matter most.',
+            'selectors'      => array(
+                '{{WRAPPER}} .wta-notegrid' => '--wta-cols: {{VALUE}};',
             ),
         ));
 

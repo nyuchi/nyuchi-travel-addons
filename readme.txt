@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.4.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,17 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.5.0 =
+* Widgets can choose which image size to load. Every widget asked for 'large'
+  and nothing offered a way to change it, so a grid of small cards fetched the
+  same file as a full-width hero.
+* The control lists the sizes the site actually registers and labels each with
+  its dimensions, because "medium" does not tell anyone whether it is bigger
+  than the card it is going into.
+* The default for each widget is whatever that widget already requested, so an
+  existing placement renders exactly as it did before until the size is
+  changed deliberately.
 
 = 1.4.0 =
 * Style controls on all thirteen widgets. Every widget shipped with its

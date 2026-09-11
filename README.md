@@ -41,12 +41,12 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key | Module | What it does |
-| --- | --- | --- |
-| `trip_meta` | Trip REST schema | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API. |
-| `term_status` | Term publication state | Adds live/draft status to taxonomy terms so a term can exist before it is public. |
-| `audit` | Classification diagnostics | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates. |
-| `compat` | Compatibility guards | Works around known defects in WP Travel companion plugins. |
+| Key           | Module                     | What it does                                                                               |
+| ------------- | -------------------------- | ------------------------------------------------------------------------------------------ |
+| `trip_meta`   | Trip REST schema           | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API.           |
+| `term_status` | Term publication state     | Adds live/draft status to taxonomy terms so a term can exist before it is public.          |
+| `audit`       | Classification diagnostics | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates. |
+| `compat`      | Compatibility guards       | Works around known defects in WP Travel companion plugins.                                 |
 
 Two further components are always loaded: a REST module and an admin module.
 Both read module state rather than adding behaviour of their own.
@@ -54,13 +54,13 @@ Both read module state rather than adding behaviour of their own.
 Post type and taxonomy names are held in one place, `WTA_Trip`, so an upstream
 schema change is a one-file edit rather than a hunt:
 
-| Name | Slug | Filter |
-| --- | --- | --- |
-| Trips | `itineraries` | `wta_trip_post_type` |
+| Name         | Slug               | Filter                |
+| ------------ | ------------------ | --------------------- |
+| Trips        | `itineraries`      | `wta_trip_post_type`  |
 | Destinations | `travel_locations` | `wta_trip_taxonomies` |
-| Activities | `activity` | `wta_trip_taxonomies` |
-| Trip Types | `itinerary_types` | `wta_trip_taxonomies` |
-| Keywords | `travel_keywords` | `wta_trip_taxonomies` |
+| Activities   | `activity`         | `wta_trip_taxonomies` |
+| Trip Types   | `itinerary_types`  | `wta_trip_taxonomies` |
+| Keywords     | `travel_keywords`  | `wta_trip_taxonomies` |
 
 ## The trip REST schema
 
@@ -207,32 +207,32 @@ upstream fix lands.
 The plugin extends the core REST endpoints for the trip post type and its
 taxonomies rather than introducing a parallel API.
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `GET` | `/wp-json/wp/v2/itineraries` | Trip collection, each item carrying `meta` and `itinerary_days`. |
-| `GET` | `/wp-json/wp/v2/itineraries/<id>` | Single trip. |
-| `POST` | `/wp-json/wp/v2/itineraries/<id>` | Write trip meta and `itinerary_days`. Requires `edit_post`. |
-| `GET` | `/wp-json/wp/v2/travel_locations` | Destination terms, each carrying `wta_status`. Drafts are omitted for unauthenticated callers. |
-| `POST` | `/wp-json/wp/v2/travel_locations/<id>` | Write `wta_status`. Requires `manage_categories`. |
+| Method | Route                                  | Purpose                                                                                        |
+| ------ | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `GET`  | `/wp-json/wp/v2/itineraries`           | Trip collection, each item carrying `meta` and `itinerary_days`.                               |
+| `GET`  | `/wp-json/wp/v2/itineraries/<id>`      | Single trip.                                                                                   |
+| `POST` | `/wp-json/wp/v2/itineraries/<id>`      | Write trip meta and `itinerary_days`. Requires `edit_post`.                                    |
+| `GET`  | `/wp-json/wp/v2/travel_locations`      | Destination terms, each carrying `wta_status`. Drafts are omitted for unauthenticated callers. |
+| `POST` | `/wp-json/wp/v2/travel_locations/<id>` | Write `wta_status`. Requires `manage_categories`.                                              |
 
 The same term routes apply to `activity`, `itinerary_types` and
 `travel_keywords`, wherever WP Travel exposes the taxonomy in REST.
 
 Fields added to those resources:
 
-| Field | Resource | Type | Notes |
-| --- | --- | --- | --- |
-| `meta` | trip | object | Present only because the module adds `custom-fields` support. |
-| `itinerary_days` | trip | array of objects | `label`, `title`, `desc`, `date`, `time`. |
-| `wta_status` | term | string | `live` or `draft`. |
+| Field            | Resource | Type             | Notes                                                         |
+| ---------------- | -------- | ---------------- | ------------------------------------------------------------- |
+| `meta`           | trip     | object           | Present only because the module adds `custom-fields` support. |
+| `itinerary_days` | trip     | array of objects | `label`, `title`, `desc`, `date`, `time`.                     |
+| `wta_status`     | term     | string           | `live` or `draft`.                                            |
 
 Error responses raised by the plugin:
 
-| Code | Status | Cause |
-| --- | --- | --- |
-| `wta_forbidden` | 403 | Caller lacks `edit_post` on the trip, or `manage_categories` for a term state change. |
-| `wta_bad_format` | 400 | `itinerary_days` was not an array. |
-| `wta_bad_status` | 400 | `wta_status` was neither `live` nor `draft`. |
+| Code             | Status | Cause                                                                                 |
+| ---------------- | ------ | ------------------------------------------------------------------------------------- |
+| `wta_forbidden`  | 403    | Caller lacks `edit_post` on the trip, or `manage_categories` for a term state change. |
+| `wta_bad_format` | 400    | `itinerary_days` was not an array.                                                    |
+| `wta_bad_status` | 400    | `wta_status` was neither `live` nor `draft`.                                          |
 
 Reading a trip:
 
@@ -260,21 +260,21 @@ curl -s -X POST "https://example.com/wp-json/wp/v2/travel_locations/45" \
 
 ## Filters
 
-| Filter | Returns | Purpose |
-| --- | --- | --- |
-| `wta_trip_post_type` | string | The trip post type slug. Default `itineraries`. The slug has differed between WP Travel versions. |
-| `wta_trip_taxonomies` | array | Taxonomy slug to human label. Drives both term publication state and the audit. |
-| `wta_trip_meta_fields` | array | The `text`, `html` and `protected` field groups registered for REST. |
+| Filter                 | Returns | Purpose                                                                                           |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `wta_trip_post_type`   | string  | The trip post type slug. Default `itineraries`. The slug has differed between WP Travel versions. |
+| `wta_trip_taxonomies`  | array   | Taxonomy slug to human label. Drives both term publication state and the audit.                   |
+| `wta_trip_meta_fields` | array   | The `text`, `html` and `protected` field groups registered for REST.                              |
 
 Adding a key to `wta_trip_meta_fields` publishes it. See the warning above.
 
 Options the plugin owns:
 
-| Option | Purpose |
-| --- | --- |
+| Option                                                                                    | Purpose                                         |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | `wta_module_trip_meta`, `wta_module_term_status`, `wta_module_audit`, `wta_module_compat` | Per-module switches, seeded to 1 on activation. |
-| `wta_status_taxonomies` | Taxonomies that carry publication state. |
-| `wta_version` | Installed version. |
+| `wta_status_taxonomies`                                                                   | Taxonomies that carry publication state.        |
+| `wta_version`                                                                             | Installed version.                              |
 
 ## Installation
 

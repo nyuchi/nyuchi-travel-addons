@@ -1,13 +1,27 @@
-# WP Travel Addons
+# Nyuchi Travel Addons
 
-By Nyuchi Web Services. Version 1.0.0.
+> Trip tools for WP Travel — a REST-accessible trip schema, an itinerary model
+> WP Travel does not have, publication state for taxonomy terms, and Elementor
+> widgets to render the lot.
+
+[![Lint](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/lint.yml/badge.svg)](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/lint.yml)
+[![CI](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/ci.yml/badge.svg)](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/ci.yml)
+[![License: GPL v2 or later](https://img.shields.io/badge/License-GPL_v2_or_later-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
+![WordPress](https://img.shields.io/badge/WordPress-5.9%2B-21759B?style=flat-square&logo=wordpress&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?style=flat-square&logo=php&logoColor=white)
+
+**Version:** 1.8.0 | **Requires:** WordPress 5.9+, PHP 7.4+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
+
+---
 
 ## What it is
 
-WP Travel Addons extends **WP Travel** (wptravel.io, by WEN Solutions) with four
-things that plugin does not provide: a REST-accessible trip schema, publication
-state for taxonomy terms, classification diagnostics, and compatibility guards
-for known defects in WP Travel companion plugins.
+WP Travel Addons extends **WP Travel** (wptravel.io, by WEN Solutions) with
+things that plugin does not provide: a REST-accessible trip schema, a richer
+itinerary model, publication state for taxonomy terms, structured destination
+and activity metadata, classification diagnostics, Elementor widgets, an
+Abilities API surface, and compatibility guards for known defects in WP Travel
+companion plugins.
 
 ## What it is not
 
@@ -33,7 +47,26 @@ The term publication state module hooks `wpseo_robots_array`, which is a Yoast
 SEO filter. Without Yoast that particular safety net is absent; the 404 on draft
 term archives still applies.
 
-## The four modules
+## Install
+
+Copy the plugin directory to `wp-content/plugins/wp-travel-addons` and activate
+it from the Plugins screen, or install the zip from
+[Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases) through
+**Plugins → Add New → Upload Plugin**.
+
+Activate WP Travel first. The plugin loads on `plugins_loaded` at priority 20
+and every module checks that the trip post type exists before registering
+anything, but leaving WP Travel inactive simply means nothing happens.
+
+Activation seeds every module option to on, seeds `wta_status_taxonomies` from
+the WP Travel taxonomy list, records the version, and flushes rewrite rules.
+The flush is necessary because term publication state changes what is publicly
+queryable.
+
+The plugin wires GitHub Releases into WordPress's update machinery, so later
+versions show up as a normal update notice.
+
+## The modules
 
 Each module is switchable independently through the option
 `wta_module_<key>`, which defaults to on. The point of the plugin is to sit
@@ -41,15 +74,22 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key           | Module                     | What it does                                                                               |
-| ------------- | -------------------------- | ------------------------------------------------------------------------------------------ |
-| `trip_meta`   | Trip REST schema           | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API.           |
-| `term_status` | Term publication state     | Adds live/draft status to taxonomy terms so a term can exist before it is public.          |
-| `audit`       | Classification diagnostics | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates. |
-| `compat`      | Compatibility guards       | Works around known defects in WP Travel companion plugins.                                 |
+| Key                | Module                          | What it does                                                                                                      |
+| ------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                   |
+| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes |
+| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client          |
+| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                      |
+| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank           |
+| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                    |
+| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                  |
+| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                         |
+| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics        |
+| `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                         |
 
-Two further components are always loaded: a REST module and an admin module.
-Both read module state rather than adding behaviour of their own.
+Three further components are always loaded: a REST module, an Abilities module
+and an admin module. They read module state rather than adding behaviour of
+their own.
 
 Post type and taxonomy names are held in one place, `WTA_Trip`, so an upstream
 schema change is a one-file edit rather than a hunt:
@@ -158,6 +198,8 @@ renders. Writing only the scalars leaves the trip meta strip showing stale
 values, so the module watches `added_post_meta` and `updated_post_meta` for
 either scalar and rewrites the mirror from both.
 
+Pricing is left to WP Travel. The plugin does not keep a cost field of its own.
+
 ## Term publication state
 
 WordPress has no draft state for terms. A term exists and is public the moment
@@ -189,50 +231,50 @@ gain a State column immediately after the name. Saving the field requires
 `wta_status_taxonomies`, which is seeded on activation from the four WP Travel
 taxonomies.
 
-## Classification diagnostics
+## Elementor widgets
 
-The audit module reports on the shape of the trip taxonomies rather than
-changing them: flat hierarchies, empty terms, terms that do not segment the
-catalogue, and terms duplicated across taxonomies. It is read-only advice about
-where the classification has drifted.
+The `elementor` module registers one widget per itinerary section, so a single
+trip template can be composed and edited in Elementor rather than in a theme
+file: hero, legs, route, seasonality, options, checklist, notes, gallery,
+trip card, destination grid, activity cards and experience strip. Each widget
+carries style and responsive controls, including per-device grid columns and a
+choice of which registered image size to load.
 
-## The compatibility guard
-
-The compat module works around known defects in WP Travel companion plugins. It
-is switchable like the others, so a workaround can be dropped as soon as the
-upstream fix lands.
+Two Elementor dynamic tags are also registered, for term text and term images,
+and `templates/elementor/single-itinerary.json` is an importable template that
+assembles the widgets into a working trip page.
 
 ## REST API reference
 
 The plugin extends the core REST endpoints for the trip post type and its
 taxonomies rather than introducing a parallel API.
 
-| Method | Route                                  | Purpose                                                                                        |
-| ------ | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `GET`  | `/wp-json/wp/v2/itineraries`           | Trip collection, each item carrying `meta` and `itinerary_days`.                               |
-| `GET`  | `/wp-json/wp/v2/itineraries/<id>`      | Single trip.                                                                                   |
-| `POST` | `/wp-json/wp/v2/itineraries/<id>`      | Write trip meta and `itinerary_days`. Requires `edit_post`.                                    |
-| `GET`  | `/wp-json/wp/v2/travel_locations`      | Destination terms, each carrying `wta_status`. Drafts are omitted for unauthenticated callers. |
-| `POST` | `/wp-json/wp/v2/travel_locations/<id>` | Write `wta_status`. Requires `manage_categories`.                                              |
+| Method | Route                                  | Purpose                                                                                       |
+| ------ | -------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `GET`  | `/wp-json/wp/v2/itineraries`           | Trip collection, each item carrying `meta` and `itinerary_days`                               |
+| `GET`  | `/wp-json/wp/v2/itineraries/<id>`      | Single trip                                                                                   |
+| `POST` | `/wp-json/wp/v2/itineraries/<id>`      | Write trip meta and `itinerary_days`. Requires `edit_post`                                    |
+| `GET`  | `/wp-json/wp/v2/travel_locations`      | Destination terms, each carrying `wta_status`. Drafts are omitted for unauthenticated callers |
+| `POST` | `/wp-json/wp/v2/travel_locations/<id>` | Write `wta_status`. Requires `manage_categories`                                              |
 
 The same term routes apply to `activity`, `itinerary_types` and
 `travel_keywords`, wherever WP Travel exposes the taxonomy in REST.
 
 Fields added to those resources:
 
-| Field            | Resource | Type             | Notes                                                         |
-| ---------------- | -------- | ---------------- | ------------------------------------------------------------- |
-| `meta`           | trip     | object           | Present only because the module adds `custom-fields` support. |
-| `itinerary_days` | trip     | array of objects | `label`, `title`, `desc`, `date`, `time`.                     |
-| `wta_status`     | term     | string           | `live` or `draft`.                                            |
+| Field            | Resource | Type             | Notes                                                        |
+| ---------------- | -------- | ---------------- | ------------------------------------------------------------ |
+| `meta`           | trip     | object           | Present only because the module adds `custom-fields` support |
+| `itinerary_days` | trip     | array of objects | `label`, `title`, `desc`, `date`, `time`                     |
+| `wta_status`     | term     | string           | `live` or `draft`                                            |
 
 Error responses raised by the plugin:
 
-| Code             | Status | Cause                                                                                 |
-| ---------------- | ------ | ------------------------------------------------------------------------------------- |
-| `wta_forbidden`  | 403    | Caller lacks `edit_post` on the trip, or `manage_categories` for a term state change. |
-| `wta_bad_format` | 400    | `itinerary_days` was not an array.                                                    |
-| `wta_bad_status` | 400    | `wta_status` was neither `live` nor `draft`.                                          |
+| Code             | Status | Cause                                                                                |
+| ---------------- | ------ | ------------------------------------------------------------------------------------ |
+| `wta_forbidden`  | 403    | Caller lacks `edit_post` on the trip, or `manage_categories` for a term state change |
+| `wta_bad_format` | 400    | `itinerary_days` was not an array                                                    |
+| `wta_bad_status` | 400    | `wta_status` was neither `live` nor `draft`                                          |
 
 Reading a trip:
 
@@ -260,37 +302,26 @@ curl -s -X POST "https://example.com/wp-json/wp/v2/travel_locations/45" \
 
 ## Filters
 
-| Filter                 | Returns | Purpose                                                                                           |
-| ---------------------- | ------- | ------------------------------------------------------------------------------------------------- |
-| `wta_trip_post_type`   | string  | The trip post type slug. Default `itineraries`. The slug has differed between WP Travel versions. |
-| `wta_trip_taxonomies`  | array   | Taxonomy slug to human label. Drives both term publication state and the audit.                   |
-| `wta_trip_meta_fields` | array   | The `text`, `html` and `protected` field groups registered for REST.                              |
+| Filter                 | Returns | Purpose                                                                                          |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `wta_trip_post_type`   | string  | The trip post type slug. Default `itineraries`. The slug has differed between WP Travel versions |
+| `wta_trip_taxonomies`  | array   | Taxonomy slug to human label. Drives both term publication state and the audit                   |
+| `wta_trip_meta_fields` | array   | The `text`, `html` and `protected` field groups registered for REST                              |
 
 Adding a key to `wta_trip_meta_fields` publishes it. See the warning above.
 
 Options the plugin owns:
 
-| Option                                                                                    | Purpose                                         |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `wta_module_trip_meta`, `wta_module_term_status`, `wta_module_audit`, `wta_module_compat` | Per-module switches, seeded to 1 on activation. |
-| `wta_status_taxonomies`                                                                   | Taxonomies that carry publication state.        |
-| `wta_version`                                                                             | Installed version.                              |
-
-## Installation
-
-Copy the plugin directory to `wp-content/plugins/wp-travel-addons` and activate
-it from the Plugins screen, or install the zip through Plugins, Add New, Upload
-Plugin.
-
-Activation seeds the four module options to on, seeds `wta_status_taxonomies`
-from the WP Travel taxonomy list, records the version, and flushes rewrite
-rules. The flush is necessary because term publication state changes what is
-publicly queryable.
-
-Activate WP Travel first. The plugin loads on `plugins_loaded` at priority 20
-and every module checks that the trip post type exists before registering
-anything, but leaving WP Travel inactive simply means nothing happens.
+| Option                  | Purpose                                                           |
+| ----------------------- | ----------------------------------------------------------------- |
+| `wta_module_<key>`      | Per-module switch, one per module in the table above, seeded to 1 |
+| `wta_status_taxonomies` | Taxonomies that carry publication state                           |
+| `wta_version`           | Installed version                                                 |
 
 ## Licence
 
-GPL v2 or later.
+Licensed under the [GNU General Public License v2 or later](https://www.gnu.org/licenses/gpl-2.0.html);
+see [LICENSE](https://github.com/nyuchi/nyuchi-travel-addons/blob/main/LICENSE).
+
+© Nyuchi Web Services. Developed by Bryan Fawcett
+([@bryanfawcett](https://github.com/bryanfawcett)).

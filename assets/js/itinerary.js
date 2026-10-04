@@ -37,6 +37,70 @@
     return Array.prototype.slice.call(root.querySelectorAll(sel));
   }
 
+  /*
+   * Author HTML (verdicts, option bodies) is stored through wp_kses_post, but
+   * the browser does not take that on trust: it is parsed in an inert
+   * document, rebuilt from an allow-list of inline and block tags, and only
+   * then attached. Anything else keeps its text and loses its element, every
+   * attribute but a safe link href is dropped, and nothing is ever assigned
+   * to innerHTML.
+   */
+  var SAFE_TAGS = {
+    A: 1, ABBR: 1, B: 1, BR: 1, CITE: 1, CODE: 1, DEL: 1, EM: 1, I: 1, INS: 1,
+    LI: 1, MARK: 1, OL: 1, P: 1, Q: 1, S: 1, SMALL: 1, SPAN: 1, STRONG: 1,
+    SUB: 1, SUP: 1, U: 1, UL: 1
+  };
+  var DROP_TAGS = { SCRIPT: 1, STYLE: 1, TEMPLATE: 1, IFRAME: 1, OBJECT: 1, EMBED: 1, NOSCRIPT: 1 };
+  var SAFE_HREF = /^(?:https?:|mailto:|tel:|[/#?.]|[^:]*$)/i;
+
+  function cleanNodes(from, into) {
+    Array.prototype.forEach.call(from.childNodes, function (node) {
+      if (node.nodeType === 3) {
+        into.appendChild(document.createTextNode(node.nodeValue));
+
+        return;
+      }
+
+      if (node.nodeType !== 1 || DROP_TAGS[node.nodeName]) {
+        return;
+      }
+
+      if (!SAFE_TAGS[node.nodeName]) {
+        cleanNodes(node, into);
+
+        return;
+      }
+
+      var el = document.createElement(node.nodeName.toLowerCase());
+
+      if (node.nodeName === 'A') {
+        var href = (node.getAttribute('href') || '').replace(/[\u0000-\u0020]/g, '');
+
+        if (href && SAFE_HREF.test(href)) {
+          el.setAttribute('href', href);
+          el.setAttribute('rel', 'noopener noreferrer');
+        }
+      }
+
+      cleanNodes(node, el);
+      into.appendChild(el);
+    });
+  }
+
+  /** Replace el's children with the allow-listed rendering of html. */
+  function setSafeHTML(el, html) {
+    var frag = document.createDocumentFragment();
+
+    if (html && typeof DOMParser !== 'undefined') {
+      cleanNodes(new DOMParser().parseFromString(String(html), 'text/html').body, frag);
+    } else if (html) {
+      frag.appendChild(document.createTextNode(String(html)));
+    }
+
+    el.textContent = '';
+    el.appendChild(frag);
+  }
+
   /** Parse a JSON <script> payload. A malformed payload must not break the page. */
   function payload(script) {
     if (!script) {
@@ -206,9 +270,9 @@
       }
 
       if (bodyEl) {
-        // Verdict text is stored through wp_kses_post, so inline mark-up is
-        // both expected and already sanitised server side.
-        bodyEl.innerHTML = month.verdict || '';
+        // Verdict text is stored through wp_kses_post and is allow-listed
+        // again here before it reaches the DOM.
+        setSafeHTML(bodyEl, month.verdict || '');
       }
 
       if (tagsEl) {
@@ -372,13 +436,6 @@
 
   /* --------------------------------------------------------- d. option picker */
 
-  function esc(s) {
-    return String(s == null ? '' : s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
   function bindOptions(script) {
     var root = scopeOf(script);
 
@@ -408,9 +465,13 @@
       var item = items[i] || {};
       var head = [item.name, item.subtitle].filter(Boolean).join(' · ');
 
-      // Names are escaped because they are plain text fields; the body is
-      // wp_kses_post HTML and is meant to keep its mark-up.
-      out.innerHTML = '<b>' + esc(head) + '</b>' + (item.body || '');
+      // Names are plain text fields; the body is wp_kses_post HTML that keeps
+      // its mark-up, allow-listed again here before it reaches the DOM.
+      var title = document.createElement('b');
+
+      title.textContent = head;
+      setSafeHTML(out, item.body || '');
+      out.insertBefore(title, out.firstChild);
     }
 
     buttons.forEach(function (b, i) {

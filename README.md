@@ -318,6 +318,24 @@ Options the plugin owns:
 | `wta_status_taxonomies` | Taxonomies that carry publication state                           |
 | `wta_version`           | Installed version                                                 |
 
+## Versioning
+
+Releases follow the org versioning policy
+([nyuchi/.github#80](https://github.com/nyuchi/.github/issues/80)). The
+branch decides the bump, and there are no version labels:
+
+- **A merge into `staging`** (the live beta) is tagged as the next
+  **patch** automatically, by `staging-version.yml`.
+- **A release to `main`** is the next **minor** above the highest tag. The
+  PR that releases sets `WTA_VERSION` in `wp-travel-addons.php` to it. CI refuses any other version
+  and names the right one.
+- **A major** is only ever made by hand: the owner runs the release
+  workflow from the Actions tab with `bump: major`.
+- Each segment holds 0–999. Patch 999 rolls into the next minor; minor 999
+  stops and asks for a manual major.
+
+Versions released before 2026-10-04 are not renumbered.
+
 ## Licence
 
 Licensed under the [GNU General Public License v2 or later](https://www.gnu.org/licenses/gpl-2.0.html);

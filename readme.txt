@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.8.0
+Stable tag: 1.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,6 +99,14 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.8.1 =
+* Security: the seasonality verdict panel and the options widget no longer
+  assign author HTML to innerHTML. Verdicts and option bodies are still stored
+  through wp_kses_post, and the front end now also parses them in an inert
+  document and rebuilds them from an allow-list of inline and block tags,
+  keeping only safe link hrefs, before they reach the page.
+* CI runs with a read-only token.
 
 = 1.8.0 =
 * The wta_cost block is gone: the meta key, its REST field, the estimator

@@ -99,6 +99,17 @@ whose values already appear in the public page source. Review the list before ad
 It writes only through documented WordPress meta and term APIs, and only to fields WP Travel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
+= Does the plugin contact GitHub? =
+
+Yes, for two things, and neither sends anything about your site. The updater checks the
+repository's latest release so WordPress can offer updates. The Travel Addons screen shows
+the repository's GitHub star count with a link to star it; that is an anonymous request
+for the public repository record, made only when the screen is opened, cached for 12
+hours, and it carries no site URL, no version numbers and no identifier. There is no
+telemetry or usage ping. To hide the star count, add
+`define( 'WTA_HIDE_STAR_COUNT', true );` to wp-config.php or return false from the
+`wta_show_star_count` filter.
+
 == Changelog ==
 
 = 1.11.0 =

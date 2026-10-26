@@ -478,6 +478,8 @@ if (!function_exists('wta_switch')) {
     </form>
     <?php endif; ?>
 
+    <?php WTA_GitHub_Stars::render(); ?>
+
 </div>
 
 <style>
@@ -794,4 +796,13 @@ a.nyx-termchip:hover { color: var(--nyx-primary); border-color: #CFC3DC; backgro
 .nyx-dim { color: var(--nyx-faint); }
 .nyx-empty { color: var(--nyx-faint); margin: 0; max-width: 72ch; }
 .nyx code { background: var(--nyx-sunken); border-radius: 4px; padding: 1px 5px; font-size: 12px; }
+
+/* GitHub star ask — quiet footer, not a notice */
+.nyx-stars {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 18px;
+    margin-top: 28px; padding: 14px 20px; border: 1px solid var(--nyx-border);
+    border-radius: var(--nyx-r-card); background: var(--nyx-surface); color: var(--nyx-muted);
+}
+.nyx-stars p { margin: 0; max-width: 72ch; }
+.nyx-stars strong { color: var(--nyx-ink); font-weight: 600; }
 </style>

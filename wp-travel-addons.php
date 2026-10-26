@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility helpers. By Nyuchi Web Services.
- * Version:     1.11.0
+ * Version:     1.12.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -11,7 +11,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: nyuchi-travel-addons
  * Requires at least: 5.9
- * Requires PHP: 7.4
+ * Requires PHP: 8.2
  *
  * Built for WP Travel (wptravel.io) by WEN Solutions — NOT WP Travel Engine,
  * which is a different plugin with a different meta schema.
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.11.0');
+define('WTA_VERSION', '1.12.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -48,6 +48,7 @@ require_once WTA_DIR . 'includes/class-wta-rest.php';
 require_once WTA_DIR . 'includes/class-wta-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-admin.php';
 require_once WTA_DIR . 'includes/class-wta-updater.php';
+require_once WTA_DIR . 'includes/class-wta-github-stars.php';
 
 /**
  * Bootstrap.
@@ -173,12 +174,20 @@ final class WP_Travel_Addons {
         // meta at all, so they load regardless of the Elementor module switch.
         $this->modules['tags'] = new WTA_Elementor_Tags();
 
-        // Update checking is admin-only work; no reason to carry it on every
-        // front-end request.
-        if (is_admin()) {
-            $this->modules['updater'] = new WTA_Updater();
-        }
+        // Always constructed. WordPress runs update checks outside wp-admin:
+        // the wp-cron wp_update_plugins event, automatic background updates,
+        // REST/MCP-triggered checks and WP-CLI. If the filters are only
+        // registered for admin requests, those checks never see our release.
+        // The constructor only adds hooks and the GitHub call is cached, so
+        // this costs nothing on an ordinary front-end request.
+        $this->modules['updater'] = new WTA_Updater();
         $this->modules['admin'] = new WTA_Admin($this);
+
+        // Only adds the Plugins-row link; the count is fetched by the admin
+        // screen itself when it renders.
+        if (is_admin()) {
+            $this->modules['stars'] = new WTA_GitHub_Stars();
+        }
     }
 
     /**

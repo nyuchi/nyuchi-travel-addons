@@ -48,6 +48,7 @@ require_once WTA_DIR . 'includes/class-wta-rest.php';
 require_once WTA_DIR . 'includes/class-wta-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-admin.php';
 require_once WTA_DIR . 'includes/class-wta-updater.php';
+require_once WTA_DIR . 'includes/class-wta-github-stars.php';
 
 /**
  * Bootstrap.
@@ -181,6 +182,12 @@ final class WP_Travel_Addons {
         // this costs nothing on an ordinary front-end request.
         $this->modules['updater'] = new WTA_Updater();
         $this->modules['admin'] = new WTA_Admin($this);
+
+        // Only adds the Plugins-row link; the count is fetched by the admin
+        // screen itself when it renders.
+        if (is_admin()) {
+            $this->modules['stars'] = new WTA_GitHub_Stars();
+        }
     }
 
     /**

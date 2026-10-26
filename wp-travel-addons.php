@@ -173,11 +173,13 @@ final class WP_Travel_Addons {
         // meta at all, so they load regardless of the Elementor module switch.
         $this->modules['tags'] = new WTA_Elementor_Tags();
 
-        // Update checking is admin-only work; no reason to carry it on every
-        // front-end request.
-        if (is_admin()) {
-            $this->modules['updater'] = new WTA_Updater();
-        }
+        // Always constructed. WordPress runs update checks outside wp-admin:
+        // the wp-cron wp_update_plugins event, automatic background updates,
+        // REST/MCP-triggered checks and WP-CLI. If the filters are only
+        // registered for admin requests, those checks never see our release.
+        // The constructor only adds hooks and the GitHub call is cached, so
+        // this costs nothing on an ordinary front-end request.
+        $this->modules['updater'] = new WTA_Updater();
         $this->modules['admin'] = new WTA_Admin($this);
     }
 

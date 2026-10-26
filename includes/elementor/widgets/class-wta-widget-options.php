@@ -97,14 +97,13 @@ class WTA_Widget_Options extends \Elementor\Widget_Base {
             }
         }
 
-        echo '<div class="wta-itin">';
-
         if (!$items) {
-            echo '<p class="wta-eyebrow">No traveller choice has been added to this trip yet.</p>';
-            echo '</div>';
+            WTA_Elementor::empty_notice('<div class="wta-itin"><p class="wta-eyebrow">No traveller choice has been added to this trip yet.</p></div>');
 
             return;
         }
+
+        echo '<div class="wta-itin">';
 
         $title = !empty($options['title']) ? $options['title'] : $settings['title_fallback'];
 

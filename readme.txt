@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.10.0
+Stable tag: 1.11.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,18 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.11.0 =
+* Changed: trip cards follow Mzizi's card spec (14px radius, 14px padding, 12px
+  image corners).
+* Changed: the trip hero shows trip images without a colour overlay at a fluid,
+  vertically centred size, with the caption under the image and a readable first
+  headline line. Spacing and typography are device-aware.
+* Fixed: the Booking Order, Field Notes, Route, Seasonality, Legs and Options
+  widgets render nothing for visitors when a trip has no data. The "not added yet"
+  prompt shows only in the Elementor editor.
+* Fixed: 44px touch targets for month cells and leg links, and gallery layout on
+  small screens.
 
 = 1.10.0 =
 * New: conditional asset loading module, off until switched on from the Modules tab.

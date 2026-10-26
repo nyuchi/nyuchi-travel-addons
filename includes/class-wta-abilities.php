@@ -735,7 +735,7 @@ class WTA_Abilities {
     protected function register_scan_compat() {
         wp_register_ability(self::NS . 'scan-compat', array(
             'label'       => 'Scan trips for widget crashes',
-            'description' => 'Find trips whose itinerary day descriptions would break the WT Widgets for Elementor trip outline widget, which passes that text to printf() as a format string. A "fatal" trip crashes the page on PHP 8; a "corruption" trip renders wrong text at HTTP 200, where nothing is logged. Reports whether the runtime guard that neutralises this is currently active.',
+            'description' => 'Find trips whose itinerary day descriptions would break a WT Widgets for Elementor trip outline widget older than 1.4.8, which passed that text to printf() as a format string (fixed upstream, WP Travel ticket #2051). A "fatal" trip crashes the page on PHP 8; a "corruption" trip renders wrong text at HTTP 200, where nothing is logged. On 1.4.8 or later nothing here is exposed; this stays as a diagnostic for sites still on an older version.',
             'category'    => self::CATEGORY,
 
             'input_schema' => array(
@@ -746,10 +746,6 @@ class WTA_Abilities {
             'output_schema' => array(
                 'type'       => 'object',
                 'properties' => array(
-                    'guard_active' => array(
-                        'type'        => 'boolean',
-                        'description' => 'Whether the escaping guard is switched on. When true the listed trips render correctly despite the vendor bug; when false they are exposed.',
-                    ),
                     'fatal'        => array(
                         'type'        => 'integer',
                         'description' => 'Trip days whose text would throw and take the page down.',
@@ -777,7 +773,7 @@ class WTA_Abilities {
                         ),
                     ),
                 ),
-                'required'   => array('guard_active', 'fatal', 'corruption', 'trips'),
+                'required'   => array('fatal', 'corruption', 'trips'),
             ),
 
             'permission_callback' => array($this, 'can_edit_posts'),
@@ -799,7 +795,6 @@ class WTA_Abilities {
                 }
 
                 return array(
-                    'guard_active' => WTA_Compat::guard_enabled(),
                     'fatal'        => $fatal,
                     'corruption'   => count($findings) - $fatal,
                     'trips'        => $findings,

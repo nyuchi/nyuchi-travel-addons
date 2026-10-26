@@ -1,18 +1,23 @@
 <?php
 /**
- * Compatibility guards for defects in WP Travel companion plugins.
+ * Compatibility helpers for WP Travel companion plugins.
  *
- * This is a stopgap. Every guard here exists because a third-party plugin ships
- * a bug we cannot patch in place — editing the vendor's file would be undone by
- * the next update. Each guard should be deleted the moment the vendor ships a
- * fix; none of them is intended as a permanent part of this plugin.
+ * Every helper here exists because a third-party plugin shipped a bug we cannot
+ * patch in place, and each should be deleted when the vendor fixes it.
  *
- * Current guards:
+ * Retired:
  *
- * - WT Widgets for Elementor 1.4.7, inc/widgets/trip-outline-widget.php:1741.
- *   The itinerary day description is passed to printf() as the format string
- *   instead of as an argument, so every '%' an editor types is parsed as a
- *   conversion specifier. On PHP 8.3 that is a fatal error, not a warning.
+ * - WT Widgets for Elementor 1.4.7 passed the itinerary day description to
+ *   printf() as the format string, so any '%' an editor typed was parsed as a
+ *   conversion specifier (a fatal error on PHP 8). Reported as WP Travel ticket
+ *   #2051 and fixed upstream in 1.4.8: the description is now an argument, with
+ *   its own filter. The runtime guard that escaped '%' has been removed.
+ *
+ * Still here:
+ *
+ * - scan_trips() reports day descriptions that would break an affected version.
+ *   It stays as a diagnostic for any site still on WT Widgets before 1.4.8.
+ * - The single-trip timeline stylesheet, loaded only on a trip.
  *
  * @package WPTravelAddons
  */
@@ -23,24 +28,6 @@ if (!defined('ABSPATH')) {
 
 class WTA_Compat {
 
-    /** Gate for the trip-outline printf guard. */
-    const OPTION_PRINTF_GUARD = 'wta_compat_wt_widgets_printf';
-
-    /**
-     * Filter the buggy printf() call routes its format string through.
-     *
-     * The misspelling of "itineraries" is the vendor's, and is reproduced here
-     * verbatim — correcting it would silently detach the guard.
-     */
-    const PRINTF_FILTER = 'wp_travel_ititneraries_trip_outline_title_tab';
-
-    /**
-     * The genuine title call on line 1726 passes this literal through the same
-     * filter as the description. It must survive untouched or the title loses
-     * its placeholder and renders empty.
-     */
-    const TITLE_PLACEHOLDER = '%s';
-
     /** Upper bound on a single scan, so a large catalogue cannot time out. */
     const SCAN_LIMIT = 500;
 
@@ -48,48 +35,17 @@ class WTA_Compat {
     const CONVERSIONS = 'bcdeEfFgGhHosuxX';
 
     public function __construct() {
-        if (!self::guard_enabled()) {
-            return;
-        }
-
-        // Priority 9: ahead of the default 10, so a theme or site filter hooked
-        // at 10 sees the already-escaped string and cannot reintroduce a raw '%'
-        // after we have run.
-        add_filter(self::PRINTF_FILTER, array($this, 'escape_printf_format'), 9, 1);
-
         // WP Travel's own itinerary timeline. A trip rendered without an
         // Elementor template still has to look like the same website.
         add_action('wp_enqueue_scripts', array($this, 'enqueue_timeline_css'));
     }
 
-    public static function guard_enabled() {
-        return (bool) get_option(self::OPTION_PRINTF_GUARD, 1);
-    }
-
-    /**
-     * Neutralise percent signs so printf() prints them instead of consuming
-     * them as specifiers.
-     *
-     * Doubling is safe for content: printf collapses '%%' back to a single '%'.
-     * It is not safe for the title placeholder, which is the one value passing
-     * through this filter that is genuinely meant to be a format string.
-     *
-     * @param mixed $text
-     * @return mixed
-     */
-    public function escape_printf_format($text) {
-        if (!is_string($text) || self::TITLE_PLACEHOLDER === $text) {
-            return $text;
-        }
-
-        return str_replace('%', '%%', $text);
-    }
-
     /**
      * Trips whose itinerary descriptions would break the vendor widget.
      *
-     * Used to tell an editor which pages are already broken, and which are
-     * quietly rendering mangled text at HTTP 200 where nothing is logged.
+     * Only WT Widgets before 1.4.8 break on these. Used to tell an editor which
+     * pages would be broken, and which would quietly render mangled text at
+     * HTTP 200 where nothing is logged.
      *
      * @return array<int, array{post_id:int, title:string, day:int, excerpt:string, mode:string}>
      */
@@ -273,8 +229,8 @@ class WTA_Compat {
      * Loaded only on a trip: these selectors are WP Travel's, and applying them
      * site-wide would let them reach markup that happens to share a class name.
      *
-     * Switchable with the compatibility guards, because it is the same kind of
-     * thing - correcting another plugin's output - and should be as easy to
+     * Switchable with the compat module, and with the wta_compat_timeline_css
+     * filter, because it corrects another plugin's output and should be easy to
      * turn off if WP Travel changes its template.
      *
      * @return void

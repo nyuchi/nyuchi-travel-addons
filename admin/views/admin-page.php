@@ -472,26 +472,6 @@ if (!function_exists('wta_switch')) {
             <?php endforeach; ?>
         </div>
 
-        <section class="nyx-card">
-            <h2>Compatibility guard</h2>
-            <p class="nyx-card-sub">
-                A targeted fix for a defect in another plugin, kept separate from the modules
-                above because it should be turned off the moment upstream ships a fix.
-            </p>
-            <?php
-            wta_switch(
-                'compat_wt_widgets_printf',
-                get_option(WTA_Admin::COMPAT_OPTION, 1),
-                'Neutralise the WT Widgets for Elementor printf defect',
-                'WT Widgets for Elementor 1.4.7 passes an itinerary day description straight into printf as the format string (trip-outline-widget.php line 1741). Any trip whose day description contains a per-cent sign therefore renders corrupted text, and throws a fatal ArgumentCountError on PHP 8.'
-            );
-            ?>
-            <p class="nyx-help">
-                The guard escapes the description before it reaches printf, so the text renders
-                as written. It does nothing when that plugin is inactive.
-            </p>
-        </section>
-
         <div class="nyx-actions">
             <button type="submit" class="nyx-btn is-primary">Save modules</button>
         </div>

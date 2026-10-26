@@ -26,9 +26,6 @@ class WTA_Admin {
     /** @var array<int, array>|null Memoised audit findings. */
     private $findings;
 
-    /** Compatibility guard option. */
-    const COMPAT_OPTION = 'wta_compat_wt_widgets_printf';
-
     public function __construct($plugin) {
         $this->plugin = $plugin;
 
@@ -211,8 +208,6 @@ class WTA_Admin {
         foreach (array_keys(WP_Travel_Addons::module_map()) as $key) {
             update_option('wta_module_' . $key, isset($_POST['module_' . $key]) ? 1 : 0);
         }
-
-        update_option(self::COMPAT_OPTION, isset($_POST['compat_wt_widgets_printf']) ? 1 : 0);
 
         $this->redirect_to('modules');
     }

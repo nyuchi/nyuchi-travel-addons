@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
- * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility guards. By Nyuchi Web Services.
+ * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility helpers. By Nyuchi Web Services.
  * Version:     1.9.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
@@ -130,8 +130,8 @@ final class WP_Travel_Addons {
             ),
             'compat' => array(
                 'class'  => 'WTA_Compat',
-                'label'  => 'Compatibility guards',
-                'detail' => 'Works around known defects in WP Travel companion plugins.',
+                'label'  => 'Compatibility helpers',
+                'detail' => 'Trip timeline styling, and a scan for itinerary text that breaks WT Widgets for Elementor older than 1.4.8.',
             ),
             'assets' => array(
                 'class'   => 'WTA_Assets',

@@ -57,11 +57,12 @@ with no content, terms applied so widely that they cannot segment anything, and 
 term name appearing in two taxonomies at once, which usually means two taxonomies are
 competing to answer the same question.
 
-= Compatibility guards =
+= Compatibility helpers =
 
-Individually switchable workarounds for defects in third-party WP Travel companion plugins,
-each documented in the code with the version it applies to. Guards are intended to be
-removed once the upstream plugin ships a fix.
+Small helpers for WP Travel companion plugins: the single-trip timeline stylesheet, and a
+scan for itinerary day text that breaks WT Widgets for Elementor older than 1.4.8 (the printf
+defect fixed upstream, WP Travel ticket #2051). The runtime guard that worked around that
+defect has been removed. Helpers are deleted once they are no longer needed.
 
 == Installation ==
 

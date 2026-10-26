@@ -123,8 +123,8 @@ class WTA_Assets {
             return true;
         }
 
-        foreach (self::wp_travel_page_checks() as $check) {
-            if (function_exists($check) && call_user_func($check)) {
+        foreach (array('checkout', 'cart', 'dashboard') as $slug) {
+            if (self::wp_travel_is_page($slug)) {
                 return true;
             }
         }
@@ -141,22 +141,23 @@ class WTA_Assets {
     }
 
     /**
-     * WP Travel's own page predicates. Probed with function_exists() because
-     * they come and go between releases.
+     * Whether WP Travel considers this request one of its own pages.
      *
-     * @return string[]
+     * WP_Travel::is_page() is the supported check. The wp_travel_is_*_page()
+     * functions it replaced are deprecated since WP Travel 4.4.2 and log a
+     * notice on every call, so they are used only when is_page() is absent
+     * (a WP Travel old enough that they were not yet deprecated).
+     *
+     * @param string $slug 'checkout', 'cart' or 'dashboard'.
      */
-    protected static function wp_travel_page_checks() {
-        return array(
-            'wp_travel_is_checkout_page',
-            'wp_travel_is_cart_page',
-            'wp_travel_is_dashboard_page',
-            'wp_travel_is_account_page',
-            'wptravel_is_checkout_page',
-            'wptravel_is_cart_page',
-            'wptravel_is_dashboard_page',
-            'wptravel_is_account_page',
-        );
+    protected static function wp_travel_is_page($slug) {
+        if (class_exists('WP_Travel') && method_exists('WP_Travel', 'is_page')) {
+            return (bool) call_user_func(array('WP_Travel', 'is_page'), $slug);
+        }
+
+        $legacy = 'wp_travel_is_' . $slug . '_page';
+
+        return function_exists($legacy) && (bool) call_user_func($legacy);
     }
 
     protected static function is_builder_request() {

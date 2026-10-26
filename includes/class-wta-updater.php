@@ -165,7 +165,7 @@ class WTA_Updater {
             'url'           => $release['url'],
             'package'       => $this->token() && !empty($release['api_url']) ? $release['api_url'] : $release['package'],
             'tested'        => '',
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
         );
 
         if (!isset($transient->response) || !is_array($transient->response)) {
@@ -201,7 +201,7 @@ class WTA_Updater {
             'version'       => $release['version'],
             'author'        => '<a href="https://nyuchi.com">Nyuchi Web Services</a>',
             'homepage'      => $release['url'],
-            'requires_php'  => '7.4',
+            'requires_php'  => '8.2',
             'last_updated'  => $release['published'],
             'sections'      => array(
                 'description' => 'Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, destination and activity metadata, classification diagnostics and a set of Elementor widgets.',

@@ -11,7 +11,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: nyuchi-travel-addons
  * Requires at least: 5.9
- * Requires PHP: 7.4
+ * Requires PHP: 8.2
  *
  * Built for WP Travel (wptravel.io) by WEN Solutions — NOT WP Travel Engine,
  * which is a different plugin with a different meta schema.

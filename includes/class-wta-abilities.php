@@ -125,6 +125,10 @@ class WTA_Abilities {
                 'description' => 'Post ID of the trip to write to.',
                 'minimum'     => 1,
             ),
+            'dry_run' => array(
+                'type'        => 'boolean',
+                'description' => 'Defaults to true. Must be explicitly false to write; a dry run sanitises the supplied groups and reports the before and after of each, writing nothing.',
+            ),
         );
 
         // One optional property per authored group, carrying the same schema
@@ -151,10 +155,23 @@ class WTA_Abilities {
             'output_schema' => array(
                 'type'       => 'object',
                 'properties' => array(
+                    'dry_run' => array(
+                        'type'        => 'boolean',
+                        'description' => 'True when nothing was written.',
+                    ),
                     'updated' => array(
                         'type'        => 'array',
-                        'description' => 'Group names that were sanitised and written to the trip.',
+                        'description' => 'Group names that were sanitised and, unless dry_run is true, written to the trip.',
                         'items'       => array('type' => 'string'),
+                    ),
+                    'unchanged' => array(
+                        'type'        => 'array',
+                        'description' => 'Supplied groups whose sanitised value equals what is already stored.',
+                        'items'       => array('type' => 'string'),
+                    ),
+                    'result'  => array(
+                        'type'        => 'object',
+                        'description' => 'Per group, the stored value before and the sanitised value after. "before" is omitted for unchanged groups.',
                     ),
                     'skipped' => array(
                         'type'        => 'array',
@@ -162,7 +179,7 @@ class WTA_Abilities {
                         'items'       => array('type' => 'string'),
                     ),
                 ),
-                'required'   => array('updated', 'skipped'),
+                'required'   => array('dry_run', 'updated', 'skipped'),
             ),
 
             // The capability is per-post and the post is an input, so it cannot
@@ -186,9 +203,17 @@ class WTA_Abilities {
                     );
                 }
 
-                $updated = array();
-                $skipped = array();
+                // Dry by default, like every other write ability here: an
+                // omitted flag must never be the way a trip gets overwritten.
+                $dry       = !isset($input['dry_run']) || (bool) $input['dry_run'];
+                $updated   = array();
+                $unchanged = array();
+                $skipped   = array();
+                $result    = array();
+                $writes    = array();
 
+                // Sanitise every group before writing any, so a WP_Error on a
+                // later group cannot leave an earlier one half-applied.
                 foreach ($fields as $meta_key => $field) {
                     $rest_key = $field['rest_key'];
 
@@ -212,13 +237,31 @@ class WTA_Abilities {
                         return $clean;
                     }
 
-                    update_post_meta($trip_id, $meta_key, $clean);
-                    $updated[] = $rest_key;
+                    $before = get_post_meta($trip_id, $meta_key, true);
+
+                    if ($before === $clean) {
+                        $unchanged[]        = $rest_key;
+                        $result[$rest_key] = array('after' => $clean);
+                    } else {
+                        $result[$rest_key] = array('before' => $before, 'after' => $clean);
+                    }
+
+                    $writes[$meta_key] = $clean;
+                    $updated[]         = $rest_key;
+                }
+
+                if (!$dry) {
+                    foreach ($writes as $meta_key => $clean) {
+                        update_post_meta($trip_id, $meta_key, $clean);
+                    }
                 }
 
                 return array(
-                    'updated' => $updated,
-                    'skipped' => $skipped,
+                    'dry_run'   => $dry,
+                    'updated'   => $updated,
+                    'unchanged' => $unchanged,
+                    'skipped'   => $skipped,
+                    'result'    => $result,
                 );
             },
         ));
@@ -692,7 +735,7 @@ class WTA_Abilities {
     protected function register_scan_compat() {
         wp_register_ability(self::NS . 'scan-compat', array(
             'label'       => 'Scan trips for widget crashes',
-            'description' => 'Find trips whose itinerary day descriptions would break the WT Widgets for Elementor trip outline widget, which passes that text to printf() as a format string. A "fatal" trip crashes the page on PHP 8; a "corruption" trip renders wrong text at HTTP 200, where nothing is logged. Reports whether the runtime guard that neutralises this is currently active.',
+            'description' => 'Find trips whose itinerary day descriptions would break a WT Widgets for Elementor trip outline widget older than 1.4.8, which passed that text to printf() as a format string (fixed upstream, WP Travel ticket #2051). A "fatal" trip crashes the page on PHP 8; a "corruption" trip renders wrong text at HTTP 200, where nothing is logged. On 1.4.8 or later nothing here is exposed; this stays as a diagnostic for sites still on an older version.',
             'category'    => self::CATEGORY,
 
             'input_schema' => array(
@@ -703,10 +746,6 @@ class WTA_Abilities {
             'output_schema' => array(
                 'type'       => 'object',
                 'properties' => array(
-                    'guard_active' => array(
-                        'type'        => 'boolean',
-                        'description' => 'Whether the escaping guard is switched on. When true the listed trips render correctly despite the vendor bug; when false they are exposed.',
-                    ),
                     'fatal'        => array(
                         'type'        => 'integer',
                         'description' => 'Trip days whose text would throw and take the page down.',
@@ -734,7 +773,7 @@ class WTA_Abilities {
                         ),
                     ),
                 ),
-                'required'   => array('guard_active', 'fatal', 'corruption', 'trips'),
+                'required'   => array('fatal', 'corruption', 'trips'),
             ),
 
             'permission_callback' => array($this, 'can_edit_posts'),
@@ -756,7 +795,6 @@ class WTA_Abilities {
                 }
 
                 return array(
-                    'guard_active' => WTA_Compat::guard_enabled(),
                     'fatal'        => $fatal,
                     'corruption'   => count($findings) - $fatal,
                     'trips'        => $findings,

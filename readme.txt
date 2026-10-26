@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.11.0
+Stable tag: 1.12.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,28 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.12.0 =
+* Changed: requires PHP 8.2 or later (it was 7.4). Sites on older PHP need to upgrade
+  PHP first; WordPress will not install this update on PHP older than 8.2.
+* Fixed: updates now arrive automatically. The updater works during background update
+  checks (scheduled checks, automatic updates, WP-CLI and REST), not only while someone
+  is in wp-admin, so new releases appear without waiting for an admin visit.
+* Fixed: the GitHub token (WTA_GITHUB_TOKEN, used only for a private repository) could
+  be sent to other hosts. It now goes only to GitHub's API over HTTPS, and it is removed
+  when GitHub redirects a download to its file storage.
+* Fixed: users without permission to publish trips can no longer publish them through
+  the create-trip and update-trip abilities. A request to publish, schedule or make a
+  trip private without that permission is refused, rather than going live.
+* Changed: users who may create trips but not publish them (contributors, on a default
+  site) can now create draft and pending trips through create-trip.
+* Changed: update-trip no longer moves trips to the bin. Bin a trip from the Trips screen.
+* New: a Star on GitHub link, with the current star count, at the foot of the Travel
+  Addons screen and on the Plugins screen. It sends nothing about your site and can be
+  hidden with `define( 'WTA_HIDE_STAR_COUNT', true );` in wp-config.php.
+* Behind the scenes: an automated test suite now runs against a real WordPress on every
+  change, and the build tooling is up to date. The tests are not part of the installed
+  plugin.
 
 = 1.11.0 =
 * Changed: trip cards follow Mzizi's card spec (14px radius, 14px padding, 12px

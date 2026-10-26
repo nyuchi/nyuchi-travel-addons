@@ -74,12 +74,16 @@
 .wta-accent-ocean {--leg:var(--ocean);--legtint:rgba(11,110,127,.08);--legfill:var(--ocean)}
 
 /* ── HERO ───────────────────────────────────────────────────────────────── */
-.wta-hero{background:var(--forest-deep);color:var(--bleach);padding:clamp(36px,7vw,76px) 0 0;position:relative;overflow:hidden}
+.wta-hero{background:var(--forest-deep);color:var(--bleach);padding:calc(var(--wta-header-h,76px) + clamp(16px,3vw,40px)) 0 0;position:relative;overflow:hidden}
+/* The site header is fixed and overlays the top of the hero, so the hero clears
+   it. itinerary.js replaces these defaults with the header's measured height. */
+@media (max-width:1024px){:root{--wta-header-h:84px}}
+@media (max-width:767px){:root{--wta-header-h:141px}}
 .wta-hero .wta-eyebrow{color:rgba(232,220,192,.55)}
 .wta-hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,4vw,56px);align-items:end}
 .wta-hero h1{
   font-family:var(--display);font-weight:800;
-  font-size:clamp(42px,8.2vw,92px);line-height:.92;letter-spacing:-.03em;margin:16px 0 0;
+  font-size:clamp(38px,7vw,80px);line-height:.94;letter-spacing:-.03em;margin:16px 0 0;text-wrap:balance;overflow-wrap:break-word;
 }
 .wta-hero h1 .wta-line{font-style:normal;display:block;font-size:inherit;line-height:inherit;border:0;padding:0}
 .wta-hero h1 .wta-line[data-accent="warm"]{color:var(--dust)}
@@ -294,6 +298,8 @@
   .wta-matrix .wta-rowlabel{padding:8px 0 2px}
   .wta-monthbtn{font-size:9px;padding:8px 0}
 }
+/* Touch targets: at least 44px on touch screens. */
+@media (pointer:coarse){ .wta-monthbtn{min-height:44px;min-width:44px} .wta-itin button,.wta-itin summary{min-height:44px} }
 @media (max-width:640px){ .wta-dbody{padding-left:16px} }
 @media (prefers-reduced-motion:reduce){ .wta-itin *{animation:none!important;transition:none!important} }
 

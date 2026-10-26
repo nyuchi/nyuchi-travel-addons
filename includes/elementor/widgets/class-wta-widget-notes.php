@@ -113,14 +113,15 @@ class WTA_Widget_Notes extends \Elementor\Widget_Base {
             }
         }
 
-        echo '<div class="wta-itin">';
-
+        // A trip with no notes shows nothing to visitors. The prompt is for
+        // whoever is building the page, so it only appears in the editor.
         if (!$notes) {
-            echo '<p class="wta-eyebrow">No field notes have been added to this trip yet.</p>';
-            echo '</div>';
+            WTA_Elementor::empty_notice('<div class="wta-itin"><p class="wta-eyebrow">No field notes have been added to this trip yet.</p></div>');
 
             return;
         }
+
+        echo '<div class="wta-itin">';
 
         // Clamped rather than trusted: an out-of-range value would emit a grid
         // template the stylesheet has no matching tile styling for.

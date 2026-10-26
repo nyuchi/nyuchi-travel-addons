@@ -20,6 +20,12 @@ if (!$wta_core_dir) {
     $wta_core_dir = rtrim(sys_get_temp_dir(), '/\\') . '/wordpress-tests';
 }
 
+// Canonical: WordPress will not create directories under a path that
+// contains "..".
+if (realpath($wta_core_dir)) {
+    $wta_core_dir = realpath($wta_core_dir);
+}
+
 if (!defined('ABSPATH')) {
     define('ABSPATH', rtrim($wta_core_dir, '/\\') . '/');
 }

@@ -88,7 +88,6 @@ class TripStatusPermissionTest extends WP_UnitTestCase {
     protected function run_callback($name, $input) {
         $ability  = wp_get_ability('nyuchi-travel/' . $name);
         $property = new ReflectionProperty(WP_Ability::class, 'execute_callback');
-        $property->setAccessible(true);
 
         return call_user_func($property->getValue($ability), $input);
     }

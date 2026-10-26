@@ -187,7 +187,7 @@ class WTA_Trip_CSV {
      * Make a cell safe to open in a spreadsheet. Plain numbers are left alone:
      * "-1.29" is a latitude, not a formula.
      */
-    protected static function guard_cell($value) {
+    public static function guard_cell($value) {
         $value = (string) $value;
 
         if ('' !== $value && preg_match('/^[=+\-@\t\r]/', $value) && !is_numeric($value)) {
@@ -210,7 +210,7 @@ class WTA_Trip_CSV {
     /**
      * @param array<int, array<int, mixed>> $rows
      */
-    protected static function write_csv(array $rows) {
+    public static function write_csv(array $rows) {
         $handle = fopen('php://temp', 'r+');
 
         foreach ($rows as $row) {

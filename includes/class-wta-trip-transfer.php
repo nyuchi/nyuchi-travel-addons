@@ -47,6 +47,10 @@ class WTA_Trip_Transfer {
         if (class_exists('WTA_Trip_CSV')) {
             WTA_Trip_CSV::register();
         }
+
+        if (class_exists('WTA_Term_Transfer')) {
+            WTA_Term_Transfer::register();
+        }
     }
 
     /**

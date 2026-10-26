@@ -116,6 +116,15 @@ dequeues, never deregisters.
   day list replaced. The itinerary groups (hero, legs, route, seasonality,
   options, checklist, notes) are JSON only. CSV import is a converter onto the
   JSON import, so it has the same safeguards.
+- `nyuchi-travel/export-terms`, `import-terms`, `export-terms-csv` and
+  `import-terms-csv` do the same for destination and activity terms: name,
+  archive description and the structured fields (country, gateway airport,
+  languages, currency, visa note, best months, duration, difficulty, minimum
+  age, typical cost, permit, standout, long description). Import is update-only
+  and dry run by default; it never creates terms and never changes a slug,
+  parent or publication state. Each exported term carries an `etag`, and a term
+  changed since the export is refused unless `force` is set. In CSV, months are
+  numbers joined by `|` and `permit_required` is `yes` or `no`.
 - `nyuchi-travel/set-trip-price` writes one price row, confined to its trip by
   joining the price row to its pricing option and the option to the trip. Dry
   run by default. Administrators only.

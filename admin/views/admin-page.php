@@ -446,7 +446,7 @@ if (!function_exists('wta_switch')) {
 
         <div class="nyx-cards">
             <?php foreach ($module_map as $key => $module) :
-                $enabled = (bool) get_option('wta_module_' . $key, 1);
+                $enabled = WP_Travel_Addons::module_enabled($key);
                 $loaded  = $this->module_enabled($key);
                 ?>
                 <section class="nyx-int <?php echo $loaded ? 'is-available' : 'is-missing'; ?>">

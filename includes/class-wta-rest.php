@@ -265,7 +265,7 @@ class WTA_REST {
             $modules[$key] = array(
                 'label'   => $module['label'],
                 'detail'  => $module['detail'],
-                'enabled' => (bool) get_option('wta_module_' . $key, 1),
+                'enabled' => WP_Travel_Addons::module_enabled($key),
                 // Enabled but not loaded means the class never materialised —
                 // a partial deploy rather than a configuration choice.
                 'loaded'  => null !== $this->plugin->module($key),

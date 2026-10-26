@@ -86,6 +86,17 @@ the others.
 | `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                         |
 | `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics        |
 | `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                         |
+| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
+
+The `assets` module is the one exception to "every module defaults to on": it
+changes what the front end loads, so it stays off until switched on from the
+Modules tab. It keeps the full asset set on single trips, trip archives and
+taxonomies, WP Travel checkout/cart/account pages, `/my-bookings/`,
+`/thank-you/`, any page whose content mentions a WP Travel shortcode, and
+Elementor/Customizer previews. What it removes, and where it keeps everything,
+is adjustable through the `wta_assets_rules`, `wta_assets_keep_paths`,
+`wta_assets_keep_shortcodes` and `wta_assets_needed` filters. It only
+dequeues, never deregisters.
 
 Three further components are always loaded: a REST module, an Abilities module
 and an admin module. They read module state rather than adding behaviour of

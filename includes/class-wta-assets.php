@@ -38,16 +38,15 @@ class WTA_Assets {
                 'src'     => array('frontend-booking-widget'),
             ),
             'google_maps' => array(
-                'handles' => array('/^(wp-travel-)?(google-?map|gmap)/'),
-                'src'     => array('maps.googleapis.com/maps/api/js', 'maps.google.com/maps/api/js'),
+                // google-map-api is the Maps JS API itself; jquery-gmaps is the
+                // wrapper library WP Travel loads beside it. Both must go, or
+                // the wrapper's dependency pulls the API back in.
+                'handles' => array('/^(wp-travel-)?(google-?map|gmap)/', '/^jquery-gmaps$/'),
+                'src'     => array('maps.googleapis.com/maps/api/js', 'maps.google.com/maps/api/js', '/lib/gmaps/'),
             ),
             'wp_travel_pro' => array(
                 'handles' => array('/^wp-travel-pro/'),
                 'src'     => array('/wp-travel-pro/'),
-            ),
-            'sign_in_with_google' => array(
-                'handles' => array('/^googlesitekit-.*sign-in-with-google/'),
-                'src'     => array('accounts.google.com/gsi/client'),
             ),
         ));
     }

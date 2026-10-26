@@ -74,6 +74,20 @@ class WTA_Travel_Abilities {
     const NS = 'nyuchi-travel/';
 
     /**
+     * Post statuses update-trip accepts. Anything else, trash included, is
+     * refused: trashing a trip is not an edit and has no business here.
+     */
+    const TRIP_STATUSES = array('draft', 'pending', 'publish', 'future', 'private');
+
+    /**
+     * Statuses that make a trip visible beyond its author. Moving a trip into
+     * any of them is publishing, so it needs the publish capability.
+     *
+     * @var string[]
+     */
+    const PUBLISHING_STATUSES = array('publish', 'future', 'private');
+
+    /**
      * Plugin files as WordPress identifies them in the active-plugins list.
      *
      * Version is read from the plugin header rather than from a constant.
@@ -804,7 +818,7 @@ class WTA_Travel_Abilities {
                     'slug'    => array('type' => 'string', 'description' => 'URL segment. Derived from the title when empty.', 'default' => ''),
                     'status'  => array(
                         'type'        => 'string',
-                        'description' => 'Publication status. Defaults to draft so nothing goes live unreviewed.',
+                        'description' => 'Publication status. Defaults to draft so nothing goes live unreviewed. publish and private need the capability to publish trips; without it the call is refused with 403.',
                         'enum'        => array('draft', 'pending', 'publish', 'private'),
                         'default'     => 'draft',
                     ),
@@ -835,7 +849,12 @@ class WTA_Travel_Abilities {
                     return $check;
                 }
 
-                if (!current_user_can('publish_posts')) {
+                // The trip post type's own capabilities, as import-trips uses:
+                // create_posts to create at all, publish_posts to create live.
+                $type_object = get_post_type_object(WTA_Trip::post_type());
+                $create_cap  = ($type_object && isset($type_object->cap->create_posts)) ? $type_object->cap->create_posts : 'edit_posts';
+
+                if (!current_user_can($create_cap)) {
                     return new WP_Error(
                         'wta_forbidden',
                         'You are not allowed to create trips.',
@@ -854,10 +873,20 @@ class WTA_Travel_Abilities {
                 // the catalogue with half-formed posts.
                 $dry = !isset($input['dry_run']) || (bool) $input['dry_run'];
 
-                $status = isset($input['status']) ? sanitize_key($input['status']) : 'draft';
+                $status   = isset($input['status']) ? sanitize_key($input['status']) : 'draft';
+                $refusals = array();
 
                 if (!in_array($status, array('draft', 'pending', 'publish', 'private'), true)) {
-                    $status = 'draft';
+                    $refusals[] = sprintf('status: "%s" is not an accepted status; the trip is created as draft.', $status);
+                    $status     = 'draft';
+                }
+
+                if (in_array($status, self::PUBLISHING_STATUSES, true) && !self::can_publish_trips()) {
+                    if (!$dry) {
+                        return self::publish_forbidden($status);
+                    }
+
+                    $refusals[] = sprintf('status: "%s" would be refused with 403: you are not allowed to publish trips. Use draft or pending.', $status);
                 }
 
                 $postarr = array(
@@ -877,7 +906,7 @@ class WTA_Travel_Abilities {
                         'dry_run'  => true,
                         'trip_id'  => 0,
                         'changed'  => array_merge(array('post'), array_keys($meta['accepted']), array_keys($terms['resolved'])),
-                        'rejected' => array_merge($meta['rejected'], $terms['rejected']),
+                        'rejected' => array_merge($refusals, $meta['rejected'], $terms['rejected']),
                         'result'   => array('post' => $postarr, 'meta' => $meta['accepted'], 'terms' => $terms['resolved']),
                         'note'     => 'Nothing was created. Call again with dry_run false to create this trip.',
                     );
@@ -901,7 +930,7 @@ class WTA_Travel_Abilities {
                     'dry_run'  => false,
                     'trip_id'  => (int) $trip_id,
                     'changed'  => array_merge(array('post'), array_keys($meta['accepted']), array_keys($terms['resolved'])),
-                    'rejected' => array_merge($meta['rejected'], $terms['rejected']),
+                    'rejected' => array_merge($refusals, $meta['rejected'], $terms['rejected']),
                     'result'   => self::prepare_trip_summary(get_post($trip_id)),
                     'note'     => trim('The trip has no pricing yet: pricing is a separate table, so call set-trip-pricing next. ' . self::price_meta_caution($meta['accepted'])),
                 );
@@ -927,8 +956,8 @@ class WTA_Travel_Abilities {
                     'slug'    => array('type' => 'string', 'description' => 'New URL segment. Changing this breaks existing links unless a redirect is added.'),
                     'status'  => array(
                         'type'        => 'string',
-                        'description' => 'New publication status.',
-                        'enum'        => array('draft', 'pending', 'publish', 'private', 'trash'),
+                        'description' => 'New publication status. publish, future and private need the capability to publish trips; without it the call is refused with 403. Trashing is not done here.',
+                        'enum'        => self::TRIP_STATUSES,
                     ),
                     'meta'    => array(
                         'type'        => 'object',
@@ -965,8 +994,28 @@ class WTA_Travel_Abilities {
                 $dry  = !isset($input['dry_run']) || (bool) $input['dry_run'];
                 $post = get_post($trip_id);
 
-                $postarr = array('ID' => $trip_id);
-                $changed = array();
+                $postarr  = array('ID' => $trip_id);
+                $changed  = array();
+                $refusals = array();
+
+                // Status is checked before anything else is planned: an
+                // unknown status is dropped and reported, and publishing
+                // without the capability refuses the whole call.
+                if (array_key_exists('status', $input)) {
+                    $status = sanitize_key((string) $input['status']);
+
+                    if (!in_array($status, self::TRIP_STATUSES, true)) {
+                        $refusals[] = sprintf('status: "%s" is not an accepted status (%s); the status was left unchanged.', $status, implode(', ', self::TRIP_STATUSES));
+                        unset($input['status']);
+                    } elseif ($status !== $post->post_status && in_array($status, self::PUBLISHING_STATUSES, true) && !self::can_publish_trips()) {
+                        if (!$dry) {
+                            return self::publish_forbidden($status);
+                        }
+
+                        $refusals[] = sprintf('status: "%s" would be refused with 403: you are not allowed to publish trips. Use draft or pending.', $status);
+                        unset($input['status']);
+                    }
+                }
 
                 $post_map = array(
                     'title'   => array('post_title', 'sanitize_text_field'),
@@ -1009,7 +1058,7 @@ class WTA_Travel_Abilities {
                         'dry_run'  => true,
                         'trip_id'  => $trip_id,
                         'changed'  => array_keys($changed),
-                        'rejected' => $meta['rejected'],
+                        'rejected' => array_merge($refusals, $meta['rejected']),
                         'result'   => $changed,
                         'note'     => 'Nothing was written. Call again with dry_run false to apply these changes.',
                     );
@@ -1036,7 +1085,7 @@ class WTA_Travel_Abilities {
                     'dry_run'  => false,
                     'trip_id'  => $trip_id,
                     'changed'  => array_keys($changed),
-                    'rejected' => $meta['rejected'],
+                    'rejected' => array_merge($refusals, $meta['rejected']),
                     'result'   => $changed,
                     'note'     => self::price_meta_caution($meta['accepted']),
                 );
@@ -2073,6 +2122,38 @@ class WTA_Travel_Abilities {
         }
 
         return true;
+    }
+
+    /**
+     * Whether the current user may publish trips.
+     *
+     * Asks for the trip post type's own publish capability rather than the
+     * generic publish_posts, so a site that maps trip capabilities separately
+     * is respected. Falls back to publish_posts only if the type is missing.
+     *
+     * @return bool
+     */
+    protected static function can_publish_trips() {
+        $type = get_post_type_object(WTA_Trip::post_type());
+        $cap  = ($type && isset($type->cap->publish_posts)) ? $type->cap->publish_posts : 'publish_posts';
+
+        return current_user_can($cap);
+    }
+
+    /**
+     * The refusal returned when a user without the publish capability asks
+     * for a publishing status. A 403, never a silent downgrade to draft: a
+     * caller that asked to publish must learn that nothing went live.
+     *
+     * @param string $status Requested status.
+     * @return WP_Error
+     */
+    protected static function publish_forbidden($status) {
+        return new WP_Error(
+            'wta_cannot_publish',
+            sprintf('You are not allowed to publish trips, so status "%s" was refused. Use draft or pending and ask an editor to publish.', $status),
+            array('status' => 403)
+        );
     }
 
     /* ------------------------------------------------------- detection */

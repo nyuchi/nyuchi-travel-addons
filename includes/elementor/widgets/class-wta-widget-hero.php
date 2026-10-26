@@ -111,17 +111,19 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
 
             printf('<figure class="wta-panel wta-accent-%s">', esc_attr($accent));
 
-            if ($image) {
-                // Same photograph across the panels, offset per panel, so a
-                // single trip image reads as a deliberate triptych.
-                printf(
-                    '<span class="wta-panel-img" style="background-image:url(%s);background-position:%d%% 50%%"></span>',
-                    esc_url($image),
-                    (int) ($legs ? ($i * (100 / max(1, count($legs) - 1 ?: 1))) : 50)
-                );
-            }
-
-            echo '<span class="wta-panel-tint"></span>';
+            // The image box is always rendered so every panel is the same size,
+            // with or without a photograph. The photograph is shown as it is: no
+            // tint, no filter, no overlay.
+            printf(
+                '<span class="wta-panel-img"%s></span>',
+                $image
+                    ? sprintf(
+                        ' style="background-image:url(%s);background-position:%d%% 50%%"',
+                        esc_url($image),
+                        (int) ($i * (100 / max(1, count($legs) - 1 ?: 1)))
+                    )
+                    : ''
+            );
 
             if ($label) {
                 printf(

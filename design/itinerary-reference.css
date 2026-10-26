@@ -475,25 +475,19 @@
 .wta-triptych[data-panels="2"]{grid-template-columns:repeat(2,1fr)}
 .wta-triptych[data-panels="3"]{grid-template-columns:repeat(3,1fr)}
 .wta-panel{
-  position:relative;margin:0;overflow:hidden;
-  aspect-ratio:3/4;min-width:0;
-  background:var(--navy);
+  position:relative;margin:0;min-width:0;
+  display:flex;flex-direction:column;
 }
+/* Every panel image is the same size, whatever the photograph or the number of
+   panels, and is shown as it is: no tint, filter or overlay. */
 .wta-panel-img{
-  position:absolute;inset:0;
+  display:block;width:100%;height:420px;
+  background-color:var(--navy);
   background-size:cover;background-repeat:no-repeat;
-  filter:grayscale(.35) contrast(1.05);
-  transform:scale(1.02);
-}
-/* The tint is what makes three crops of one photograph read as a set. */
-.wta-panel-tint{position:absolute;inset:0;background:var(--leg);opacity:.55;mix-blend-mode:multiply}
-.wta-panel::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(13,26,46,.9) 0%,rgba(13,26,46,.15) 55%,transparent 100%);
 }
 .wta-panel figcaption{
-  position:absolute;left:10px;right:10px;bottom:10px;z-index:1;
   display:flex;flex-direction:column;gap:2px;
+  padding:10px 2px 0;
 }
 .wta-panel figcaption b{
   font-family:var(--display);font-weight:800;font-size:22px;line-height:1;
@@ -506,7 +500,7 @@
 }
 @media (max-width:900px){
   .wta-hero-art{margin-top:28px}
-  .wta-panel{aspect-ratio:1/1}
+  .wta-panel-img{height:280px}
 }
 
 /* Day body needed more room inside the accordion. */

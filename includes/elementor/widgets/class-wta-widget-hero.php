@@ -139,6 +139,60 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
         echo '</div></div>';
     }
 
+    /**
+     * "How to read this hero" strip.
+     *
+     * Describes only what the hero really does: the headline lines, the stats
+     * and the numbered panels (one per leg, in trip order, each matching a leg
+     * section further down). The panels are not interactive, so no hover or tap
+     * behaviour is promised. Items are dropped when they do not apply: no stats
+     * means no "at a glance" item, and a single leg (or no triptych) means no
+     * panel item. With fewer than two items there is nothing to explain.
+     *
+     * The live site carries a stopgap copy (.wta-guide-stopgap in the trip
+     * template plus Additional CSS) that hides itself when this strip exists.
+     */
+    protected function render_guide($stats, $data, $settings) {
+        $legs = (!empty($data['legs']) && is_array($data['legs'])) ? count(array_slice($data['legs'], 0, 3)) : 0;
+
+        $items = array(
+            array(
+                'label' => __('The story', 'wp-travel-addons'),
+                'text'  => __('The headline tells the journey in a few lines, one after another.', 'wp-travel-addons'),
+            ),
+        );
+
+        if ($stats) {
+            $items[] = array(
+                'label' => __('At a glance', 'wp-travel-addons'),
+                'text'  => __('The figures beneath it are the essential facts of the trip.', 'wp-travel-addons'),
+            );
+        }
+
+        if ('yes' === $settings['show_art'] && $legs > 1) {
+            $items[] = array(
+                'label' => __('The legs', 'wp-travel-addons'),
+                'text'  => __('Read the images left to right: each panel is one leg, in the order you travel it, and each is set out in full below.', 'wp-travel-addons'),
+            );
+        }
+
+        if (count($items) < 2) {
+            return;
+        }
+
+        echo '<ul class="wta-hero-guide" aria-label="' . esc_attr__('How to read this hero', 'wp-travel-addons') . '">';
+
+        foreach ($items as $item) {
+            printf(
+                '<li><b>%s</b><span>%s</span></li>',
+                esc_html($item['label']),
+                esc_html($item['text'])
+            );
+        }
+
+        echo '</ul>';
+    }
+
     protected function render() {
         $data = WTA_Elementor::trip_data();
 
@@ -210,6 +264,7 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
                         }
                         ?>
                     </div>
+                    <?php $this->render_guide($stats, $data, $settings); ?>
                     <?php if ('yes' === $settings['show_bar']) : ?>
                         <div class="wta-gradient-bar"></div>
                     <?php endif; ?>

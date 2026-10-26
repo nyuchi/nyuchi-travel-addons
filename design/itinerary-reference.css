@@ -300,7 +300,7 @@
   .wta-monthbtn{font-size:9px;padding:8px 0}
 }
 /* Touch targets: at least 44px on touch screens. */
-@media (pointer:coarse){ .wta-monthbtn{min-height:44px;min-width:44px} .wta-itin button,.wta-itin summary{min-height:44px} }
+@media (pointer:coarse){ .wta-monthbtn{min-height:44px;min-width:44px} .wta-itin button,.wta-itin summary{min-height:44px} .wta-matrix .wta-mcell{height:44px} .wta-leglink{display:inline-flex;align-items:center;min-height:44px} }
 @media (max-width:640px){ .wta-dbody{padding-left:16px} }
 @media (prefers-reduced-motion:reduce){ .wta-itin *{animation:none!important;transition:none!important} }
 

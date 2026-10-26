@@ -94,14 +94,15 @@ class WTA_Widget_Checklist extends \Elementor\Widget_Base {
         // data-trip is what the script keys its remembered ticks on, so a reader
         // who returns to this trip keeps their place and one who moves to
         // another trip starts clean.
-        printf('<div class="wta-itin" data-trip="%d">', (int) get_the_ID());
-
+        // A trip with no steps shows nothing to visitors. The prompt is for
+        // whoever is building the page, so it only appears in the editor.
         if (!$steps) {
-            echo '<p class="wta-eyebrow">No booking steps have been added to this trip yet.</p>';
-            echo '</div>';
+            WTA_Elementor::empty_notice('<div class="wta-itin"><p class="wta-eyebrow">No booking steps have been added to this trip yet.</p></div>');
 
             return;
         }
+
+        printf('<div class="wta-itin" data-trip="%d">', (int) get_the_ID());
 
         echo '<section class="wta-section"><div class="wta-wrap">';
 

@@ -154,6 +154,21 @@ class WTA_Elementor {
     }
 
     /**
+     * Empty-state message for a trip widget with nothing authored yet.
+     *
+     * Visitors see nothing, so a trip that has no seasonality, route, steps or
+     * notes simply has no such section. The prompt is for whoever is building
+     * the page, so it only appears inside the Elementor editor.
+     *
+     * @param string $html Markup to show in the editor.
+     */
+    public static function empty_notice($html) {
+        if (class_exists('\\Elementor\\Plugin') && \Elementor\Plugin::$instance->editor->is_edit_mode()) {
+            echo $html; // phpcs:ignore WordPress.Security.EscapeOutput -- built from escaped strings by the caller.
+        }
+    }
+
+    /**
      * The trip currently being rendered, in the shape the widgets expect.
      *
      * Returns an empty array off a trip — in the Elementor editor a widget is

@@ -8,3 +8,4 @@ vendor/
 .claude/
 __pycache__/
 *.pyc
+.phpunit.result.cache

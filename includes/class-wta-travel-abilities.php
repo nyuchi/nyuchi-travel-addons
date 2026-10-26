@@ -163,6 +163,11 @@ class WTA_Travel_Abilities {
 
         $this->register_list_travel_posts();
 
+        // The enquiry form's configuration and the enquiries it collects.
+        if (class_exists('WTA_Inquiry_Abilities')) {
+            WTA_Inquiry_Abilities::register();
+        }
+
         // Export and import of whole trips, built on the helpers above.
         if (class_exists('WTA_Trip_Transfer')) {
             WTA_Trip_Transfer::register();

@@ -103,10 +103,19 @@ dequeues, never deregisters.
 - `nyuchi-travel/export-trips` downloads up to 25 trips as one JSON document
   (post fields, WP Travel meta, days, itinerary groups, terms by slug, and
   read-only pricing and dates for context). No booking or enquiry data.
-- `nyuchi-travel/import-trips` applies an edited document back onto the same
-  trips. Dry run by default. It updates only: it never creates trips or terms,
-  never changes a slug or status, and never writes pricing or dates. A trip
-  modified after the export is refused unless `force` is set.
+- `nyuchi-travel/import-trips` applies an edited document back. Dry run by
+  default. It updates existing trips and never changes their slug or status,
+  creates terms, or writes pricing or dates. A trip modified after the export
+  is refused unless `force` is set. With `allow_create`, an entry without an
+  id creates a new trip, always as a draft.
+- `nyuchi-travel/export-trips-csv` and `nyuchi-travel/import-trips-csv` do the
+  same through two spreadsheet-friendly files: `trips.csv` (one row per trip:
+  post fields, WP Travel meta, terms as slugs joined by `|`) and `days.csv`
+  (one row per day). A blank cell leaves a value unchanged; write `[clear]` to
+  clear a meta field or term list. A trip with rows in `days.csv` has its whole
+  day list replaced. The itinerary groups (hero, legs, route, seasonality,
+  options, checklist, notes) are JSON only. CSV import is a converter onto the
+  JSON import, so it has the same safeguards.
 - `nyuchi-travel/set-trip-price` writes one price row, confined to its trip by
   joining the price row to its pricing option and the option to the trip. Dry
   run by default. Administrators only.

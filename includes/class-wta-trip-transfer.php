@@ -10,10 +10,11 @@
  *
  * What it will not do, deliberately:
  *
- * - It never creates trips or terms. Missing terms are reported; create them
- *   with create-term first, so a typo cannot publish a new archive.
- * - It never changes a trip's slug or status. A slug change breaks URLs
- *   without a redirect, and status is how an unreviewed trip goes live.
+ * - It never creates terms. Missing terms are reported; create them with
+ *   create-term first, so a typo cannot publish a new archive. Trips are
+ *   created only when allow_create is set, and always as drafts.
+ * - It never changes an existing trip's slug or status. A slug change breaks
+ *   URLs without a redirect, and status is how an unreviewed trip goes live.
  * - It never writes pricing or dates. Those are exported for reference only;
  *   prices are written one confirmed figure at a time by set-trip-price.
  * - It refuses a trip that changed after it was exported, unless forced, so an
@@ -42,6 +43,10 @@ class WTA_Trip_Transfer {
     public static function register() {
         self::register_export();
         self::register_import();
+
+        if (class_exists('WTA_Trip_CSV')) {
+            WTA_Trip_CSV::register();
+        }
     }
 
     /**
@@ -225,7 +230,7 @@ class WTA_Trip_Transfer {
     protected static function register_import() {
         wp_register_ability(WTA_Travel_Abilities::NS . 'import-trips', array(
             'label'       => 'Import edited trips from JSON',
-            'description' => 'Apply a document produced by export-trips back onto the same trips. Updates only: it never creates trips or terms, never changes a slug or status, and never writes pricing or dates. Only the sections present for a trip are touched, and each is sanitised exactly as the single-purpose abilities do. A trip that changed since it was exported is refused unless force is true. Defaults to a dry run that reports, per trip, which sections would change and writes nothing.',
+            'description' => 'Apply a document produced by export-trips back onto the same trips. Updates existing trips; with allow_create it also creates a draft trip for each entry without an id. It never creates terms, never changes the slug or status of an existing trip, and never writes pricing or dates. Only the sections present for a trip are touched, and each is sanitised exactly as the single-purpose abilities do. A trip that changed since it was exported is refused unless force is true. Defaults to a dry run that reports, per trip, which sections would change and writes nothing.',
             'category'    => WTA_Travel_Abilities::CATEGORY,
 
             'input_schema' => array(
@@ -243,6 +248,10 @@ class WTA_Trip_Transfer {
                     'force'    => array(
                         'type'        => 'boolean',
                         'description' => 'Apply even if a trip was modified after the export. Overwrites that later edit. Defaults to false.',
+                    ),
+                    'allow_create' => array(
+                        'type'        => 'boolean',
+                        'description' => 'Create a new trip for each entry that has no id. New trips are always drafts, whatever status the entry carries. Defaults to false, in which case an entry without an id is skipped.',
                     ),
                     'dry_run'  => array(
                         'type'        => 'boolean',
@@ -270,7 +279,8 @@ class WTA_Trip_Transfer {
                     isset($input['document']) ? $input['document'] : null,
                     isset($input['sections']) ? (array) $input['sections'] : self::SECTIONS,
                     !empty($input['force']),
-                    !isset($input['dry_run']) || (bool) $input['dry_run']
+                    !isset($input['dry_run']) || (bool) $input['dry_run'],
+                    !empty($input['allow_create'])
                 );
             },
         ));
@@ -279,7 +289,7 @@ class WTA_Trip_Transfer {
     /**
      * @return array<string, mixed>|WP_Error
      */
-    public static function import($document, array $sections, $force, $dry) {
+    public static function import($document, array $sections, $force, $dry, $allow_create = false) {
         if (!is_array($document) || !isset($document['format']) || self::FORMAT !== $document['format']) {
             return new WP_Error('wta_bad_document', 'document is not an export-trips document (format mismatch).', array('status' => 400));
         }
@@ -302,14 +312,12 @@ class WTA_Trip_Transfer {
         $applied = array();
 
         foreach ($document['trips'] as $entry) {
-            $row = self::import_one(is_array($entry) ? $entry : array(), $sections, $force, $dry);
+            $row = self::import_one(is_array($entry) ? $entry : array(), $sections, $force, $dry, $allow_create);
 
             if ('changed' === $row['status'] && !$dry) {
                 $applied[] = $row['id'];
             }
 
-            // The plan carries sanitised values for writing; callers get the
-            // summary only.
             unset($row['plan']);
             $report[] = $row;
         }
@@ -320,43 +328,69 @@ class WTA_Trip_Transfer {
             'trips'   => $report,
             'note'    => $dry
                 ? 'Nothing was written. Call again with dry_run false to apply the trips marked "changed".'
-                : 'Written. Purge Cloudflare and Varnish if the front end shows stale content.',
+                : 'Written. New trips are drafts: review and publish them in the admin. Purge Cloudflare and Varnish if the front end shows stale content.',
         );
     }
 
-    protected static function import_one(array $entry, array $sections, $force, $dry) {
+    protected static function import_one(array $entry, array $sections, $force, $dry, $allow_create = false) {
         $trip_id = isset($entry['id']) ? absint($entry['id']) : 0;
-        $row     = array('id' => $trip_id, 'status' => 'skipped', 'changed' => array(), 'warnings' => array(), 'reason' => '');
+        $is_new  = 0 === $trip_id;
+        $row     = array('id' => $trip_id, 'status' => 'skipped', 'new' => $is_new, 'changed' => array(), 'warnings' => array(), 'reason' => '');
+        $post    = null;
 
-        $check = WTA_Travel_Abilities::require_trip($trip_id);
-
-        if (is_wp_error($check)) {
-            $row['reason'] = $check->get_error_message();
-            return $row;
-        }
-
-        if (!current_user_can('edit_post', $trip_id)) {
-            $row['reason'] = 'You are not allowed to edit this trip.';
-            return $row;
-        }
-
-        $post = get_post($trip_id);
-
-        if (!$force) {
-            if (empty($entry['modified_gmt'])) {
-                $row['reason'] = 'The entry has no modified_gmt, so edits since the export cannot be ruled out. Pass force to apply anyway.';
+        if ($is_new) {
+            if (!$allow_create) {
+                $row['reason'] = 'The entry has no id, so importing it would create a new trip. Pass allow_create to create trips.';
                 return $row;
             }
 
-            if ((string) $entry['modified_gmt'] !== (string) $post->post_modified_gmt) {
-                $row['reason'] = sprintf('Trip was modified at %s, after the export (%s). Export it again, or pass force to overwrite that edit.', $post->post_modified_gmt, $entry['modified_gmt']);
+            $type_object = get_post_type_object(WTA_Trip::post_type());
+            $create_cap  = ($type_object && isset($type_object->cap->create_posts)) ? $type_object->cap->create_posts : 'edit_posts';
+
+            if (!current_user_can($create_cap)) {
+                $row['reason'] = 'You are not allowed to create trips.';
                 return $row;
             }
-        }
 
-        foreach (array('slug', 'status') as $ignored) {
-            if (isset($entry[$ignored]) && (string) $entry[$ignored] !== (string) $post->{'post_' . ('slug' === $ignored ? 'name' : 'status')}) {
-                $row['warnings'][] = sprintf('%s differs from the live trip and was ignored: import never changes slug or status.', $ignored);
+            if (!isset($entry['post']['title']) || '' === trim(sanitize_text_field((string) $entry['post']['title']))) {
+                $row['reason'] = 'A new trip needs post.title.';
+                return $row;
+            }
+
+            if (isset($entry['status']) && 'draft' !== (string) $entry['status']) {
+                $row['warnings'][] = 'status was ignored: new trips are always created as drafts.';
+            }
+        } else {
+            $check = WTA_Travel_Abilities::require_trip($trip_id);
+
+            if (is_wp_error($check)) {
+                $row['reason'] = $check->get_error_message();
+                return $row;
+            }
+
+            if (!current_user_can('edit_post', $trip_id)) {
+                $row['reason'] = 'You are not allowed to edit this trip.';
+                return $row;
+            }
+
+            $post = get_post($trip_id);
+
+            if (!$force) {
+                if (empty($entry['modified_gmt'])) {
+                    $row['reason'] = 'The entry has no modified_gmt, so edits since the export cannot be ruled out. Pass force to apply anyway.';
+                    return $row;
+                }
+
+                if ((string) $entry['modified_gmt'] !== (string) $post->post_modified_gmt) {
+                    $row['reason'] = sprintf('Trip was modified at %s, after the export (%s). Export it again, or pass force to overwrite that edit.', $post->post_modified_gmt, $entry['modified_gmt']);
+                    return $row;
+                }
+            }
+
+            foreach (array('slug', 'status') as $ignored) {
+                if (isset($entry[$ignored]) && (string) $entry[$ignored] !== (string) $post->{'post_' . ('slug' === $ignored ? 'name' : 'status')}) {
+                    $row['warnings'][] = sprintf('%s differs from the live trip and was ignored: import never changes the slug or status of an existing trip.', $ignored);
+                }
             }
         }
 
@@ -377,9 +411,15 @@ class WTA_Trip_Transfer {
 
                 $value = call_user_func($spec[1], (string) $entry['post'][$key]);
 
-                if ($value !== $post->{$spec[0]}) {
+                if ($is_new ? '' !== $value : $value !== $post->{$spec[0]}) {
                     $postarr[$spec[0]] = $value;
                 }
+            }
+
+            // A new trip may carry a slug (WordPress makes it unique); an
+            // existing trip's slug is never touched.
+            if ($is_new && !empty($entry['slug'])) {
+                $postarr['post_name'] = sanitize_title((string) $entry['slug']);
             }
 
             if ($postarr) {
@@ -392,7 +432,9 @@ class WTA_Trip_Transfer {
             $diff = array();
 
             foreach ($meta['accepted'] as $key => $value) {
-                if ((string) get_post_meta($trip_id, $key, true) !== (string) $value) {
+                $current = $is_new ? '' : (string) get_post_meta($trip_id, $key, true);
+
+                if ($current !== (string) $value) {
                     $diff[$key] = $value;
                 }
             }
@@ -411,20 +453,20 @@ class WTA_Trip_Transfer {
                 $row['warnings'][] = 'days: expected an array, skipped.';
             } else {
                 $days    = self::clean_days($entry['days']);
-                $current = get_post_meta($trip_id, WTA_Trip::ITINERARY_META, true);
+                $current = $is_new ? array() : get_post_meta($trip_id, WTA_Trip::ITINERARY_META, true);
                 $current = is_array($current) ? self::clean_days($current) : array();
 
                 if ($days !== $current) {
                     $plan['days'] = $days;
 
-                    if (count($days) !== count($current)) {
+                    if (!$is_new && count($days) !== count($current)) {
                         $row['warnings'][] = sprintf('days: count changes from %d to %d; any leg that referenced a day by index now points elsewhere.', count($current), count($days));
                     }
                 }
 
                 foreach ($days as $i => $day) {
                     if (false !== strpos($day['desc'], '%')) {
-                        $row['warnings'][] = sprintf('days: day %d contains a literal percent sign, which breaks the trip outline template. Write "percent".', $i + 1);
+                        $row['warnings'][] = sprintf('days: day %d contains a literal percent sign, which can break the trip outline template. Write "percent".', $i + 1);
                     }
                 }
             }
@@ -453,7 +495,7 @@ class WTA_Trip_Transfer {
                         continue;
                     }
 
-                    if (get_post_meta($trip_id, $meta_key, true) !== $clean) {
+                    if ($is_new ? !empty($clean) : get_post_meta($trip_id, $meta_key, true) !== $clean) {
                         $plan['itinerary'][$meta_key] = $clean;
                     }
                 }
@@ -462,7 +504,7 @@ class WTA_Trip_Transfer {
 
         if (in_array('terms', $sections, true) && isset($entry['terms'])) {
             $resolved = WTA_Travel_Abilities::resolve_terms($entry['terms']);
-            $before   = WTA_Travel_Abilities::trip_terms($trip_id);
+            $before   = $is_new ? array() : WTA_Travel_Abilities::trip_terms($trip_id);
 
             foreach ($resolved['rejected'] as $reason) {
                 $row['warnings'][] = $reason;
@@ -489,7 +531,25 @@ class WTA_Trip_Transfer {
             return $row;
         }
 
-        if (isset($plan['post'])) {
+        if ($is_new) {
+            $inserted = wp_insert_post(
+                array_merge(
+                    array('post_type' => WTA_Trip::post_type(), 'post_status' => 'draft'),
+                    isset($plan['post']) ? $plan['post'] : array()
+                ),
+                true
+            );
+
+            if (is_wp_error($inserted) || !$inserted) {
+                $row['status'] = 'skipped';
+                $row['reason'] = is_wp_error($inserted) ? $inserted->get_error_message() : 'The trip could not be created.';
+                return $row;
+            }
+
+            $trip_id    = (int) $inserted;
+            $row['id']  = $trip_id;
+            unset($plan['post']);
+        } elseif (isset($plan['post'])) {
             $updated = wp_update_post(array_merge(array('ID' => $trip_id), $plan['post']), true);
 
             if (is_wp_error($updated)) {

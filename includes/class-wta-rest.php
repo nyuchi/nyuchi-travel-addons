@@ -515,7 +515,6 @@ class WTA_REST {
         }
 
         return rest_ensure_response(array(
-            'guard_active' => WTA_Compat::guard_enabled(),
             'scan_limit'   => WTA_Compat::SCAN_LIMIT,
             'affected'     => count($findings),
             'fatal'        => $fatal,

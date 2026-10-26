@@ -20,8 +20,8 @@ WP Travel Addons extends **WP Travel** (wptravel.io, by WEN Solutions) with
 things that plugin does not provide: a REST-accessible trip schema, a richer
 itinerary model, publication state for taxonomy terms, structured destination
 and activity metadata, classification diagnostics, Elementor widgets, an
-Abilities API surface, and compatibility guards for known defects in WP Travel
-companion plugins.
+Abilities API surface, and compatibility helpers for WP Travel companion
+plugins.
 
 ## What it is not
 
@@ -85,7 +85,7 @@ the others.
 | `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                               |
 | `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                      |
 | `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                     |
-| `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                                      |
+| `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                      |
 | `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
 
 The `assets` module is the one exception to "every module defaults to on": it

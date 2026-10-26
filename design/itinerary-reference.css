@@ -468,8 +468,8 @@
  * Hand-drawn art cannot scale across a catalogue, so the panels are generated
  * from the trip's own legs — panel count and accent colours describe the actual
  * shape of the journey. */
-.wta-hero-grid{align-items:end}
-.wta-hero-art{padding-bottom:0;min-width:0}
+.wta-hero-grid{align-items:center}
+.wta-hero-art{padding-bottom:0;min-width:0;align-self:center}
 .wta-triptych{display:grid;gap:6px;align-items:stretch}
 .wta-triptych[data-panels="1"]{grid-template-columns:1fr}
 .wta-triptych[data-panels="2"]{grid-template-columns:repeat(2,1fr)}
@@ -479,11 +479,14 @@
   display:flex;flex-direction:column;
 }
 /* Every panel image is the same size, whatever the photograph or the number of
-   panels, and is shown as it is: no tint, filter or overlay. */
+   panels, scales fluidly with the screen, and is shown as it is: no tint, filter or overlay. */
 .wta-panel-img{
-  display:block;width:100%;height:420px;
+  display:block;width:100%;
+  /* Fluid: scales with the viewport between 240px and 480px, so the image
+     fits the screen it is on instead of a fixed pixel height. */
+  height:clamp(240px,36vw,480px);
   background-color:var(--navy);
-  background-size:cover;background-repeat:no-repeat;
+  background-size:cover;background-repeat:no-repeat;background-position-y:50%;
 }
 .wta-panel figcaption{
   display:flex;flex-direction:column;gap:2px;
@@ -500,7 +503,6 @@
 }
 @media (max-width:900px){
   .wta-hero-art{margin-top:28px}
-  .wta-panel-img{height:280px}
 }
 
 /* Day body needed more room inside the accordion. */

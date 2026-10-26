@@ -120,7 +120,7 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
                     ? sprintf(
                         ' style="background-image:url(%s);background-position:%d%% 50%%"',
                         esc_url($image),
-                        (int) ($i * (100 / max(1, count($legs) - 1 ?: 1)))
+                        (int) (count($legs) > 1 ? $i * (100 / (count($legs) - 1)) : 50)
                     )
                     : ''
             );

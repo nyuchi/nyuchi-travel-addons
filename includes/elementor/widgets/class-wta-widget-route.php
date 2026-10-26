@@ -146,9 +146,11 @@ class WTA_Widget_Route extends \Elementor\Widget_Base {
         $stops = (isset($data['route']) && is_array($data['route'])) ? array_values($data['route']) : array();
 
         if (!$stops) {
-            echo '<div class="wta-itin"><div class="wta-wrap"><p class="wta-eyebrow">'
+            WTA_Elementor::empty_notice(
+                '<div class="wta-itin"><div class="wta-wrap"><p class="wta-eyebrow">'
                 . esc_html__('Route map: no stops authored for this trip.', 'wp-travel-addons')
-                . '</p></div></div>';
+                . '</p></div></div>'
+            );
 
             return;
         }

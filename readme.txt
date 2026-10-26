@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.9.0
+Stable tag: 1.10.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,33 @@ It writes only through documented WordPress meta and term APIs, and only to fiel
 already uses. The duration mirror is kept in sync because leaving it stale is a visible bug.
 
 == Changelog ==
+
+= 1.10.0 =
+* New: conditional asset loading module, off until switched on from the Modules tab.
+  It keeps the WP Travel booking widget, Google Maps and WP Travel Pro scripts off
+  pages that cannot use them. Single trips, trip archives and taxonomies, WP Travel
+  checkout, cart and account pages, /my-bookings/, /thank-you/ and any page using a
+  WP Travel shortcode keep everything.
+* New: export and import trips as JSON or CSV (export-trips, import-trips,
+  export-trips-csv, import-trips-csv). Update-only and dry run by default; a trip
+  edited after the export is refused unless forced; new trips are created only with
+  allow_create and are always drafts. Slugs, statuses, pricing and dates are never
+  changed by an import.
+* New: export and import destination and activity terms as JSON or CSV
+  (export-terms, import-terms, export-terms-csv, import-terms-csv). Update-only,
+  never creates terms or changes a slug, parent or publication state.
+* New: set-trip-price writes one price row, confined to its trip, dry run by default.
+* Changed: update-itinerary now defaults to a dry run. Pass dry_run false to write.
+  Anything that called it without dry_run and relied on it writing must be updated.
+* Changed: modules can declare a default, so an update never switches on a module
+  that changes what the front end loads.
+* Fixed: set-trip-terms with append reports the complete resulting set, with added
+  and removed term IDs, instead of only the terms supplied.
+* Removed: the WT Widgets for Elementor printf guard, fixed upstream in 1.4.8
+  (WP Travel ticket 2051). scan-compat remains as a diagnostic for older versions
+  and no longer returns guard_active.
+* Developer: tools/trips_xlsx.py converts the CSV files to a formatted Excel
+  workbook and back. It is a repository helper and is not part of the plugin zip.
 
 = 1.9.0 =
 * Maintenance release: CI runs on staging, staging merges are tagged as

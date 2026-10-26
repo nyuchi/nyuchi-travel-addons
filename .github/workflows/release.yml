@@ -57,6 +57,7 @@ jobs:
             --exclude '.github' \
             --exclude '.claude' \
             --exclude 'build' \
+            --exclude 'tools' \
             --exclude 'design' \
             --exclude 'templates/elementor/README.md' \
             --exclude '.gitignore' \

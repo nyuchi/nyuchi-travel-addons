@@ -333,6 +333,8 @@ class WTA_Inquiry_Form {
         // A list that lost entries is not applied: silently dropping a field the
         // caller meant to keep is worse than refusing the whole replacement.
         if (count($clean) !== count($extras)) {
+            $rejected[] = 'extras: the list was not applied because an entry above was refused. Nothing was changed.';
+
             return null;
         }
 

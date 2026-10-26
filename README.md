@@ -85,6 +85,7 @@ the others.
 | `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                               |
 | `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                      |
 | `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                     |
+| `inquiry_form`     | Enquiry form customisation      | Labels, extra fields and recipients for WP Travel's own enquiry form, and the Enquiry widget                                   |
 | `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                      |
 | `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
 
@@ -128,6 +129,24 @@ dequeues, never deregisters.
 - `nyuchi-travel/set-trip-price` writes one price row, confined to its trip by
   joining the price row to its pricing option and the option to the trip. Dry
   run by default. Administrators only.
+
+- `nyuchi-travel/get-inquiry-form` describes WP Travel's trip enquiry form as it
+  renders now: each field's label, placeholder, required flag and source, the
+  consent text, who the notification goes to, and what anti-spam exists. Read
+  only; never returns keys or secrets. Administrators only.
+- `nyuchi-travel/update-inquiry-form` relabels WP Travel's three fields, replaces
+  the list of extra fields (text, textarea or select, at most five) and the
+  notification addresses, and sets the consent text, the privacy link behaviour,
+  the enquiry switch and the admin email subject. Name and email stay required.
+  Dry run by default. Consent, switch and subject are written to WP Travel's own
+  settings, one key at a time; the rest is stored in `wta_inquiry_form`.
+  Administrators only.
+- `nyuchi-travel/list-inquiries` lists recent enquiries newest first. Rows carry
+  the trip, date and read state only; `include_contact` adds name and email and
+  `include_message` adds the message. Requires `edit_others_posts`.
+- `nyuchi-travel/get-inquiry-stats` counts enquiries per trip, destination and
+  month over a window, with enquiries per published trip. No personal data.
+  Requires `edit_others_posts`.
 
 Three further components are always loaded: a REST module, an Abilities module
 and an admin module. They read module state rather than adding behaviour of
@@ -281,6 +300,12 @@ file: hero, legs, route, seasonality, options, checklist, notes, gallery,
 trip card, destination grid, activity cards and experience strip. Each widget
 carries style and responsive controls, including per-device grid columns and a
 choice of which registered image size to load.
+
+The Trip Enquiry widget (`wta-enquiry`) shows "From $X pp" (or "Price on
+request" when the trip has no price above zero), a button, and WP Travel's own
+enquiry form inline for the trip being viewed. Labels, extra fields and
+recipients come from `update-inquiry-form`, which WP Travel applies through its
+`wp_travel_enquiries_form_fields` and `wp_travel_enquiries_admin_emails` filters.
 
 Two Elementor dynamic tags are also registered, for term text and term images,
 and `templates/elementor/single-itinerary.json` is an importable template that

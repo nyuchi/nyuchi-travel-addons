@@ -101,6 +101,16 @@ already uses. The duration mirror is kept in sync because leaving it stale is a 
 
 == Changelog ==
 
+= Unreleased =
+* New: get-inquiry-form, update-inquiry-form, list-inquiries and get-inquiry-stats
+  abilities for WP Travel's trip enquiry form. update-inquiry-form is dry run by
+  default and administrators only; list-inquiries returns no name, email or message
+  unless asked, and needs edit_others_posts; get-inquiry-stats carries no personal data.
+* New: enquiry form customisation module. Applies saved labels, placeholders, required
+  flags, up to five extra fields and notification addresses to WP Travel's own form.
+* New: Trip Enquiry Elementor widget (wta-enquiry): price or "Price on request", a
+  button, and WP Travel's enquiry form inline for the current trip.
+
 = 1.10.0 =
 * New: conditional asset loading module, off until switched on from the Modules tab.
   It keeps the WP Travel booking widget, Google Maps and WP Travel Pro scripts off

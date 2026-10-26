@@ -48,6 +48,11 @@ A run takes about ten seconds.
 - `RouteSanitizeTest.php` and `TripDataTest.php`: the `wta_route` sanitiser
   (including today's "unknown transfer mode becomes drive" behaviour) and
   `WTA_Elementor::trip_data()` for a partially filled trip.
+- `TripStatusPermissionTest.php`: `create-trip` and `update-trip` refuse a
+  publish, schedule or private status without the trip post type's publish
+  capability (#39), write nothing else when they refuse, still let a
+  contributor move a trip between draft and pending, and report the refusal
+  in a dry run. Skipped on WordPress older than 6.9 (no Abilities API).
 
 No test reaches the network: `tests/includes/class-wta-test-http.php` answers
 every request or refuses it.

@@ -86,6 +86,7 @@
   font-size:clamp(38px,7vw,80px);line-height:.94;letter-spacing:-.03em;margin:16px 0 0;text-wrap:balance;overflow-wrap:break-word;
 }
 .wta-hero h1 .wta-line{font-style:normal;display:block;font-size:inherit;line-height:inherit;border:0;padding:0}
+.wta-hero h1 .wta-line{color:var(--bleach)}
 .wta-hero h1 .wta-line[data-accent="warm"]{color:var(--dust)}
 .wta-hero h1 .wta-line[data-accent="cool"]{color:var(--ocean-bright)}
 .wta-hero-sub{margin:22px 0 0;max-width:46ch;color:rgba(232,220,192,.78);font-size:clamp(15px,1.6vw,18px)}

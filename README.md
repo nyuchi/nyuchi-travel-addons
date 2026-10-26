@@ -74,18 +74,51 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key                | Module                          | What it does                                                                                                      |
-| ------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                   |
-| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes |
-| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client          |
-| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                      |
-| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank           |
-| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                    |
-| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                  |
-| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                         |
-| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics        |
-| `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                         |
+| Key                | Module                          | What it does                                                                                                                   |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                |
+| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes              |
+| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                       |
+| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                   |
+| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                        |
+| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                 |
+| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                               |
+| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                      |
+| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                     |
+| `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                                      |
+| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
+
+The `assets` module is the one exception to "every module defaults to on": it
+changes what the front end loads, so it stays off until switched on from the
+Modules tab. It keeps the full asset set on single trips, trip archives and
+taxonomies, WP Travel checkout/cart/account pages, `/my-bookings/`,
+`/thank-you/`, any page whose content mentions a WP Travel shortcode, and
+Elementor/Customizer previews. What it removes, and where it keeps everything,
+is adjustable through the `wta_assets_rules`, `wta_assets_keep_paths`,
+`wta_assets_keep_shortcodes` and `wta_assets_needed` filters. It only
+dequeues, never deregisters.
+
+### Trip abilities added with the WP Travel abilities module
+
+- `nyuchi-travel/export-trips` downloads up to 25 trips as one JSON document
+  (post fields, WP Travel meta, days, itinerary groups, terms by slug, and
+  read-only pricing and dates for context). No booking or enquiry data.
+- `nyuchi-travel/import-trips` applies an edited document back. Dry run by
+  default. It updates existing trips and never changes their slug or status,
+  creates terms, or writes pricing or dates. A trip modified after the export
+  is refused unless `force` is set. With `allow_create`, an entry without an
+  id creates a new trip, always as a draft.
+- `nyuchi-travel/export-trips-csv` and `nyuchi-travel/import-trips-csv` do the
+  same through two spreadsheet-friendly files: `trips.csv` (one row per trip:
+  post fields, WP Travel meta, terms as slugs joined by `|`) and `days.csv`
+  (one row per day). A blank cell leaves a value unchanged; write `[clear]` to
+  clear a meta field or term list. A trip with rows in `days.csv` has its whole
+  day list replaced. The itinerary groups (hero, legs, route, seasonality,
+  options, checklist, notes) are JSON only. CSV import is a converter onto the
+  JSON import, so it has the same safeguards.
+- `nyuchi-travel/set-trip-price` writes one price row, confined to its trip by
+  joining the price row to its pricing option and the option to the trip. Dry
+  run by default. Administrators only.
 
 Three further components are always loaded: a REST module, an Abilities module
 and an admin module. They read module state rather than adding behaviour of

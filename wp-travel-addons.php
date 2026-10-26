@@ -39,7 +39,10 @@ require_once WTA_DIR . 'includes/class-wta-term-media.php';
 require_once WTA_DIR . 'includes/class-wta-term-fields.php';
 require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
+require_once WTA_DIR . 'includes/class-wta-assets.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
+require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
+require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
 require_once WTA_DIR . 'includes/class-wta-rest.php';
 require_once WTA_DIR . 'includes/class-wta-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-admin.php';
@@ -129,12 +132,30 @@ final class WP_Travel_Addons {
                 'label'  => 'Compatibility guards',
                 'detail' => 'Works around known defects in WP Travel companion plugins.',
             ),
+            'assets' => array(
+                'class'   => 'WTA_Assets',
+                'label'   => 'Conditional asset loading',
+                'detail'  => 'Keeps the WP Travel booking widget, Google Maps and WP Travel Pro bundles off pages that cannot use them. Off until switched on, because it changes what the front end loads.',
+                'default' => 0,
+            ),
         );
+    }
+
+    /**
+     * Whether a module is switched on. Modules default to on unless the map
+     * says otherwise, so an update never silently enables a new one that
+     * changes front-end behaviour.
+     */
+    public static function module_enabled($key) {
+        $map     = self::module_map();
+        $default = isset($map[$key]['default']) ? (int) $map[$key]['default'] : 1;
+
+        return (bool) get_option('wta_module_' . $key, $default);
     }
 
     public function boot() {
         foreach (self::module_map() as $key => $module) {
-            if (!get_option('wta_module_' . $key, 1)) {
+            if (!self::module_enabled($key)) {
                 continue;
             }
 
@@ -167,9 +188,9 @@ final class WP_Travel_Addons {
     }
 
     public function activate() {
-        foreach (array_keys(self::module_map()) as $key) {
+        foreach (self::module_map() as $key => $module) {
             if (false === get_option('wta_module_' . $key, false)) {
-                add_option('wta_module_' . $key, 1);
+                add_option('wta_module_' . $key, isset($module['default']) ? (int) $module['default'] : 1);
             }
         }
 

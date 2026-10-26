@@ -324,7 +324,7 @@
 /* A single-column strip is a row of one thing per line, not a grid of one. */
 .wta-exp-row[data-layout="list"]{grid-template-columns:minmax(0,1fr)}
 
-.wta-card{min-width:0;border-radius:10px;overflow:hidden;background:#fff;border:1px solid var(--rule)}
+.wta-card{min-width:0;border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--rule)}
 .wta-card-link{display:block;color:inherit;text-decoration:none;height:100%}
 .wta-card-link:focus-visible{outline:2px solid var(--dust);outline-offset:2px}
 
@@ -339,6 +339,9 @@
 .wta-cards-grid[data-ratio="4-3"]  {--wta-card-ratio:4/3}
 .wta-cards-grid[data-ratio="3-4"]  {--wta-card-ratio:3/4}
 .wta-cards-grid[data-ratio="16-9"] {--wta-card-ratio:16/9}
+/* Mzizi card spec: 14px card, 12px inner image corners. The overlay style
+   fills the whole card with the image, so the card's own radius clips it. */
+.wta-cards-grid:not([data-style="overlay"]) .wta-card-media{border-radius:12px 12px 0 0}
 .wta-card-img{
   width:100%;height:100%;object-fit:cover;
   transform:scale(1);transition:transform .5s ease;
@@ -352,7 +355,7 @@
   background:rgba(8,26,21,.82);color:var(--bleach);padding:5px 10px;border-radius:2px;
 }
 
-.wta-card-body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:7px}
+.wta-card-body{padding:14px;display:flex;flex-direction:column;gap:7px}
 .wta-card-title{
   font-family:var(--display);font-weight:700;font-size:16px;
   line-height:1.3;letter-spacing:-.01em;margin:0;color:var(--ink);

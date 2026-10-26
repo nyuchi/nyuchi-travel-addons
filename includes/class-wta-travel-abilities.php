@@ -1,3 +1,33 @@
+                $before = self::trip_terms($trip_id);
+                $result = array();
+
+                // "to" is the whole set the trip ends up with, not the list the
+                // caller supplied: with append that list is only the delta, and
+                // reporting it as the outcome reads like a replace.
+                foreach ($terms['resolved'] as $taxonomy => $term_ids) {
+                    $from  = isset($before[$taxonomy]) ? array_map('intval', wp_list_pluck($before[$taxonomy], 'term_id')) : array();
+                    $given = array_map('intval', $term_ids);
+                    $to    = $append ? array_values(array_unique(array_merge($from, $given))) : array_values(array_unique($given));
+
+                    $result[$taxonomy] = array(
+                        'from'    => $from,
+                        'to'      => $to,
+                        'added'   => array_values(array_diff($to, $from)),
+                        'removed' => array_values(array_diff($from, $to)),
+                    );
+                }
+
+                if ($dry) {
+                    return array(
+                        'dry_run'  => true,
+                        'trip_id'  => $trip_id,
+                        'changed'  => array_keys($terms['resolved']),
+                        'rejected' => $terms['rejected'],
+                        'result'   => $result,
+                        'note'     => 'Nothing was changed. Call again with dry_run false to apply this classification.',
+                    );
+                }
+
 <?php
 /**
  * WP Travel's own data, described so a machine can manage a trip end to end.
@@ -1196,7 +1226,7 @@ class WTA_Travel_Abilities {
                 'required'   => array('trip_id', 'terms'),
             ),
 
-            'output_schema' => $this->write_result_schema('Terms before and after, per taxonomy.'),
+            'output_schema' => $this->write_result_schema('Per taxonomy: from (before), to (the complete resulting set, also when append is true), added and removed term IDs.'),
 
             'permission_callback' => array($this, 'can_edit_posts'),
 
@@ -1243,6 +1273,16 @@ class WTA_Travel_Abilities {
 
                 foreach ($terms['resolved'] as $taxonomy => $term_ids) {
                     wp_set_object_terms($trip_id, $term_ids, $taxonomy, $append);
+                }
+
+                // Report what is stored, not what we predicted, so a term the
+                // write silently dropped shows up as a mismatch with the plan.
+                $after = self::trip_terms($trip_id);
+                foreach ($result as $taxonomy => $row) {
+                    $stored                    = isset($after[$taxonomy]) ? array_map('intval', wp_list_pluck($after[$taxonomy], 'term_id')) : array();
+                    $result[$taxonomy]['to']      = $stored;
+                    $result[$taxonomy]['added']   = array_values(array_diff($stored, $row['from']));
+                    $result[$taxonomy]['removed'] = array_values(array_diff($row['from'], $stored));
                 }
 
                 return array(

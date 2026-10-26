@@ -41,6 +41,7 @@ require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-assets.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
+require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-rest.php';
 require_once WTA_DIR . 'includes/class-wta-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-admin.php';

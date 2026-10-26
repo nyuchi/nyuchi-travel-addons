@@ -162,6 +162,11 @@ class WTA_Travel_Abilities {
         $this->register_update_term();
 
         $this->register_list_travel_posts();
+
+        // Export and import of whole trips, built on the helpers above.
+        if (class_exists('WTA_Trip_Transfer')) {
+            WTA_Trip_Transfer::register();
+        }
     }
 
     /* ------------------------------------------------------- wp-travel-status */
@@ -2136,7 +2141,7 @@ class WTA_Travel_Abilities {
      *
      * @return true|WP_Error
      */
-    protected static function require_trip($trip_id) {
+    public static function require_trip($trip_id) {
         $core = self::require_core();
 
         if (is_wp_error($core)) {
@@ -2417,7 +2422,7 @@ class WTA_Travel_Abilities {
      * @return array<string, mixed> Always includes the table description, so a
      *                              caller that got no rows can still see why.
      */
-    protected static function read_trip_rows($suffix, $trip_id) {
+    public static function read_trip_rows($suffix, $trip_id) {
         global $wpdb;
 
         $schema = self::describe_table($suffix);
@@ -2476,7 +2481,7 @@ class WTA_Travel_Abilities {
      * @param array<string, mixed> $parent Result of read_trip_rows().
      * @return array<string, mixed>
      */
-    protected static function read_related_rows($suffix, $parent) {
+    public static function read_related_rows($suffix, $parent) {
         global $wpdb;
 
         $schema = self::describe_table($suffix);
@@ -2800,7 +2805,7 @@ class WTA_Travel_Abilities {
      *
      * @return array{accepted: array<string, string>, rejected: string[]}
      */
-    protected static function partition_meta($meta) {
+    public static function partition_meta($meta) {
         $accepted = array();
         $rejected = array();
 
@@ -2850,7 +2855,7 @@ class WTA_Travel_Abilities {
      *
      * @return array{resolved: array<string, int[]>, rejected: string[]}
      */
-    protected static function resolve_terms($terms) {
+    public static function resolve_terms($terms) {
         $resolved = array();
         $rejected = array();
 
@@ -2904,7 +2909,7 @@ class WTA_Travel_Abilities {
      *
      * @return array<string, array<int, array<string, mixed>>>
      */
-    protected static function trip_terms($trip_id) {
+    public static function trip_terms($trip_id) {
         $out = array();
 
         foreach (array_keys(WTA_Trip::default_taxonomies()) as $taxonomy) {

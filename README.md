@@ -98,6 +98,19 @@ is adjustable through the `wta_assets_rules`, `wta_assets_keep_paths`,
 `wta_assets_keep_shortcodes` and `wta_assets_needed` filters. It only
 dequeues, never deregisters.
 
+### Trip abilities added with the WP Travel abilities module
+
+- `nyuchi-travel/export-trips` downloads up to 25 trips as one JSON document
+  (post fields, WP Travel meta, days, itinerary groups, terms by slug, and
+  read-only pricing and dates for context). No booking or enquiry data.
+- `nyuchi-travel/import-trips` applies an edited document back onto the same
+  trips. Dry run by default. It updates only: it never creates trips or terms,
+  never changes a slug or status, and never writes pricing or dates. A trip
+  modified after the export is refused unless `force` is set.
+- `nyuchi-travel/set-trip-price` writes one price row, confined to its trip by
+  joining the price row to its pricing option and the option to the trip. Dry
+  run by default. Administrators only.
+
 Three further components are always loaded: a REST module, an Abilities module
 and an admin module. They read module state rather than adding behaviour of
 their own.

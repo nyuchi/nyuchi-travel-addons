@@ -74,18 +74,18 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key                | Module                          | What it does                                                                                                      |
-| ------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                   |
-| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes |
-| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client          |
-| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                      |
-| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank           |
-| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                    |
-| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                  |
-| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                         |
-| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics        |
-| `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                         |
+| Key                | Module                          | What it does                                                                                                                   |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                |
+| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes              |
+| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                       |
+| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                   |
+| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                        |
+| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                 |
+| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                               |
+| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                      |
+| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                     |
+| `compat`           | Compatibility guards            | Works around known defects in WP Travel companion plugins                                                                      |
 | `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
 
 The `assets` module is the one exception to "every module defaults to on": it

@@ -8,9 +8,9 @@
 [![CI](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/ci.yml/badge.svg)](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/ci.yml)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL_v2_or_later-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
 ![WordPress](https://img.shields.io/badge/WordPress-5.9%2B-21759B?style=flat-square&logo=wordpress&logoColor=white)
-![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?style=flat-square&logo=php&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)
 
-**Version:** 1.11.0 | **Requires:** WordPress 5.9+, PHP 7.4+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
+**Version:** 1.12.0 | **Requires:** WordPress 5.9+, PHP 8.2+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
 
 ---
 
@@ -39,7 +39,10 @@ the wrong tool.
 
 ## Requirements
 
-WordPress 5.9 or later, PHP 7.4 or later, and an active WP Travel installation.
+WordPress 5.9 or later, PHP 8.2 or later, and an active WP Travel installation.
+The PHP minimum was raised from 7.4 to 8.2: a breaking requirement change for
+sites on older PHP, shipping in the next minor release. There is no maximum PHP
+version.
 Each module checks that the trip post type exists before registering anything,
 so the plugin stays inert rather than erroring if WP Travel is deactivated.
 

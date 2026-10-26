@@ -125,6 +125,10 @@ class WTA_Abilities {
                 'description' => 'Post ID of the trip to write to.',
                 'minimum'     => 1,
             ),
+            'dry_run' => array(
+                'type'        => 'boolean',
+                'description' => 'Defaults to true. Must be explicitly false to write; a dry run sanitises the supplied groups and reports the before and after of each, writing nothing.',
+            ),
         );
 
         // One optional property per authored group, carrying the same schema
@@ -151,10 +155,23 @@ class WTA_Abilities {
             'output_schema' => array(
                 'type'       => 'object',
                 'properties' => array(
+                    'dry_run' => array(
+                        'type'        => 'boolean',
+                        'description' => 'True when nothing was written.',
+                    ),
                     'updated' => array(
                         'type'        => 'array',
-                        'description' => 'Group names that were sanitised and written to the trip.',
+                        'description' => 'Group names that were sanitised and, unless dry_run is true, written to the trip.',
                         'items'       => array('type' => 'string'),
+                    ),
+                    'unchanged' => array(
+                        'type'        => 'array',
+                        'description' => 'Supplied groups whose sanitised value equals what is already stored.',
+                        'items'       => array('type' => 'string'),
+                    ),
+                    'result'  => array(
+                        'type'        => 'object',
+                        'description' => 'Per group, the stored value before and the sanitised value after. "before" is omitted for unchanged groups.',
                     ),
                     'skipped' => array(
                         'type'        => 'array',
@@ -162,7 +179,7 @@ class WTA_Abilities {
                         'items'       => array('type' => 'string'),
                     ),
                 ),
-                'required'   => array('updated', 'skipped'),
+                'required'   => array('dry_run', 'updated', 'skipped'),
             ),
 
             // The capability is per-post and the post is an input, so it cannot
@@ -186,9 +203,17 @@ class WTA_Abilities {
                     );
                 }
 
-                $updated = array();
-                $skipped = array();
+                // Dry by default, like every other write ability here: an
+                // omitted flag must never be the way a trip gets overwritten.
+                $dry       = !isset($input['dry_run']) || (bool) $input['dry_run'];
+                $updated   = array();
+                $unchanged = array();
+                $skipped   = array();
+                $result    = array();
+                $writes    = array();
 
+                // Sanitise every group before writing any, so a WP_Error on a
+                // later group cannot leave an earlier one half-applied.
                 foreach ($fields as $meta_key => $field) {
                     $rest_key = $field['rest_key'];
 
@@ -212,13 +237,31 @@ class WTA_Abilities {
                         return $clean;
                     }
 
-                    update_post_meta($trip_id, $meta_key, $clean);
-                    $updated[] = $rest_key;
+                    $before = get_post_meta($trip_id, $meta_key, true);
+
+                    if ($before === $clean) {
+                        $unchanged[]        = $rest_key;
+                        $result[$rest_key] = array('after' => $clean);
+                    } else {
+                        $result[$rest_key] = array('before' => $before, 'after' => $clean);
+                    }
+
+                    $writes[$meta_key] = $clean;
+                    $updated[]         = $rest_key;
+                }
+
+                if (!$dry) {
+                    foreach ($writes as $meta_key => $clean) {
+                        update_post_meta($trip_id, $meta_key, $clean);
+                    }
                 }
 
                 return array(
-                    'updated' => $updated,
-                    'skipped' => $skipped,
+                    'dry_run'   => $dry,
+                    'updated'   => $updated,
+                    'unchanged' => $unchanged,
+                    'skipped'   => $skipped,
+                    'result'    => $result,
                 );
             },
         ));

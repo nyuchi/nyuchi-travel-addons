@@ -1,33 +1,3 @@
-                $before = self::trip_terms($trip_id);
-                $result = array();
-
-                // "to" is the whole set the trip ends up with, not the list the
-                // caller supplied: with append that list is only the delta, and
-                // reporting it as the outcome reads like a replace.
-                foreach ($terms['resolved'] as $taxonomy => $term_ids) {
-                    $from  = isset($before[$taxonomy]) ? array_map('intval', wp_list_pluck($before[$taxonomy], 'term_id')) : array();
-                    $given = array_map('intval', $term_ids);
-                    $to    = $append ? array_values(array_unique(array_merge($from, $given))) : array_values(array_unique($given));
-
-                    $result[$taxonomy] = array(
-                        'from'    => $from,
-                        'to'      => $to,
-                        'added'   => array_values(array_diff($to, $from)),
-                        'removed' => array_values(array_diff($from, $to)),
-                    );
-                }
-
-                if ($dry) {
-                    return array(
-                        'dry_run'  => true,
-                        'trip_id'  => $trip_id,
-                        'changed'  => array_keys($terms['resolved']),
-                        'rejected' => $terms['rejected'],
-                        'result'   => $result,
-                        'note'     => 'Nothing was changed. Call again with dry_run false to apply this classification.',
-                    );
-                }
-
 <?php
 /**
  * WP Travel's own data, described so a machine can manage a trip end to end.
@@ -184,6 +154,7 @@ class WTA_Travel_Abilities {
 
         $this->register_get_pricing();
         $this->register_set_pricing();
+        $this->register_set_trip_price();
         $this->register_get_dates();
         $this->register_set_dates();
 
@@ -1253,10 +1224,19 @@ class WTA_Travel_Abilities {
                 $before = self::trip_terms($trip_id);
                 $result = array();
 
+                // "to" is the whole set the trip ends up with, not the list the
+                // caller supplied: with append that list is only the delta, and
+                // reporting it as the outcome reads like a replace.
                 foreach ($terms['resolved'] as $taxonomy => $term_ids) {
+                    $from  = isset($before[$taxonomy]) ? array_map('intval', wp_list_pluck($before[$taxonomy], 'term_id')) : array();
+                    $given = array_map('intval', $term_ids);
+                    $to    = $append ? array_values(array_unique(array_merge($from, $given))) : array_values(array_unique($given));
+
                     $result[$taxonomy] = array(
-                        'from' => isset($before[$taxonomy]) ? wp_list_pluck($before[$taxonomy], 'term_id') : array(),
-                        'to'   => $term_ids,
+                        'from'    => $from,
+                        'to'      => $to,
+                        'added'   => array_values(array_diff($to, $from)),
+                        'removed' => array_values(array_diff($from, $to)),
                     );
                 }
 
@@ -1279,7 +1259,7 @@ class WTA_Travel_Abilities {
                 // write silently dropped shows up as a mismatch with the plan.
                 $after = self::trip_terms($trip_id);
                 foreach ($result as $taxonomy => $row) {
-                    $stored                    = isset($after[$taxonomy]) ? array_map('intval', wp_list_pluck($after[$taxonomy], 'term_id')) : array();
+                    $stored                       = isset($after[$taxonomy]) ? array_map('intval', wp_list_pluck($after[$taxonomy], 'term_id')) : array();
                     $result[$taxonomy]['to']      = $stored;
                     $result[$taxonomy]['added']   = array_values(array_diff($stored, $row['from']));
                     $result[$taxonomy]['removed'] = array_values(array_diff($row['from'], $stored));
@@ -1372,6 +1352,225 @@ class WTA_Travel_Abilities {
                 return self::write_trip_row('wt_pricings', $input);
             },
         ));
+    }
+
+    /* ------------------------------------------------------- set-trip-price */
+
+    /**
+     * Column on the category-relation table that points at its wt_pricings row.
+     *
+     * Same discovery order read_related_rows() uses, so the two cannot disagree
+     * about what the link is.
+     */
+    protected static function relation_link_column($relations) {
+        foreach (array('pricing_id', 'pricings_id') as $candidate) {
+            if (isset($relations['columns'][$candidate])) {
+                return $candidate;
+            }
+        }
+
+        return '';
+    }
+
+    protected function register_set_trip_price() {
+        wp_register_ability(self::NS . 'set-trip-price', array(
+            'label'       => 'Set a trip\'s per-person price',
+            'description' => 'Write the real price of one pricing option on a trip. WP Travel keeps it in the category-relation table (regular_price, price_per, pricing_category_id), one row per pricing option and category, reached through a wt_pricings row such as "Luxury". This ability confines the write to the named trip by joining the relation row to its pricing row and the pricing row to the trip, so a wrong id cannot reprice another trip. Pass relation_id to change an existing price row, or omit it to add one to the pricing option. Defaults to a dry run showing the row before and after. Never invent a price: write only figures the business has confirmed.',
+            'category'    => self::CATEGORY,
+
+            'input_schema' => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'trip_id'             => array('type' => 'integer', 'description' => 'Post ID of the trip.', 'minimum' => 1),
+                    'pricing_id'          => array('type' => 'integer', 'description' => 'ID of the trip\'s wt_pricings row (get-trip-pricing lists them). Must belong to this trip.', 'minimum' => 1),
+                    'relation_id'         => array('type' => 'integer', 'description' => 'ID of the existing price row to change. Omit to add a new price row to the pricing option.', 'minimum' => 1),
+                    'regular_price'       => array('type' => 'number', 'description' => 'The price, in the site currency, greater than zero.', 'exclusiveMinimum' => 0),
+                    'sale_price'          => array('type' => 'number', 'description' => 'Optional sale price, zero or more. Only written when the table has a sale_price column.', 'minimum' => 0),
+                    'price_per'           => array('type' => 'string', 'description' => 'What the price covers.', 'enum' => array('person', 'group')),
+                    'pricing_category_id' => array('type' => 'integer', 'description' => 'Price category (adult, child, ...) term ID. Required when adding a row; kept as is when updating if omitted.', 'minimum' => 0),
+                    'default_pax'         => array('type' => 'integer', 'description' => 'Default number of travellers. Only written when the table has a default_pax column.', 'minimum' => 1),
+                    'dry_run'             => array('type' => 'boolean', 'description' => 'Defaults to true. Must be explicitly false to write the price.'),
+                ),
+                'required'   => array('trip_id', 'pricing_id', 'regular_price'),
+            ),
+
+            'output_schema' => $this->write_result_schema('The price row before and after.'),
+
+            'permission_callback' => array($this, 'can_manage_travel_tables'),
+
+            'execute_callback' => function ($input) {
+                return self::write_trip_price($input);
+            },
+        ));
+    }
+
+    /**
+     * @return array<string, mixed>|WP_Error
+     */
+    protected static function write_trip_price($input) {
+        global $wpdb;
+
+        $trip_id = isset($input['trip_id']) ? absint($input['trip_id']) : 0;
+        $check   = self::require_trip($trip_id);
+
+        if (is_wp_error($check)) {
+            return $check;
+        }
+
+        $pricing_id  = isset($input['pricing_id']) ? absint($input['pricing_id']) : 0;
+        $relation_id = isset($input['relation_id']) ? absint($input['relation_id']) : 0;
+        $dry         = !isset($input['dry_run']) || (bool) $input['dry_run'];
+
+        if (!isset($input['regular_price']) || !is_numeric($input['regular_price']) || (float) $input['regular_price'] <= 0) {
+            return new WP_Error('wta_bad_price', 'regular_price must be a number greater than zero.', array('status' => 400));
+        }
+
+        if (isset($input['price_per']) && !in_array($input['price_per'], array('person', 'group'), true)) {
+            return new WP_Error('wta_bad_price_per', 'price_per must be "person" or "group".', array('status' => 400));
+        }
+
+        $pricings  = self::describe_table('wt_pricings');
+        $relations = self::describe_table('wt_price_category_relation');
+
+        if (!$pricings['exists'] || !$relations['exists']) {
+            return new WP_Error('wta_table_missing', 'WP Travel\'s pricing tables are not both present on this site.', array('status' => 409));
+        }
+
+        $trip_col = $pricings['trip_column'];
+        $pk       = $pricings['primary_key'];
+        $link     = self::relation_link_column($relations);
+        $rel_pk   = $relations['primary_key'];
+
+        if ('' === $trip_col || '' === $pk || '' === $link || '' === $rel_pk) {
+            return new WP_Error(
+                'wta_table_unscoped',
+                'Cannot confine a price write to one trip: the pricing tables lack a trip column, a primary key or a link column. Refusing to write.',
+                array('status' => 409)
+            );
+        }
+
+        $ptable = $pricings['table'];
+        $rtable = $relations['table'];
+
+        // The pricing option must belong to this trip.
+        $pricing = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM `{$ptable}` WHERE `{$pk}` = %d AND `{$trip_col}` = %d", $pricing_id, $trip_id),
+            ARRAY_A
+        );
+
+        if (!$pricing) {
+            return new WP_Error(
+                'wta_pricing_not_this_trip',
+                sprintf('Pricing option %d does not exist on trip %d. Call get-trip-pricing to list this trip\'s options.', $pricing_id, $trip_id),
+                array('status' => 409)
+            );
+        }
+
+        // An existing price row must hang off that pricing option.
+        $existing = null;
+
+        if ($relation_id) {
+            $existing = $wpdb->get_row(
+                $wpdb->prepare("SELECT * FROM `{$rtable}` WHERE `{$rel_pk}` = %d AND `{$link}` = %d", $relation_id, $pricing_id),
+                ARRAY_A
+            );
+
+            if (!$existing) {
+                return new WP_Error(
+                    'wta_relation_not_this_pricing',
+                    sprintf('Price row %d does not belong to pricing option %d on trip %d.', $relation_id, $pricing_id, $trip_id),
+                    array('status' => 409)
+                );
+            }
+        }
+
+        $wanted = array('regular_price' => (float) $input['regular_price']);
+
+        foreach (array('sale_price', 'price_per', 'pricing_category_id', 'default_pax') as $key) {
+            if (isset($input[$key])) {
+                $wanted[$key] = $input[$key];
+            }
+        }
+
+        if (!$relation_id && !isset($wanted['pricing_category_id'])) {
+            return new WP_Error('wta_category_required', 'pricing_category_id is required when adding a price row.', array('status' => 400));
+        }
+
+        // A category id that is not a term would write a price WP Travel cannot
+        // display. Checked only when the taxonomy exists on this site.
+        if (isset($wanted['pricing_category_id']) && (int) $wanted['pricing_category_id'] > 0
+            && taxonomy_exists('itinerary_pricing_category')
+            && !term_exists((int) $wanted['pricing_category_id'], 'itinerary_pricing_category')) {
+            return new WP_Error('wta_bad_category', sprintf('pricing_category_id %d is not a price category on this site.', (int) $wanted['pricing_category_id']), array('status' => 400));
+        }
+
+        $clean    = array();
+        $formats  = array();
+        $rejected = array();
+
+        foreach ($wanted as $column => $value) {
+            if (!isset($relations['columns'][$column])) {
+                $rejected[] = sprintf('%s: not a column of %s on this site, so it was not written.', $column, $rtable);
+                continue;
+            }
+
+            list($clean[$column], $formats[]) = self::cast_for_column($relations['columns'][$column]['type'], $value);
+        }
+
+        if (!isset($clean['regular_price'])) {
+            return new WP_Error('wta_no_price_column', sprintf('%s has no regular_price column, so there is nowhere to write the price.', $rtable), array('status' => 409));
+        }
+
+        $action = $relation_id ? 'update' : 'insert';
+        $after  = array_merge((array) $existing, $clean, $relation_id ? array() : array($link => $pricing_id));
+
+        if ($dry) {
+            return array(
+                'dry_run'  => true,
+                'trip_id'  => $trip_id,
+                'changed'  => array_keys($clean),
+                'rejected' => $rejected,
+                'result'   => array(
+                    'action'     => $action,
+                    'pricing'    => $pricing,
+                    'before'     => $existing,
+                    'after'      => $after,
+                ),
+                'note'     => 'Nothing was written. Call again with dry_run false to ' . $action . ' this price.',
+            );
+        }
+
+        if ($relation_id) {
+            $wpdb->update($rtable, $clean, array($rel_pk => $relation_id), $formats, array('%d'));
+            $written = $relation_id;
+        } else {
+            $clean[$link] = $pricing_id;
+            $formats[]    = '%d';
+
+            $wpdb->insert($rtable, $clean, $formats);
+            $written = (int) $wpdb->insert_id;
+        }
+
+        // Direct table writes skip WP Travel's own save routine. Clear what
+        // WordPress itself caches for the trip, and tell anything else that
+        // caches prices (WP Travel, a page cache) to do the same.
+        clean_post_cache($trip_id);
+        do_action('wta_trip_price_written', $trip_id, $pricing_id, $written);
+
+        return array(
+            'dry_run'  => false,
+            'trip_id'  => $trip_id,
+            'changed'  => array_keys($clean),
+            'rejected' => $rejected,
+            'result'   => array(
+                'action'      => $action,
+                'relation_id' => $written,
+                'pricing'     => $pricing,
+                'before'      => $existing,
+                'after'       => $wpdb->get_row($wpdb->prepare("SELECT * FROM `{$rtable}` WHERE `{$rel_pk}` = %d", $written), ARRAY_A),
+            ),
+            'note'     => 'Written directly to the table; the trip\'s WordPress post cache was cleared. WP Travel\'s own caches were not verified to clear, so re-save the trip in the admin or purge Cloudflare and Varnish if the front end shows the old price.',
+        );
     }
 
     /* -------------------------------------------------------- get-trip-dates */

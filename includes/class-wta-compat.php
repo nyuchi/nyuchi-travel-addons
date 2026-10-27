@@ -24,6 +24,11 @@
  *   so slick printed ahead of jQuery and logged "jQuery is not defined" on
  *   every page, whether or not a carousel was used. fix_slick_jquery() adds the
  *   missing dependency.
+ * - The home page hero is a muted, looping background video with a poster image
+ *   underneath. Phones that refuse to autoplay it (iOS Low Power Mode, data
+ *   saver, some in-app browsers) show a native play button that sits behind the
+ *   hero text and cannot be tapped. hero_video_fallback() hides that button and,
+ *   when playback does not start, removes the video so the poster shows.
  *
  * @package WPTravelAddons
  */
@@ -52,6 +57,8 @@ class WTA_Compat {
         // printing, for any enqueued after wp_enqueue_scripts. Idempotent.
         add_action('wp_enqueue_scripts', array($this, 'fix_slick_jquery'), 100);
         add_action('wp_print_scripts', array($this, 'fix_slick_jquery'), 1);
+
+        add_action('wp_footer', array($this, 'hero_video_fallback'), 99);
     }
 
     /**
@@ -293,5 +300,55 @@ class WTA_Compat {
 
             $script->deps[] = 'jquery';
         }
+    }
+
+    /** Selector for the background videos the fallback watches. */
+    const HERO_VIDEO_SELECTOR = 'video.ie-hero-media';
+
+    /**
+     * Script that keeps a hero background video from showing a dead play button.
+     *
+     * Reduced motion and data saver skip the video outright. Otherwise it asks
+     * the browser to play and, if that is refused or nothing is playing after
+     * 2.5 seconds, removes the video so the image beneath it shows.
+     *
+     * @return string
+     */
+    public static function hero_video_js() {
+        $selector = wp_json_encode(self::HERO_VIDEO_SELECTOR);
+
+        return '(function(){var vs=document.querySelectorAll(' . $selector . ');if(!vs.length){return;}'
+            . 'var m=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;'
+            . 'var c=navigator.connection||{};var skip=m||c.saveData===true;'
+            . 'Array.prototype.forEach.call(vs,function(v){'
+            . 'var drop=function(){if(v.parentNode){v.parentNode.removeChild(v);}};'
+            . 'if(skip){drop();return;}'
+            . 'v.muted=true;v.setAttribute("playsinline","");v.removeAttribute("controls");'
+            . 'var p=v.play&&v.play();if(p&&p.catch){p.catch(drop);}'
+            . 'setTimeout(function(){if(v.paused||v.readyState<3){drop();}},2500);'
+            . '});})();';
+    }
+
+    /**
+     * Print the hero video fallback on the front end.
+     *
+     * The CSS hides the native start-playback button on iOS and stops the video
+     * from taking taps meant for the hero. Switchable with the
+     * wta_compat_hero_video_fallback filter.
+     *
+     * @return void
+     */
+    public function hero_video_fallback() {
+        if (is_admin() || !apply_filters('wta_compat_hero_video_fallback', true)) {
+            return;
+        }
+
+        $selector = self::HERO_VIDEO_SELECTOR;
+
+        echo '<style id="wta-hero-video-css">' . $selector . '{pointer-events:none}'
+            . $selector . '::-webkit-media-controls,'
+            . $selector . '::-webkit-media-controls-start-playback-button,'
+            . $selector . '::-webkit-media-controls-overlay-play-button{display:none!important;-webkit-appearance:none}</style>' . "\n";
+        echo '<script id="wta-hero-video">' . self::hero_video_js() . '</script>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
     }
 }

@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility helpers. By Nyuchi Web Services.
- * Version:     1.17.0
+ * Version:     1.18.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.17.0');
+define('WTA_VERSION', '1.18.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -45,6 +45,7 @@ require_once WTA_DIR . 'includes/class-wta-pwa.php';
 require_once WTA_DIR . 'includes/class-wta-pwa-legacy.php';
 require_once WTA_DIR . 'includes/class-wta-consent.php';
 require_once WTA_DIR . 'includes/class-wta-consent-log.php';
+require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -160,6 +161,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_Consent',
                 'label'   => 'Cookie consent',
                 'detail'  => 'A cookie consent banner (accept, decline, manage categories) with Google Consent Mode v2 signalling, held-back scripts, an optional Meta Pixel loader and an optional consent log. Off until switched on, because it changes what the front end prints. Settings are on the Consent tab.',
+                'default' => 0,
+            ),
+            'ai_crawlers' => array(
+                'class'   => 'WTA_AI_Crawlers',
+                'label'   => 'AI crawler policy',
+                'detail'  => 'Adds a policy for AI crawlers to robots.txt: search and answer bots are welcome, training bots are disallowed, plus a Content-Signal line and the sitemap. Off until switched on, because it changes your robots.txt.',
                 'default' => 0,
             ),
         );

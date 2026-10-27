@@ -12,6 +12,7 @@ class AiCrawlersTest extends WP_UnitTestCase {
     public function tear_down() {
         remove_all_filters('wta_ai_search_bots');
         remove_all_filters('wta_ai_training_bots');
+        remove_all_filters('wta_ai_content_signal');
         parent::tear_down();
     }
 
@@ -70,5 +71,25 @@ class AiCrawlersTest extends WP_UnitTestCase {
 
         $this->assertStringContainsString('User-agent: BadBot', $out);
         $this->assertStringContainsString('User-agent: Real-Bot', $out);
+    }
+
+    public function test_the_content_signal_can_be_changed_with_a_filter() {
+        add_filter('wta_ai_content_signal', function () {
+            return 'search=yes, ai-input=no, ai-train=no';
+        });
+
+        $this->assertStringContainsString('Content-Signal: search=yes, ai-input=no, ai-train=no', $this->robots());
+    }
+
+    public function test_an_empty_signal_writes_nothing_to_robots() {
+        add_filter('wta_ai_content_signal', '__return_empty_string');
+
+        $this->assertStringNotContainsString('Content-Signal:', $this->robots());
+    }
+
+    public function test_the_header_hook_is_registered() {
+        $module = new WTA_AI_Crawlers();
+
+        $this->assertNotFalse(has_action('send_headers', array($module, 'send_content_signal')));
     }
 }

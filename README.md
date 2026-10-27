@@ -93,6 +93,7 @@ the others.
 | `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**                           |
 | `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
 | `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
+| `ai_crawlers`      | AI crawler policy               | Adds search and answer bots as allowed, AI training bots as disallowed, a Content-Signal line and the sitemap to robots.txt. **Off by default**          |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -192,6 +193,22 @@ Filters: `wta_pwa_defaults`, `wta_pwa_settings`, `wta_pwa_manifest`,
 `wta_pwa_categories`, `wta_pwa_exclude_paths`, `wta_pwa_cache_limits`,
 `wta_pwa_precache`, `wta_pwa_font_hosts`, `wta_pwa_register_logged_in`,
 `wta_pwa_wp_travel_active`, `wta_pwa_legacy_cleanup`, `wta_pwa_legacy_sw_path`.
+
+### AI crawler policy (the `ai_crawlers` module)
+
+Appends a policy for AI crawlers to the robots.txt WordPress serves. Search and
+answer crawlers (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User,
+PerplexityBot, Perplexity-User) are allowed so assistants can find and quote the
+site. Crawlers that collect pages to train models (GPTBot, ClaudeBot,
+anthropic-ai, Google-Extended, Applebot-Extended, CCBot, Bytespider,
+Meta-ExternalAgent) are disallowed. It also adds
+`Content-Signal: search=yes, ai-input=yes, ai-train=no` to the `*` group and a
+`Sitemap:` line when none is present.
+
+Move a bot between the lists with the `wta_ai_search_bots` and
+`wta_ai_training_bots` filters. A physical `robots.txt` file in the web root
+bypasses WordPress and is not changed; Cloudflare's own content-signal setting
+is separate and is changed in the Cloudflare dashboard.
 
 ### Cookie consent (the `consent` module)
 

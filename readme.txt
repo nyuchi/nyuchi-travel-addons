@@ -112,6 +112,15 @@ telemetry or usage ping. To hide the star count, add
 
 == Changelog ==
 
+= Unreleased =
+* New: country FAQs. Destinations have an FAQs field (question and answer pairs, edited
+  on the term screen, over REST, in the term export and import, and through update-term),
+  and a new Term FAQ Elementor widget shows them as an accessible accordion. On a trip or
+  a place it shows its country's FAQs, so each country has one FAQ source. The widget
+  publishes a single FAQPage schema block and leaves it out when another plugin or widget
+  on the page already publishes one.
+* Changed: destination terms exported before this release show as changed after it,
+  because the export now includes the FAQs. Export again before importing.
 = 1.12.0 =
 * Changed: requires PHP 8.2 or later (it was 7.4). Sites on older PHP need to upgrade
   PHP first; WordPress will not install this update on PHP older than 8.2.

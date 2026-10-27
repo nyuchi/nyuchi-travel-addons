@@ -37,6 +37,7 @@ require_once WTA_DIR . 'includes/class-wta-term-status.php';
 require_once WTA_DIR . 'includes/class-wta-elementor-tags.php';
 require_once WTA_DIR . 'includes/class-wta-term-media.php';
 require_once WTA_DIR . 'includes/class-wta-term-fields.php';
+require_once WTA_DIR . 'includes/class-wta-term-faq.php';
 require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-assets.php';
@@ -113,6 +114,11 @@ final class WP_Travel_Addons {
                 'class'  => 'WTA_Term_Fields',
                 'label'  => 'Destination and activity detail',
                 'detail' => 'Structured facts for destinations (country, gateway airport, currency, best months) and activities (duration, difficulty, minimum age, best months).',
+            ),
+            'term_faq' => array(
+                'class'  => 'WTA_Term_FAQ',
+                'label'  => 'Country FAQs',
+                'detail' => 'The Term FAQ widget: shows the FAQs written on a country (or on a destination) as an accessible accordion, and publishes them as one FAQPage schema graph that steps aside for FAQ schema from another source.',
             ),
             'term_status' => array(
                 'class'  => 'WTA_Term_Status',

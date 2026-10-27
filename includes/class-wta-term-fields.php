@@ -43,6 +43,9 @@ class WTA_Term_Fields {
     /** All inputs post as one array, so save() can iterate the field map. */
     const INPUT_NAME = 'wta_term_fields';
 
+    /** Most FAQs one term can carry; filterable through wta_faq_max_items. */
+    const MAX_FAQS = 50;
+
     /** Difficulty is a closed set; '' is a real choice meaning "not graded". */
     const DIFFICULTIES = array('', 'easy', 'moderate', 'strenuous');
 
@@ -67,6 +70,8 @@ class WTA_Term_Fields {
 
         add_action('created_term', array($this, 'save'), 10, 3);
         add_action('edited_term', array($this, 'save'), 10, 3);
+
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin'));
 
         add_action('init', array($this, 'register_meta'), 20);
         add_action('rest_api_init', array($this, 'register_rest_fields'));
@@ -107,7 +112,7 @@ class WTA_Term_Fields {
      *
      *   label       Admin label, also the REST description prefix.
      *   help        One line under the control. Absent means none.
-     *   control     text | number | select | checkbox | months | textarea
+     *   control     text | number | select | checkbox | months | textarea | faqs
      *   sanitize    Method on this class. Lenient: never returns WP_Error.
      *   rest        REST schema fragment for this field.
      *   default     Value get() reports when nothing is stored.
@@ -248,6 +253,28 @@ class WTA_Term_Fields {
                 ),
                 'standout'         => $standout,
                 'long_description' => $long_description,
+                // One FAQ source per country: the Term FAQ widget reads this
+                // from the country, on the country page and on every trip and
+                // place beneath it, so an answer is edited in one place.
+                'faqs'             => array(
+                    'label'    => __('FAQs', 'wp-travel-addons'),
+                    'help'     => __('Questions and answers for the Term FAQ widget, which also publishes them as FAQPage schema. Add them to the country; its trips and places show the same list. Answers keep basic formatting: paragraphs, bold, italic, lists and links.', 'wp-travel-addons'),
+                    'control'  => 'faqs',
+                    'sanitize' => 'sanitize_faqs',
+                    'default'  => array(),
+                    'rest'     => array(
+                        'type'        => 'array',
+                        'description' => 'Frequently asked questions, in display order.',
+                        'items'       => array(
+                            'type'       => 'object',
+                            'properties' => array(
+                                'question' => array('type' => 'string'),
+                                'answer'   => array('type' => 'string', 'description' => 'Basic HTML: p, br, strong, em, ul, ol, li, a.'),
+                            ),
+                            'required'   => array('question', 'answer'),
+                        ),
+                    ),
+                ),
             ),
         );
 
@@ -379,9 +406,30 @@ class WTA_Term_Fields {
             return true;
         }
 
-        update_term_meta($term_id, self::meta_key($key), $clean);
+        update_term_meta($term_id, self::meta_key($key), self::to_storage($field, $clean));
 
         return true;
+    }
+
+    /**
+     * The form a clean value takes in the database.
+     *
+     * Everything is stored as WordPress would store it, except lists of
+     * records: FAQs are stored as JSON, so the value stays legible in the
+     * database and readable by anything that is not PHP. update_metadata()
+     * strips slashes from what it is given, which would eat the backslash
+     * escapes in the JSON, so the string is slashed first.
+     *
+     * @param array $field
+     * @param mixed $clean
+     * @return mixed
+     */
+    protected static function to_storage($field, $clean) {
+        if ('faqs' === $field['control']) {
+            return wp_slash(wp_json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        }
+
+        return $clean;
     }
 
     /**
@@ -621,11 +669,91 @@ class WTA_Term_Fields {
     }
 
     /**
+     * HTML an FAQ answer may keep.
+     *
+     * Narrower than wp_kses_post() on purpose: the same markup is published as
+     * the acceptedAnswer of FAQPage schema, where search engines accept only a
+     * handful of tags, and a country page has no need for embeds or headings
+     * inside an answer. Filterable for a site that wants more.
+     *
+     * @return array<string, array<string, bool>>
+     */
+    public static function faq_allowed_html() {
+        return apply_filters('wta_faq_allowed_html', array(
+            'p'      => array(),
+            'br'     => array(),
+            'strong' => array(),
+            'b'      => array(),
+            'em'     => array(),
+            'i'      => array(),
+            'ul'     => array(),
+            'ol'     => array(),
+            'li'     => array(),
+            'a'      => array('href' => true, 'title' => true, 'rel' => true),
+        ));
+    }
+
+    /**
+     * A list of question and answer pairs, in order.
+     *
+     * Takes the list itself or the JSON the database holds, because both
+     * arrive: the admin form and REST send arrays, the stored value and a CSV
+     * cell are JSON. A pair missing either half is dropped rather than kept as
+     * a question with no answer, and the list is capped so a bad import cannot
+     * store a page-sized FAQ.
+     *
+     * @param mixed $value
+     * @return array<int, array{question: string, answer: string}>
+     */
+    public static function sanitize_faqs($value) {
+        if (is_string($value)) {
+            $value = trim($value);
+
+            if ('' === $value) {
+                return array();
+            }
+
+            $value = json_decode($value, true);
+        }
+
+        if (!is_array($value)) {
+            return array();
+        }
+
+        $max = (int) apply_filters('wta_faq_max_items', self::MAX_FAQS);
+        $out = array();
+
+        foreach ($value as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $question = isset($item['question']) && is_scalar($item['question']) ? sanitize_text_field((string) $item['question']) : '';
+            $answer   = isset($item['answer']) && is_scalar($item['answer'])
+                ? trim(wp_kses((string) $item['answer'], self::faq_allowed_html()))
+                : '';
+
+            if ('' === $question || '' === $answer) {
+                continue;
+            }
+
+            $out[] = array('question' => $question, 'answer' => $answer);
+
+            if (count($out) >= $max) {
+                break;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Whether a value counts as "not answered" and should be deleted.
      */
     protected static function is_blank($field, $value) {
         switch ($field['control']) {
             case 'months':
+            case 'faqs':
                 return !is_array($value) || !$value;
 
             case 'checkbox':
@@ -712,6 +840,10 @@ class WTA_Term_Fields {
                 $this->render_months($key, is_array($value) ? $value : array());
                 break;
 
+            case 'faqs':
+                $this->render_faqs($key, is_array($value) ? $value : array());
+                break;
+
             case 'select':
                 $options = isset($field['options']) ? $field['options'] : array();
                 ?>
@@ -793,6 +925,112 @@ class WTA_Term_Fields {
             <?php endforeach; ?>
         </span>
         <?php
+    }
+
+    /**
+     * The FAQ repeater: a row per question, added and removed in the browser.
+     *
+     * Rows are plain inputs named wta_term_fields[faqs][<n>][question|answer],
+     * so the form saves with or without JavaScript. Without it there is one
+     * blank row beyond the saved ones to type into; the script adds the buttons
+     * for more. Order is the order of the rows on screen.
+     *
+     * @param string $key
+     * @param array  $faqs
+     */
+    protected function render_faqs($key, $faqs) {
+        $faqs = array_values($faqs);
+
+        // One spare row, so a term with no FAQs yet shows somewhere to start.
+        $faqs[] = array('question' => '', 'answer' => '');
+        $max    = (int) apply_filters('wta_faq_max_items', self::MAX_FAQS);
+        ?>
+        <div id="<?php echo esc_attr(self::input_id($key)); ?>"
+             class="wta-faq-editor"
+             data-next="<?php echo esc_attr((string) count($faqs)); ?>"
+             data-max="<?php echo esc_attr((string) $max); ?>">
+            <ol class="wta-faq-rows" style="margin:0 0 8px;padding:0;list-style:none;">
+                <?php foreach ($faqs as $i => $faq) : ?>
+                    <?php $this->render_faq_row($key, (string) $i, $faq['question'], $faq['answer']); ?>
+                <?php endforeach; ?>
+            </ol>
+            <template class="wta-faq-template">
+                <?php $this->render_faq_row($key, '__INDEX__', '', ''); ?>
+            </template>
+            <p class="wta-faq-add-wrap" hidden>
+                <button type="button" class="button wta-faq-add"><?php esc_html_e('Add a question', 'wp-travel-addons'); ?></button>
+            </p>
+        </div>
+        <?php
+    }
+
+    protected function render_faq_row($key, $index, $question, $answer) {
+        $base = self::input_name($key) . '[' . $index . ']';
+        ?>
+        <li class="wta-faq-row" style="margin:0 0 12px;padding:12px;background:#fff;border:1px solid #c3c4c7;max-width:52em;">
+            <p style="margin:0 0 8px;">
+                <label>
+                    <strong><?php esc_html_e('Question', 'wp-travel-addons'); ?></strong>
+                    <input type="text"
+                           name="<?php echo esc_attr($base); ?>[question]"
+                           value="<?php echo esc_attr($question); ?>"
+                           class="large-text">
+                </label>
+            </p>
+            <p style="margin:0 0 8px;">
+                <label>
+                    <strong><?php esc_html_e('Answer', 'wp-travel-addons'); ?></strong>
+                    <textarea name="<?php echo esc_attr($base); ?>[answer]"
+                              rows="4"
+                              class="large-text"><?php echo esc_textarea($answer); ?></textarea>
+                </label>
+            </p>
+            <p class="wta-faq-actions" style="margin:0;" hidden>
+                <button type="button" class="button-link wta-faq-up"><?php esc_html_e('Move up', 'wp-travel-addons'); ?></button>
+                <span aria-hidden="true">|</span>
+                <button type="button" class="button-link wta-faq-down"><?php esc_html_e('Move down', 'wp-travel-addons'); ?></button>
+                <span aria-hidden="true">|</span>
+                <button type="button" class="button-link button-link-delete wta-faq-remove"><?php esc_html_e('Remove', 'wp-travel-addons'); ?></button>
+            </p>
+        </li>
+        <?php
+    }
+
+    /**
+     * The repeater script, on the term screens of the taxonomies that have FAQs.
+     *
+     * @param string $hook
+     */
+    public function enqueue_admin($hook) {
+        if (!in_array($hook, array('edit-tags.php', 'term.php'), true)) {
+            return;
+        }
+
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+
+        if (!$screen || empty($screen->taxonomy) || !$this->handles($screen->taxonomy)) {
+            return;
+        }
+
+        $has_faqs = false;
+
+        foreach (self::fields($screen->taxonomy) as $field) {
+            if ('faqs' === $field['control']) {
+                $has_faqs = true;
+            }
+        }
+
+        if (!$has_faqs) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'wta-term-faqs',
+            WTA_URL . 'assets/js/term-faqs.js',
+            array(),
+            WTA_VERSION,
+            true
+        );
     }
 
     protected static function input_name($key) {
@@ -905,6 +1143,13 @@ class WTA_Term_Fields {
             $parts[] = $months;
         }
 
+        // Which countries still have no FAQs is the question the Term FAQ
+        // widget raises, so the list answers it at a glance.
+        if (!empty($values['faqs']) && is_array($values['faqs'])) {
+            /* translators: %d: number of FAQs on a term. */
+            $parts[] = sprintf(_n('%d FAQ', '%d FAQs', count($values['faqs']), 'wp-travel-addons'), count($values['faqs']));
+        }
+
         if (!$parts) {
             return '<span style="color:#8C8F94;">—</span>';
         }
@@ -923,7 +1168,9 @@ class WTA_Term_Fields {
         foreach (self::taxonomies() as $taxonomy) {
             foreach (self::fields($taxonomy) as $key => $field) {
                 register_term_meta($taxonomy, self::meta_key($key), array(
-                    'type'          => 'months' === $field['control'] ? 'array' : $field['rest']['type'],
+                    // FAQs are an array of records in PHP and a JSON string in the
+                    // database; show_in_rest is off, so this is documentation.
+                    'type'          => 'months' === $field['control'] ? 'array' : ('faqs' === $field['control'] ? 'string' : $field['rest']['type']),
                     'single'        => true,
                     'show_in_rest'  => false,
                     'auth_callback' => function () {
@@ -1021,6 +1268,10 @@ class WTA_Term_Fields {
             return self::sanitize_months($value);
         }
 
+        if ('faqs' === $field['control']) {
+            return self::validate_faqs($meta_key, $value);
+        }
+
         if (isset($field['rest']['enum'])) {
             $candidate = is_scalar($value) ? (string) $value : null;
 
@@ -1066,5 +1317,59 @@ class WTA_Term_Fields {
         }
 
         return $value;
+    }
+
+    /**
+     * An API write of FAQs: refuse a malformed list instead of dropping parts.
+     *
+     * A client sending {"question": "..."} with no answer has made a mistake
+     * it should hear about; the admin form, where a person is watching, quietly
+     * skips a half-filled row instead.
+     *
+     * @param string $meta_key
+     * @param mixed  $value    A list of {question, answer}, or its JSON.
+     * @return array|WP_Error
+     */
+    protected static function validate_faqs($meta_key, $value) {
+        if (is_string($value)) {
+            $value = '' === trim($value) ? array() : json_decode($value, true);
+        }
+
+        if (!is_array($value)) {
+            return new WP_Error(
+                'wta_bad_faqs',
+                sprintf('%s must be a list of {question, answer} objects.', $meta_key),
+                array('status' => 400)
+            );
+        }
+
+        foreach ($value as $i => $item) {
+            if (
+                !is_array($item)
+                || !isset($item['question'], $item['answer'])
+                || !is_string($item['question'])
+                || !is_string($item['answer'])
+                || '' === trim($item['question'])
+                || '' === trim($item['answer'])
+            ) {
+                return new WP_Error(
+                    'wta_bad_faqs',
+                    sprintf('%s item %d needs a non-empty question and answer, both strings.', $meta_key, (int) $i),
+                    array('status' => 400)
+                );
+            }
+        }
+
+        $max = (int) apply_filters('wta_faq_max_items', self::MAX_FAQS);
+
+        if (count($value) > $max) {
+            return new WP_Error(
+                'wta_too_many_faqs',
+                sprintf('%s accepts at most %d FAQs.', $meta_key, $max),
+                array('status' => 400)
+            );
+        }
+
+        return self::sanitize_faqs($value);
     }
 }

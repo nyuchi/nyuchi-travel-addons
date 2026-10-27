@@ -46,6 +46,7 @@ require_once WTA_DIR . 'includes/class-wta-pwa-legacy.php';
 require_once WTA_DIR . 'includes/class-wta-consent.php';
 require_once WTA_DIR . 'includes/class-wta-consent-log.php';
 require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
+require_once WTA_DIR . 'includes/class-wta-llms.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -167,6 +168,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_AI_Crawlers',
                 'label'   => 'AI crawler policy',
                 'detail'  => 'Adds a policy for AI crawlers to robots.txt: every AI crawler is welcome (search, answer and training bots), plus a Content-Signal line and header and the sitemap. Blocking a bot is opt-in. Off until switched on, because it changes your robots.txt.',
+                'default' => 0,
+            ),
+            'llms' => array(
+                'class'   => 'WTA_LLMS',
+                'label'   => 'llms.txt for AI assistants',
+                'detail'  => 'Serves /llms.txt (every trip with its length and from-price, destinations, key pages, park guides and recent articles) and /llms-full.txt (each trip with overview, itinerary and inclusions), built from the site and cached. Off until switched on. Yoast SEO writes its own llms.txt as a physical file; turn that feature off in Yoast so this one is reached.',
                 'default' => 0,
             ),
         );

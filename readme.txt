@@ -115,6 +115,7 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* Fix: the home page hero video no longer shows an untappable play button on phones that refuse to autoplay it. The button is hidden and, if playback does not start, the poster image shows instead. Switch off with the `wta_compat_hero_video_fallback` filter.
 * New: a cookie consent banner. It asks first-time visitors, and everyone again after you
   change the policy version, to accept all, decline (necessary cookies only) or choose
   analytics and marketing separately. Accept and Decline look and weigh the same, it works

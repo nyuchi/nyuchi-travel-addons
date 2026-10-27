@@ -115,11 +115,35 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* New: a cookie consent banner. It asks first-time visitors, and everyone again after you
+  change the policy version, to accept all, decline (necessary cookies only) or choose
+  analytics and marketing separately. Accept and Decline look and weigh the same, it works
+  with the keyboard and screen readers, and on phones it is a bottom sheet that does not
+  cover the page. The choice is remembered in a first-party cookie for 180 days by
+  default. Off by default; switch it on from the new Consent tab, where the wording,
+  privacy policy link, categories, position and a live preview are set.
+* New: Google Consent Mode v2. Before a choice, Google tags are told that advertising and
+  analytics storage are denied, then updated when the visitor chooses. The banner works
+  with a cached site, because the visitor's choice is handled in the browser. Google Tag
+  Manager is not added by this plugin; the container must read Consent Mode (see the README).
+* New: a [wta_cookie_settings] shortcode and window.wtaConsent.open() to reopen the
+  choices, a wta_consent_script() helper and data-wta-consent attribute to hold back other
+  scripts until a category is allowed, and an optional Meta Pixel loader that only loads
+  after marketing consent and respects withdrawal.
+* New: an optional consent log (off by default) that keeps a random id, the time, the
+  policy version, the choices, a salted and shortened IP hash and the browser family for 13
+  months, with WordPress export and erase support, and a consent-status ability. The Consent
+  tab lists other consent tools (Usercentrics, Cloudflare Zaraz, Complianz and others) that
+  would show a second banner. This is a tool, not legal advice: have the wording reviewed.
+
+= 1.15.0 =
 * Fixed: removes a JavaScript error ("jQuery is not defined") that appeared in the browser
   console on every page. WT Widgets for Elementor loads its slick carousel scripts without
   telling WordPress they need jQuery, so they ran too early. The compatibility module now
   declares that dependency, only for those scripts and only when it is missing. No change
   to how any page looks.
+
+= 1.14.0 =
 * New: a progressive web app module that fixes WP Travel's built-in PWA. It serves a
   current web app manifest, a service worker and an offline page from the plugin, so
   guests can install the site and still see a friendly page without a connection. Pages

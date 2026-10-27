@@ -80,6 +80,11 @@ A run takes about ten seconds.
   widget is a thin shell over `WTA_Term_FAQ`, which is what runs here: Elementor
   is not installed in the test site.
 
+- `SlickJqueryTest.php`: the `compat` module adds the missing `jquery`
+  dependency to WT Widgets' slick scripts, resolves jQuery first, and leaves
+  alone scripts that already depend on it, absent handles, other scripts, and
+  everything when `wta_compat_slick_jquery_fix` is false.
+
 No test reaches the network: `tests/includes/class-wta-test-http.php` answers
 every request or refuses it.
 

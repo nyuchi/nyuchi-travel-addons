@@ -48,6 +48,7 @@ require_once WTA_DIR . 'includes/class-wta-consent-log.php';
 require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
 require_once WTA_DIR . 'includes/class-wta-llms.php';
 require_once WTA_DIR . 'includes/class-wta-hardening.php';
+require_once WTA_DIR . 'includes/class-wta-safaribookings.php';
 require_once WTA_DIR . 'includes/class-wta-login-style.php';
 require_once WTA_DIR . 'includes/class-wta-workos-mfa.php';
 require_once WTA_DIR . 'includes/class-wta-workos-bridge.php';
@@ -190,6 +191,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_WorkOS_MFA',
                 'label'   => 'WorkOS second-factor step',
                 'detail'  => 'Fixes the WorkOS sign-in page getting stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required: it turns that WorkOS reply into the authenticator-code step the page already has. Nothing is relaxed, the second factor is still checked by WorkOS. Off until switched on.',
+                'default' => 0,
+            ),
+            'safaribookings' => array(
+                'class'   => 'WTA_SafariBookings',
+                'label'   => 'SafariBookings reviews script',
+                'detail'  => 'Loads the SafariBookings reviews script on the public site, from WordPress instead of Cloudflare Zaraz. Asynchronous, in the footer. Off until switched on, so it is not loaded twice while Zaraz still has it.',
                 'default' => 0,
             ),
             'workos_bridge' => array(

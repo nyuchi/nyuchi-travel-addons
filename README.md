@@ -96,6 +96,7 @@ the others.
 | `ai_crawlers`      | AI crawler policy               | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
 | `llms`             | llms.txt for AI assistants      | Serves a complete /llms.txt and /llms-full.txt built from your trips, destinations and key pages. **Off by default**                                     |
 | `hardening`        | Login hardening                 | Hides the public username list in the REST API and closes XML-RPC. **Off by default**                                                                    |
+| `login_style`      | Sign-in page styling            | Gives the WorkOS sign-in page and wp-login.php the site look. **Off by default**                                                                         |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -237,6 +238,15 @@ filter (blocking wins over allowing), change the list with `wta_ai_allowed_bots`
 and the signal with `wta_ai_content_signal`. A physical `robots.txt` file in the
 web root bypasses WordPress and is not changed; Cloudflare's own AI bot
 policies are separate and are changed in the Cloudflare dashboard.
+
+### Sign-in page styling (the `login_style` module)
+
+Gives the sign-in page the site look: the sand background, the site's display
+and body fonts, a white card and navy pill buttons. It styles the WorkOS sign-in
+page (Integration with WorkOS in custom login mode) and the standard
+`wp-login.php` form. The stylesheet is printed inline, so there is no extra
+request. Change it with the `wta_login_style_css` filter. Set the logo, heading
+and accent colour in the WorkOS plugin's login profile.
 
 ### Cookie consent (the `consent` module)
 

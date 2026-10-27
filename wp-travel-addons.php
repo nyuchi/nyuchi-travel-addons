@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility helpers. By Nyuchi Web Services.
- * Version:     1.20.0
+ * Version:     1.21.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.20.0');
+define('WTA_VERSION', '1.21.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -48,6 +48,8 @@ require_once WTA_DIR . 'includes/class-wta-consent-log.php';
 require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
 require_once WTA_DIR . 'includes/class-wta-llms.php';
 require_once WTA_DIR . 'includes/class-wta-hardening.php';
+require_once WTA_DIR . 'includes/class-wta-login-style.php';
+require_once WTA_DIR . 'includes/class-wta-workos-mfa.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -181,6 +183,18 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_Hardening',
                 'label'   => 'Login hardening',
                 'detail'  => 'Hides the public list of usernames in the REST API (/wp-json/wp/v2/users) and closes XML-RPC, the two doors password-guessing bots use first. Logged-in editors and admins still see the user list. Off until switched on, because a site that uses XML-RPC (Jetpack, old mobile apps) would lose it.',
+                'default' => 0,
+            ),
+            'workos_mfa' => array(
+                'class'   => 'WTA_WorkOS_MFA',
+                'label'   => 'WorkOS second-factor step',
+                'detail'  => 'Fixes the WorkOS sign-in page getting stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required: it turns that WorkOS reply into the authenticator-code step the page already has. Nothing is relaxed, the second factor is still checked by WorkOS. Off until switched on.',
+                'default' => 0,
+            ),
+            'login_style' => array(
+                'class'   => 'WTA_Login_Style',
+                'label'   => 'Sign-in page styling',
+                'detail'  => 'Gives the sign-in page the site look: sand background, site fonts, white card and navy pill buttons. Works on the WorkOS sign-in page and on the standard wp-login.php form. Off until switched on, because it changes how the login page looks.',
                 'default' => 0,
             ),
         );

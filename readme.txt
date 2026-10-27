@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.20.0
+Stable tag: 1.21.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,6 +114,10 @@ telemetry or usage ping. To hide the star count, add
 
 == Changelog ==
 
+= 1.21.0 =
+* Fix: the WorkOS sign-in page no longer gets stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required (off by default, the `workos_mfa` module). It turns that WorkOS reply into the authenticator-code step the page already has. The second factor is still checked by WorkOS.
+* New: sign-in page styling module (off by default). Gives the WorkOS sign-in page and the standard wp-login.php form the site look: sand background, the site's display and body fonts, a white card and navy pill buttons. The one-time code field is drawn as six boxes. Adjust it with the `wta_login_style_css` filter.
+
 = 1.20.0 =
 * New: login hardening module (off by default). Hides the public list of usernames in the REST API (`/wp-json/wp/v2/users`) from visitors and closes XML-RPC, the two doors password-guessing bots use first. Editors and admins still see the user list. Keep either open with the `wta_hardening_hide_rest_users` or `wta_hardening_close_xmlrpc` filter.
 * New: with the llms.txt module on, the home page sends `Link` headers pointing to `/llms.txt`, `/llms-full.txt` and the sitemap.
@@ -125,6 +129,7 @@ telemetry or usage ping. To hide the star count, add
 = 1.18.0 =
 * New: an AI crawler policy module for robots.txt (off by default).
 * Fix: trip pages no longer tell search engines and AI assistants that every trip costs 0. The TouristTrip schema now carries the trip's from-price per person sharing (the same figure the trip cards show), is left without an offer when a trip has no price, and no longer shows "&amp;" literally in day titles. Switch off with the `wta_compat_trip_schema_fix` filter.
+
 
 
 = 1.17.0 =

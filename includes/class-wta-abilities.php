@@ -72,6 +72,7 @@ class WTA_Abilities {
         $this->register_create_term();
         $this->register_audit_classification();
         $this->register_scan_compat();
+        $this->register_pwa_status();
     }
 
     /* ----------------------------------------------------------- get-trip */
@@ -803,6 +804,77 @@ class WTA_Abilities {
         ));
     }
 
+    /* ----------------------------------------------------------- pwa-status */
+
+    protected function register_pwa_status() {
+        $icon = array(
+            'type'       => 'object',
+            'properties' => array(
+                'slot'     => array('type' => 'string', 'description' => 'icon_192, icon_512 or icon_maskable.'),
+                'label'    => array('type' => 'string', 'description' => 'Human name of the slot.'),
+                'required' => array('type' => 'boolean', 'description' => 'Whether browsers need this icon before they offer to install the app.'),
+                'source'   => array('type' => 'string', 'description' => 'attachment (chosen in the media library), site_icon (the WordPress site icon) or none.'),
+                'url'      => array('type' => 'string', 'description' => 'Icon URL, empty when none.'),
+                'sizes'    => array('type' => 'string', 'description' => 'Real pixel size, such as 512x512.'),
+                'ok'       => array('type' => 'boolean', 'description' => 'Whether the icon is square, large enough and an accepted image type.'),
+                'problems' => array('type' => 'array', 'items' => array('type' => 'string'), 'description' => 'What is wrong with it, in plain words.'),
+            ),
+        );
+
+        wp_register_ability(self::NS . 'pwa-status', array(
+            'label'       => 'PWA status',
+            'description' => 'Report the state of the site\'s progressive web app: whether the Travel Addons PWA module is on and actually active (it steps aside while WP Travel\'s own PWA is on), the manifest, service worker and offline page URLs, the cache build id (it changes with each release or when the cache version setting is raised), whether the 192, 512 and maskable icons are present and valid, and whether the old WP Travel /sw.js is still in the web root, was replaced by the kill-switch worker, or could not be replaced. Read-only. Use it to decide whether the PWA can be switched on or what blocks it.',
+            'category'    => self::CATEGORY,
+
+            'input_schema' => array(
+                'type'       => 'object',
+                'properties' => array(),
+            ),
+
+            'output_schema' => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'module_enabled'        => array('type' => 'boolean', 'description' => 'Whether the PWA module switch is on.'),
+                    'active'                => array('type' => 'boolean', 'description' => 'Whether the manifest and worker are really being offered: the module is on and WP Travel\'s own PWA is off.'),
+                    'wp_travel_pwa_enabled' => array('type' => 'boolean', 'description' => 'WP Travel\'s own PWA setting. While true this module prints nothing.'),
+                    'manifest_url'          => array('type' => 'string', 'description' => 'Where the web app manifest is served.'),
+                    'service_worker_url'    => array('type' => 'string', 'description' => 'Where the service worker is served.'),
+                    'offline_url'           => array('type' => 'string', 'description' => 'The page shown when the network is down.'),
+                    'cache_build'           => array('type' => 'string', 'description' => 'Identifier baked into the worker\'s cache names.'),
+                    'icons_ok'              => array('type' => 'boolean', 'description' => 'Whether both required icons (192 and 512) are valid.'),
+                    'icons'                 => array('type' => 'array', 'items' => $icon),
+                    'legacy_service_worker' => array(
+                        'type'        => 'object',
+                        'description' => 'The old WP Travel /sw.js in the web root.',
+                        'properties'  => array(
+                            'state'   => array(
+                                'type'        => 'string',
+                                'description' => 'none (no file), legacy (old worker present, not yet replaced), cleaned (replaced by the kill-switch), unrelated (another sw.js, left alone), pwa_enabled (WP Travel\'s PWA is on, file in use), not_writable or error (could not be replaced), disabled (clean-up filtered off).',
+                                'enum'        => array('none', 'legacy', 'cleaned', 'unrelated', 'pwa_enabled', 'not_writable', 'error', 'disabled'),
+                            ),
+                            'path'    => array('type' => 'string', 'description' => 'Absolute path checked.'),
+                            'present' => array('type' => 'boolean', 'description' => 'Whether the file exists.'),
+                            'cleaned' => array('type' => 'boolean', 'description' => 'Whether it has been replaced.'),
+                            'message' => array('type' => 'string', 'description' => 'Result of the last clean-up attempt.'),
+                        ),
+                    ),
+                    'warnings'              => array('type' => 'array', 'items' => array('type' => 'string'), 'description' => 'Anything that needs attention.'),
+                ),
+                'required'   => array('module_enabled', 'active', 'manifest_url', 'service_worker_url', 'icons', 'legacy_service_worker'),
+            ),
+
+            'permission_callback' => array($this, 'can_manage_options'),
+
+            'meta' => array(
+                'annotations' => array('readonly' => true),
+            ),
+
+            'execute_callback' => function () {
+                return WTA_PWA::status();
+            },
+        ));
+    }
+
     /* --------------------------------------------------------- permissions */
 
     /**
@@ -816,6 +888,23 @@ class WTA_Abilities {
             return new WP_Error(
                 'wta_forbidden',
                 'You are not allowed to read WP Travel trip data.',
+                array('status' => 403)
+            );
+        }
+
+        return true;
+    }
+
+    /**
+     * Site configuration, as opposed to editorial content.
+     *
+     * @return true|WP_Error
+     */
+    public function can_manage_options() {
+        if (!current_user_can('manage_options')) {
+            return new WP_Error(
+                'wta_forbidden',
+                'You are not allowed to read the site configuration.',
                 array('status' => 403)
             );
         }

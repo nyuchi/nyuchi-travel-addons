@@ -39,6 +39,9 @@ class WTA_Admin {
         // Saving happens on admin_init so wp_safe_redirect() runs before any
         // admin markup has been sent.
         add_action('admin_init', array($this, 'handle_post'));
+
+        // The PWA tab's image pickers use the media library modal.
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_media'));
     }
 
     /* ----------------------------------------------------------------- Menu */
@@ -53,6 +56,7 @@ class WTA_Admin {
             'overview'       => array('Overview', 'palmtree'),
             'classification' => array('Classification', 'category'),
             'terms'          => array('Terms', 'tag'),
+            'pwa'            => array('PWA', 'smartphone'),
             'modules'        => array('Modules', 'admin-plugins'),
         );
     }
@@ -195,7 +199,31 @@ class WTA_Admin {
             $this->save_modules();
         } elseif ('terms' === $form) {
             $this->save_terms();
+        } elseif ('pwa' === $form) {
+            $this->save_pwa();
         }
+    }
+
+    public function enqueue_media() {
+        if (isset($_GET['page'], $_GET['tab']) && self::SLUG === sanitize_key(wp_unslash($_GET['page'])) && 'pwa' === sanitize_key(wp_unslash($_GET['tab']))) {
+            wp_enqueue_media();
+        }
+    }
+
+    private function save_pwa() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to change PWA settings.', 'wp-travel-addons'));
+        }
+
+        check_admin_referer('wta_save_pwa', 'wta_pwa_nonce');
+
+        // sanitize() unslashes and validates every value.
+        $input = isset($_POST['wta_pwa']) && is_array($_POST['wta_pwa']) ? $_POST['wta_pwa'] : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+
+        update_option(WTA_PWA::OPTION, WTA_PWA::sanitize($input));
+        update_option('wta_module_pwa', isset($_POST['module_pwa']) ? 1 : 0);
+
+        $this->redirect_to('pwa');
     }
 
     private function save_modules() {

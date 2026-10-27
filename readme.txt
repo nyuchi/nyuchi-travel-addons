@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.12.0
+Stable tag: 1.13.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,18 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.13.0 =
+* Changed: the trip card shows the starting-from price only, as "From $X" with a small
+  qualifier. The qualifier defaults to "per person sharing" and can be changed or hidden,
+  and the card can carry one short footnote under the grid, shown only when a card shows
+  a price.
+* Changed: card duration reads "10 days" or "3 nights" on its own, and the meta row is
+  left out when it has nothing to show.
+* Changed: each trip card is one link named by title, price and duration, with a clearer
+  keyboard focus ring and lighter overlay text for contrast.
+* Fixed: the trip hero showed one photo sliced across every country panel. Each panel now
+  shows its own country's image, and falls back to the trip image when a country has none.
 
 = 1.12.0 =
 * Changed: requires PHP 8.2 or later (it was 7.4). Sites on older PHP need to upgrade

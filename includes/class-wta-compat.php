@@ -29,6 +29,10 @@
  *   saver, some in-app browsers) show a native play button that sits behind the
  *   hero text and cannot be tapped. hero_video_fallback() hides that button and,
  *   when playback does not start, removes the video so the poster shows.
+ * - WP Travel's TouristTrip schema offers every trip at price 0 (and a bare
+ *   eligibleQuantity), and leaves HTML entities in its text. fix_trip_schema()
+ *   replaces the offer with the trip's real from-price per person, or drops it
+ *   when the trip has no price, and decodes the entities.
  *
  * @package WPTravelAddons
  */
@@ -59,6 +63,9 @@ class WTA_Compat {
         add_action('wp_print_scripts', array($this, 'fix_slick_jquery'), 1);
 
         add_action('wp_footer', array($this, 'hero_video_fallback'), 99);
+
+        // After WP Travel and any other source has had its say.
+        add_filter('wp_travel_trip_schema', array($this, 'fix_trip_schema'), 99, 2);
     }
 
     /**
@@ -350,5 +357,132 @@ class WTA_Compat {
             . $selector . '::-webkit-media-controls-start-playback-button,'
             . $selector . '::-webkit-media-controls-overlay-play-button{display:none!important;-webkit-appearance:none}</style>' . "\n";
         echo '<script id="wta-hero-video">' . self::hero_video_js() . '</script>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput
+    }
+
+    /**
+     * The from-price of a trip, per person sharing, or 0 when it has none.
+     *
+     * Reads the same post meta the trip cards show, so the schema and the page
+     * agree. When that is empty, falls back to the lowest positive price in
+     * WP Travel's pricing tables.
+     *
+     * @param int $trip_id Trip ID.
+     * @return float
+     */
+    public static function trip_from_price($trip_id) {
+        $meta = get_post_meta($trip_id, 'wp_travel_trip_price', true);
+
+        if ('' !== $meta && is_numeric($meta) && (float) $meta > 0) {
+            return (float) $meta;
+        }
+
+        global $wpdb;
+
+        $pricings  = $wpdb->prefix . 'wt_pricings';
+        $relations = $wpdb->prefix . 'wt_price_category_relation';
+
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        if ($relations !== $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($relations)))
+            || $pricings !== $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($pricings)))) {
+            // phpcs:enable
+            return 0.0;
+        }
+
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $found = $wpdb->get_var($wpdb->prepare(
+            "SELECT MIN(CAST(r.regular_price AS DECIMAL(12,2)))
+               FROM {$relations} r
+               INNER JOIN {$pricings} p ON p.id = r.pricing_id
+              WHERE p.trip_id = %d AND CAST(r.regular_price AS DECIMAL(12,2)) > 0",
+            $trip_id
+        ));
+        // phpcs:enable
+
+        return $found ? (float) $found : 0.0;
+    }
+
+    /**
+     * Correct WP Travel's TouristTrip schema.
+     *
+     * - offers: replaced by one Offer carrying the from-price per person, or
+     *   removed when the trip has no price. A zero offer reads as "free".
+     * - HTML entities in any text (day titles, answers) are decoded, because
+     *   JSON-LD is not HTML and "&amp;" would be read literally.
+     *
+     * Switchable with the wta_compat_trip_schema_fix filter.
+     *
+     * @param array $schema  TouristTrip structure.
+     * @param int   $trip_id Trip ID.
+     * @return array
+     */
+    public function fix_trip_schema($schema, $trip_id = 0) {
+        if (!is_array($schema) || !apply_filters('wta_compat_trip_schema_fix', true)) {
+            return $schema;
+        }
+
+        $schema = self::decode_entities($schema);
+
+        $currency = '';
+
+        if (isset($schema['offers']['priceCurrency']) && is_string($schema['offers']['priceCurrency'])) {
+            $currency = $schema['offers']['priceCurrency'];
+        }
+
+        unset($schema['offers']);
+
+        $price = self::trip_from_price((int) $trip_id);
+
+        if ($price <= 0) {
+            return $schema;
+        }
+
+        $currency = '' !== $currency ? $currency : 'USD';
+
+        $schema['offers'] = array(
+            '@type'              => 'Offer',
+            'price'              => $price,
+            'priceCurrency'      => $currency,
+            'availability'       => 'https://schema.org/InStock',
+            'priceSpecification' => array(
+                '@type'             => 'UnitPriceSpecification',
+                'price'             => $price,
+                'minPrice'          => $price,
+                'priceCurrency'     => $currency,
+                'referenceQuantity' => array(
+                    '@type'    => 'QuantitativeValue',
+                    'value'    => 1,
+                    'unitText' => 'person sharing',
+                ),
+            ),
+            'seller'             => array(
+                '@type' => 'Organization',
+                'name'  => get_bloginfo('name'),
+                'url'   => home_url('/'),
+            ),
+        );
+
+        return $schema;
+    }
+
+    /**
+     * Decode HTML entities in every string of a structure.
+     *
+     * @param mixed $value Array or scalar.
+     * @return mixed
+     */
+    protected static function decode_entities($value) {
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = self::decode_entities($item);
+            }
+
+            return $value;
+        }
+
+        if (is_string($value) && false !== strpos($value, '&')) {
+            return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        return $value;
     }
 }

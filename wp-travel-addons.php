@@ -41,6 +41,8 @@ require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-assets.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
+require_once WTA_DIR . 'includes/class-wta-inquiry-form.php';
+require_once WTA_DIR . 'includes/class-wta-inquiry-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
 require_once WTA_DIR . 'includes/class-wta-term-transfer.php';
@@ -128,6 +130,11 @@ final class WP_Travel_Addons {
                 'class'  => 'WTA_Travel_Abilities',
                 'label'  => 'WP Travel abilities',
                 'detail' => 'Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies and diagnostics. Reads WP Travel\'s own storage rather than mirroring it, and reports rather than fails when WP Travel is absent.',
+            ),
+            'inquiry_form' => array(
+                'class'  => 'WTA_Inquiry_Form',
+                'label'  => 'Enquiry form customisation',
+                'detail' => 'Applies saved labels, extra fields and notification addresses to WP Travel\'s own trip enquiry form, and powers the Enquiry widget. Changes nothing until something is saved with update-inquiry-form.',
             ),
             'compat' => array(
                 'class'  => 'WTA_Compat',

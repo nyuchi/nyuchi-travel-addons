@@ -60,6 +60,21 @@ A run takes about ten seconds.
   contributor move a trip between draft and pending, and report the refusal
   in a dry run. Skipped on WordPress older than 6.9 (no Abilities API).
 
+- `InquiryAbilitiesTest.php`: the four enquiry abilities. `get-inquiry-form`
+  and `update-inquiry-form` are administrators only; the update is a dry run by
+  default, writes only the WP Travel settings it owns and carries the rest of
+  `wp_travel_settings` (reCAPTCHA keys, payment keys, the email template) through
+  unchanged, never returns a key, keeps `wta_inquiry_form` out of autoload, and
+  refuses bad input without aborting the rest of the call. `list-inquiries` and
+  `get-inquiry-stats` need `edit_others_posts`; name, email and message appear
+  only when asked for, and the stats carry no personal data.
+- `InquiryFormModuleTest.php`: the `inquiry_form` module's filters. With nothing
+  saved the form, the recipients and the email are exactly WP Travel's; once
+  saved, labels, extra fields and recipients are applied and WP Travel's input
+  names never change. WP Travel is not installed, so
+  `tests/includes/wp-travel-enquiry-stubs.php` stands in for its two form
+  functions.
+
 No test reaches the network: `tests/includes/class-wta-test-http.php` answers
 every request or refuses it.
 

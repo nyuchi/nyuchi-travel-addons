@@ -557,3 +557,30 @@
 }
 .wta-hero-guide span{font-size:14.5px;line-height:1.55;max-width:38ch;color:rgba(232,220,192,.78)}
 .wta-hero-guide + .wta-gradient-bar{margin-top:clamp(32px,5vw,56px)}
+
+/* ── TRIP ENQUIRY ───────────────────────────────────────────────────────────
+ * Price, button and WP Travel's own enquiry form. The button is a link, so the
+ * host theme's global button rules do not reach it; the form's submit button is
+ * WP Travel's and is left to the theme.
+ */
+.wta-enquiry{padding:clamp(20px,3vw,32px);border:1px solid var(--rule)}
+.wta-enquiry-title{font-family:var(--display);font-weight:700;color:var(--navy);margin:0 0 12px;letter-spacing:-.01em}
+.wta-enquiry-price{font-family:var(--display);font-weight:700;font-size:22px;color:var(--dust-deep);margin:0 0 16px;letter-spacing:-.01em}
+.wta-enquiry-price small{font-family:var(--body);font-weight:400;font-size:13px;color:var(--ink-soft);letter-spacing:0}
+.wta-enquiry-price.is-request{font-family:var(--body);font-weight:500;font-size:15px;color:var(--ink-soft);letter-spacing:0}
+.wta-enquiry-cta{
+  display:inline-block;min-height:44px;padding:11px 22px;margin:0 0 20px;
+  border:1px solid var(--navy);background:var(--navy);color:var(--shell);
+  font-family:var(--body);font-weight:600;font-size:14px;text-decoration:none;
+}
+.wta-enquiry-cta:hover,.wta-enquiry-cta:focus-visible{background:var(--navy-deep);color:var(--shell)}
+.wta-enquiry-cta.is-request{background:transparent;border-color:var(--dust);color:var(--dust-deep)}
+.wta-enquiry-cta.is-request:hover,.wta-enquiry-cta.is-request:focus-visible{background:var(--dust);color:var(--navy-deep)}
+.wta-enquiry-form{scroll-margin-top:96px}
+/* WP Travel builds this form for a popup. Make sure it is visible inline. */
+.wta-enquiry-form .wp-travel-enquiries-form,
+.wta-enquiry-form .wp-travel-enquiries-form-wrapper{display:block;visibility:visible;opacity:1;max-width:none}
+.wta-enquiry-form label{font-family:var(--body);font-size:14px;color:var(--ink)}
+.wta-enquiry-form input[type=text],.wta-enquiry-form input[type=email],.wta-enquiry-form select,.wta-enquiry-form textarea{
+  width:100%;max-width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--rule);background:#fff;font:inherit;color:var(--ink);
+}

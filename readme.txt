@@ -112,6 +112,16 @@ telemetry or usage ping. To hide the star count, add
 
 == Changelog ==
 
+= Unreleased =
+* New: get-inquiry-form, update-inquiry-form, list-inquiries and get-inquiry-stats
+  abilities for WP Travel's trip enquiry form. update-inquiry-form is dry run by
+  default and administrators only; list-inquiries returns no name, email or message
+  unless asked, and needs edit_others_posts; get-inquiry-stats carries no personal data.
+* New: enquiry form customisation module. Applies saved labels, placeholders, required
+  flags, up to five extra fields and notification addresses to WP Travel's own form.
+* New: Trip Enquiry Elementor widget (wta-enquiry): price or "Price on request", a
+  button, and WP Travel's enquiry form inline for the current trip.
+
 = 1.12.0 =
 * Changed: requires PHP 8.2 or later (it was 7.4). Sites on older PHP need to upgrade
   PHP first; WordPress will not install this update on PHP older than 8.2.

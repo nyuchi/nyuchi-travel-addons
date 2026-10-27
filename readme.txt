@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.23.0
+Stable tag: 1.24.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,9 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.24.0 =
+* New: SafariBookings reviews script module (off by default). Loads the reviews script from WordPress, asynchronously in the footer, so Cloudflare Zaraz can be switched off.
 
 = 1.23.0 =
 * Fix: signing in with WorkOS no longer sends you back to the login page on hosts that drop the login cookie on the plugin's own sign-in routes (the `workos_bridge` module, off by default). After WorkOS confirms the user, the last step runs on wp-login.php with a one-time token (random, 90 seconds, single use, tied to the browser), which sets the cookie.

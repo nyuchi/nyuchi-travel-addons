@@ -10,7 +10,7 @@
 ![WordPress](https://img.shields.io/badge/WordPress-5.9%2B-21759B?style=flat-square&logo=wordpress&logoColor=white)
 ![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)
 
-**Version:** 1.23.0 | **Requires:** WordPress 5.9+, PHP 8.2+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
+**Version:** 1.24.0 | **Requires:** WordPress 5.9+, PHP 8.2+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
 
 ---
 
@@ -99,6 +99,7 @@ the others.
 | `login_style`      | Sign-in page styling            | Gives the WorkOS sign-in page and wp-login.php the site look. **Off by default**                                                                         |
 | `workos_mfa`       | WorkOS second-factor step       | Lets the WorkOS sign-in page ask for the authenticator code. **Off by default**                                                                          |
 | `workos_bridge`    | WorkOS sign-in cookie bridge    | Finishes a WorkOS sign-in on wp-login.php so the login cookie sticks (one-time token, 90 seconds). **Off by default**                                    |
+| `safaribookings`   | SafariBookings reviews script   | Loads the SafariBookings reviews script from WordPress instead of Cloudflare Zaraz. **Off by default**                                                   |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the

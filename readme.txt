@@ -62,7 +62,9 @@ competing to answer the same question.
 Small helpers for WP Travel companion plugins: the single-trip timeline stylesheet, and a
 scan for itinerary day text that breaks WT Widgets for Elementor older than 1.4.8 (the printf
 defect fixed upstream, WP Travel ticket #2051). The runtime guard that worked around that
-defect has been removed. Helpers are deleted once they are no longer needed.
+defect has been removed. It also declares the jQuery dependency that WT Widgets for
+Elementor 1.4.9 leaves out of its slick carousel scripts, which can be switched off with the
+wta_compat_slick_jquery_fix filter. Helpers are deleted once they are no longer needed.
 
 == Installation ==
 
@@ -113,6 +115,11 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* Fixed: removes a JavaScript error ("jQuery is not defined") that appeared in the browser
+  console on every page. WT Widgets for Elementor loads its slick carousel scripts without
+  telling WordPress they need jQuery, so they ran too early. The compatibility module now
+  declares that dependency, only for those scripts and only when it is missing. No change
+  to how any page looks.
 * New: a progressive web app module that fixes WP Travel's built-in PWA. It serves a
   current web app manifest, a service worker and an offline page from the plugin, so
   guests can install the site and still see a friendly page without a connection. Pages

@@ -18,6 +18,12 @@
  * - scan_trips() reports day descriptions that would break an affected version.
  *   It stays as a diagnostic for any site still on WT Widgets before 1.4.8.
  * - The single-trip timeline stylesheet, loaded only on a trip.
+ * - WT Widgets for Elementor 1.4.9 registers its slick carousel scripts with no
+ *   dependencies (the `true` in category-trips-widget.php:54 and
+ *   hero-slider-widget.php:59 lands in the version argument, not in_footer),
+ *   so slick printed ahead of jQuery and logged "jQuery is not defined" on
+ *   every page, whether or not a carousel was used. fix_slick_jquery() adds the
+ *   missing dependency.
  *
  * @package WPTravelAddons
  */
@@ -34,10 +40,18 @@ class WTA_Compat {
     /** Conversion characters PHP's printf family accepts. */
     const CONVERSIONS = 'bcdeEfFgGhHosuxX';
 
+    /** Script handles WT Widgets for Elementor registers for slick. */
+    const SLICK_HANDLES = array('slick-min-js', 'slick-init', 'category-trips-slick');
+
     public function __construct() {
         // WP Travel's own itinerary timeline. A trip rendered without an
         // Elementor template still has to look like the same website.
         add_action('wp_enqueue_scripts', array($this, 'enqueue_timeline_css'));
+
+        // Late, so the vendor has enqueued its scripts; and again just before
+        // printing, for any enqueued after wp_enqueue_scripts. Idempotent.
+        add_action('wp_enqueue_scripts', array($this, 'fix_slick_jquery'), 100);
+        add_action('wp_print_scripts', array($this, 'fix_slick_jquery'), 1);
     }
 
     /**
@@ -250,5 +264,34 @@ class WTA_Compat {
             array(),
             WTA_VERSION
         );
+    }
+
+    /**
+     * Give WT Widgets' slick scripts the jQuery dependency they forgot.
+     *
+     * Touches only the handles in SLICK_HANDLES, only when they exist and only
+     * when 'jquery' is missing from their dependencies. WordPress then prints
+     * jQuery first and moves the script to wherever jQuery is printed.
+     * Switchable with the wta_compat_slick_jquery_fix filter; delete it when
+     * the vendor declares the dependency itself.
+     *
+     * @return void
+     */
+    public function fix_slick_jquery() {
+        if (!apply_filters('wta_compat_slick_jquery_fix', true)) {
+            return;
+        }
+
+        $scripts = wp_scripts();
+
+        foreach (self::SLICK_HANDLES as $handle) {
+            $script = isset($scripts->registered[$handle]) ? $scripts->registered[$handle] : null;
+
+            if (!$script || in_array('jquery', (array) $script->deps, true)) {
+                continue;
+            }
+
+            $script->deps[] = 'jquery';
+        }
     }
 }

@@ -196,11 +196,28 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
             'condition'   => array('show_price' => 'yes'),
         ));
 
+        $this->add_control('price_suffix', array(
+            'label'       => 'Qualifier after the price',
+            'type'        => \Elementor\Controls_Manager::TEXT,
+            'default'     => 'per person sharing',
+            'description' => 'Small text shown under "From $X". Leave empty to hide it.',
+            'condition'   => array('show_price' => 'yes'),
+        ));
+
         $this->add_control('cta_request', array(
             'label'       => 'Button label when there is no price',
             'type'        => \Elementor\Controls_Manager::TEXT,
             'default'     => 'Request price',
             'description' => 'A trip with no published price should ask for the enquiry rather than repeat the generic call to action.',
+        ));
+
+        $this->add_control('footnote', array(
+            'label'       => 'Footnote',
+            'type'        => \Elementor\Controls_Manager::TEXTAREA,
+            'default'     => '',
+            'rows'        => 3,
+            'description' => 'Shown once under the cards, and only when at least one card shows a price. Use it for what the price includes or excludes.',
+            'condition'   => array('show_price' => 'yes'),
         ));
 
         $this->end_controls_section();
@@ -247,21 +264,21 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
 
     /**
      * Duration as a single readable phrase. WP Travel keeps days and nights
-     * apart, and a trip may have set only one of them.
+     * apart, and a trip may have set only one of them, so each combination
+     * reads on its own: "10 days", "3 nights" or "4 days / 3 nights".
      */
     protected function duration_label($post_id) {
-        $days   = (int) get_post_meta($post_id, 'wp_travel_trip_duration', true);
-        $nights = (int) get_post_meta($post_id, 'wp_travel_trip_duration_night', true);
+        $days   = max(0, (int) get_post_meta($post_id, 'wp_travel_trip_duration', true));
+        $nights = max(0, (int) get_post_meta($post_id, 'wp_travel_trip_duration_night', true));
 
-        if ($days && $nights) {
-            return sprintf('%d days / %d nights', $days, $nights);
+        $day_text   = $days ? sprintf(_n('%d day', '%d days', $days, 'wp-travel-addons'), $days) : '';
+        $night_text = $nights ? sprintf(_n('%d night', '%d nights', $nights, 'wp-travel-addons'), $nights) : '';
+
+        if ($day_text && $night_text) {
+            return $day_text . ' / ' . $night_text;
         }
 
-        if ($days) {
-            return sprintf('%d days', $days);
-        }
-
-        return $nights ? sprintf('%d nights', $nights) : '';
+        return $day_text . $night_text;
     }
 
     /**
@@ -278,6 +295,14 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
         return '' !== $price && null !== $price && (float) $price > 0;
     }
 
+    /**
+     * The trip's starting-from price as formatted text, or '' when it has none.
+     *
+     * Uses WP Travel's own formatter so the symbol, position and separators
+     * match the rest of the site. Newer WP Travel releases renamed the function
+     * from wp_travel_* to wptravel_*, so both are tried; if neither exists the
+     * number is formatted here.
+     */
     protected function price_label($post_id) {
         if (!$this->has_price($post_id)) {
             return '';
@@ -285,11 +310,182 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
 
         $price = get_post_meta($post_id, 'wp_travel_trip_price', true);
 
-        if (function_exists('wp_travel_get_formated_price_currency')) {
-            return wp_travel_get_formated_price_currency($price);
+        foreach (array('wptravel_get_formated_price_currency', 'wp_travel_get_formated_price_currency') as $formatter) {
+            if (function_exists($formatter)) {
+                $formatted = $formatter($price);
+
+                if (is_string($formatted) && '' !== trim(wp_strip_all_tags($formatted))) {
+                    return $formatted;
+                }
+            }
         }
 
-        return number_format_i18n((float) $price);
+        $symbol = '$';
+
+        foreach (array('wptravel_get_currency_symbol', 'wp_travel_get_currency_symbol') as $getter) {
+            if (function_exists($getter)) {
+                $found = $getter();
+
+                if (is_string($found) && '' !== $found) {
+                    $symbol = $found;
+                    break;
+                }
+            }
+        }
+
+        /**
+         * Currency symbol used when WP Travel's formatter is unavailable.
+         *
+         * @param string $symbol  Symbol, "$" unless WP Travel supplies one.
+         * @param int    $post_id Trip ID.
+         */
+        $symbol = (string) apply_filters('wta_trip_card_currency_symbol', $symbol, $post_id);
+
+        return esc_html($symbol) . number_format_i18n((float) $price);
+    }
+
+    /**
+     * "From $X" plus the small qualifier. The caller has already established
+     * that the trip has a price.
+     */
+    protected function price_markup($price, $suffix) {
+        $html  = '<span class="wta-card-price">';
+        $html .= '<small class="wta-card-from">' . esc_html__('From', 'wp-travel-addons') . '</small> ';
+        $html .= '<span class="wta-card-amount">' . wp_kses_post($price) . '</span>';
+
+        if ('' !== $suffix) {
+            $html .= ' <small class="wta-card-suffix">' . esc_html($suffix) . '</small>';
+        }
+
+        return $html . '</span>';
+    }
+
+    /**
+     * The card link's accessible name: title, then price, then duration.
+     *
+     * The link wraps the whole card, so without a name a screen reader reads
+     * every fragment inside it in DOM order. One sentence is easier to scan.
+     *
+     * @param string $title    Trip title.
+     * @param string $price    Price as shown, qualifier included ("" if none).
+     * @param string $duration Duration as shown ("" if none).
+     */
+    protected function card_name($title, $price, $duration) {
+        $parts = array();
+
+        foreach (array($title, $price, $duration) as $part) {
+            $part = trim(html_entity_decode(wp_strip_all_tags((string) $part), ENT_QUOTES, 'UTF-8'));
+
+            if ('' !== $part) {
+                $parts[] = $part;
+            }
+        }
+
+        return implode(', ', $parts);
+    }
+
+    /**
+     * One card. Returns the markup and whether it displays a price, which
+     * decides if the footnote is printed.
+     *
+     * @return array{html:string,priced:bool}
+     */
+    protected function card_html($id, $s) {
+        $has_price   = $this->has_price($id);
+        $show_price  = 'yes' === $s['show_price'];
+        $suffix      = isset($s['price_suffix']) ? trim((string) $s['price_suffix']) : 'per person sharing';
+        $duration    = 'yes' === $s['show_duration'] ? $this->duration_label($id) : '';
+        $price       = ($show_price && $has_price) ? $this->price_label($id) : '';
+        $destination = 'yes' === $s['show_destination'] ? $this->destination_label($id) : '';
+        $request     = ($show_price && !$has_price && !empty($s['price_request_label'])) ? $s['price_request_label'] : '';
+        $title       = get_the_title($id);
+
+        // No price is a different sales conversation, so the card asks for
+        // the enquiry instead of repeating the generic call to action.
+        $cta_label = (!$has_price && !empty($s['cta_request'])) ? $s['cta_request'] : $s['cta'];
+
+        $priced = '' !== $price;
+        $name   = $this->card_name(
+            $title,
+            $priced
+                ? esc_html__('From', 'wp-travel-addons') . ' ' . $price . ('' !== $suffix ? ' ' . $suffix : '')
+                : $request,
+            $duration
+        );
+
+        $html  = '<article class="wta-card">';
+        $html .= '<a class="wta-card-link" href="' . esc_url(get_permalink($id)) . '" aria-label="' . esc_attr($name) . '">';
+
+        $html .= '<div class="wta-card-media">';
+        if (has_post_thumbnail($id)) {
+            // The wrapper clips; the image fills it. Scaling happens here,
+            // not on a permanently over-zoomed rest state. The link's name
+            // already carries the title, so the image is decorative.
+            $html .= get_the_post_thumbnail($id, $this->wta_image_size('card', $s), array(
+                'class'   => 'wta-card-img',
+                'loading' => 'lazy',
+                'alt'     => '',
+            ));
+        } else {
+            $html .= '<span class="wta-card-noimg" aria-hidden="true"></span>';
+        }
+
+        if ($destination) {
+            $html .= '<span class="wta-card-place">' . esc_html($destination) . '</span>';
+        }
+        $html .= '</div>';
+
+        $html .= '<div class="wta-card-body">';
+        $html .= '<h3 class="wta-card-title">' . esc_html($title) . '</h3>';
+
+        if ('yes' === $s['show_excerpt']) {
+            $excerpt = get_the_excerpt($id);
+            if ($excerpt) {
+                $html .= '<p class="wta-card-excerpt">' . esc_html(wp_trim_words($excerpt, 22)) . '</p>';
+            }
+        }
+
+        // The row only exists when it has something in it.
+        if ($duration || $priced || $request) {
+            $html .= '<div class="wta-card-meta">';
+            if ($duration) {
+                $html .= '<span class="wta-card-dur">' . esc_html($duration) . '</span>';
+            }
+            if ($priced) {
+                $html .= $this->price_markup($price, $suffix);
+            } elseif ($request) {
+                $html .= '<span class="wta-card-price is-request">' . esc_html($request) . '</span>';
+            }
+            $html .= '</div>';
+        }
+
+        if ($cta_label) {
+            $html .= sprintf(
+                '<span class="wta-card-cta%s">%s</span>',
+                $has_price ? '' : ' is-request',
+                esc_html($cta_label)
+            );
+        }
+
+        $html .= '</div></a></article>';
+
+        return array('html' => $html, 'priced' => $priced);
+    }
+
+    /**
+     * The footnote under the grid, or '' when there is none to show.
+     *
+     * A footnote qualifies a price, so it is dropped when no card on the page
+     * displays one.
+     */
+    protected function footnote_html($s, $any_priced) {
+        $text = isset($s['footnote']) ? trim((string) $s['footnote']) : '';
+
+        if (!$any_priced || '' === $text) {
+            return '';
+        }
+
+        return '<p class="wta-cards-footnote">' . nl2br(esc_html($text)) . '</p>';
     }
 
     protected function destination_label($post_id) {
@@ -535,79 +731,21 @@ class WTA_Widget_Trip_Card extends \Elementor\Widget_Base {
             esc_attr($s['ratio'])
         );
 
+        $any_priced = false;
+
         while ($query->have_posts()) {
             $query->the_post();
-            $id = get_the_ID();
 
-            $duration    = 'yes' === $s['show_duration'] ? $this->duration_label($id) : '';
-            $has_price   = $this->has_price($id);
-            $price       = 'yes' === $s['show_price'] ? $this->price_label($id) : '';
-            $destination = 'yes' === $s['show_destination'] ? $this->destination_label($id) : '';
+            $card = $this->card_html(get_the_ID(), $s);
 
-            // No price is a different sales conversation, so the card asks for
-            // the enquiry instead of repeating the generic call to action.
-            $cta_label = (!$has_price && !empty($s['cta_request'])) ? $s['cta_request'] : $s['cta'];
+            $any_priced = $any_priced || $card['priced'];
 
-            echo '<article class="wta-card">';
-            echo '<a class="wta-card-link" href="' . esc_url(get_permalink($id)) . '">';
-
-            echo '<div class="wta-card-media">';
-            if (has_post_thumbnail($id)) {
-                // The wrapper clips; the image fills it. Scaling happens here,
-                // not on a permanently over-zoomed rest state.
-                echo get_the_post_thumbnail($id, $this->wta_image_size('card', $s), array(
-                    'class'   => 'wta-card-img',
-                    'loading' => 'lazy',
-                    'alt'     => esc_attr(get_the_title($id)),
-                ));
-            } else {
-                echo '<span class="wta-card-noimg" aria-hidden="true"></span>';
-            }
-
-            if ($destination) {
-                echo '<span class="wta-card-place">' . esc_html($destination) . '</span>';
-            }
-            echo '</div>';
-
-            echo '<div class="wta-card-body">';
-            echo '<h3 class="wta-card-title">' . esc_html(get_the_title($id)) . '</h3>';
-
-            if ('yes' === $s['show_excerpt']) {
-                $excerpt = get_the_excerpt($id);
-                if ($excerpt) {
-                    echo '<p class="wta-card-excerpt">' . esc_html(wp_trim_words($excerpt, 22)) . '</p>';
-                }
-            }
-
-            $show_request = 'yes' === $s['show_price'] && !$has_price && !empty($s['price_request_label']);
-
-            if ($duration || $price || $show_request) {
-                echo '<div class="wta-card-meta">';
-                if ($duration) {
-                    echo '<span class="wta-card-dur">' . esc_html($duration) . '</span>';
-                }
-                if ($price) {
-                    echo '<span class="wta-card-price"><small>from</small> ' . wp_kses_post($price) . '</span>';
-                } elseif ($show_request) {
-                    echo '<span class="wta-card-price is-request">' . esc_html($s['price_request_label']) . '</span>';
-                }
-                echo '</div>';
-            }
-
-            if ($cta_label) {
-                printf(
-                    '<span class="wta-card-cta%s">%s</span>',
-                    $has_price ? '' : ' is-request',
-                    esc_html($cta_label)
-                );
-            }
-
-            echo '</div>';
-            echo '</a>';
-            echo '</article>';
+            echo $card['html']; // Escaped where built, in card_html().
         }
 
-        echo '</div></div>';
+        echo '</div>';
+        echo $this->footnote_html($s, $any_priced); // Escaped where built.
+        echo '</div>';
 
         wp_reset_postdata();
     }

@@ -48,6 +48,12 @@ A run takes about ten seconds.
 - `RouteSanitizeTest.php` and `TripDataTest.php`: the `wta_route` sanitiser
   (including today's "unknown transfer mode becomes drive" behaviour) and
   `WTA_Elementor::trip_data()` for a partially filled trip.
+- `TripCardPricingTest.php`: the trip card's "From $X" price and
+  `price_suffix` qualifier, the once-only footnote (only when a card shows a
+  price), the no-price branch, days-only and nights-only durations, the card
+  link's accessible name, and the currency fallback. Elementor is not
+  installed, so the widget loads against an empty base class
+  (`tests/includes/elementor-stubs.php`).
 - `TripStatusPermissionTest.php`: `create-trip` and `update-trip` refuse a
   publish, schedule or private status without the trip post type's publish
   capability (#39), write nothing else when they refuse, still let a

@@ -94,6 +94,7 @@ the others.
 | `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
 | `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
 | `ai_crawlers`      | AI crawler policy               | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
+| `llms`             | llms.txt for AI assistants      | Serves a complete /llms.txt and /llms-full.txt built from your trips, destinations and key pages. **Off by default**                                     |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -193,6 +194,21 @@ Filters: `wta_pwa_defaults`, `wta_pwa_settings`, `wta_pwa_manifest`,
 `wta_pwa_categories`, `wta_pwa_exclude_paths`, `wta_pwa_cache_limits`,
 `wta_pwa_precache`, `wta_pwa_font_hosts`, `wta_pwa_register_logged_in`,
 `wta_pwa_wp_travel_active`, `wta_pwa_legacy_cleanup`, `wta_pwa_legacy_sw_path`.
+
+### llms.txt for AI assistants (the `llms` module)
+
+Serves `/llms.txt` and `/llms-full.txt`, built from the site and cached for six
+hours (and rebuilt when a post or term changes). `llms.txt` lists every trip
+under its country with its length and from-price per person sharing, then the
+destinations, the key pages, the national park guides, recent articles and the
+policies. `llms-full.txt` adds each trip's overview, day-by-day itinerary and
+what is included and not included. An unpriced trip is listed without a price.
+
+Yoast SEO writes its own `llms.txt` as a physical file in the web root, which the
+web server serves before WordPress runs. Turn off Yoast's llms.txt feature and
+delete the file if it is left behind; the plugin shows an admin notice while a
+physical file is in the way. Change the summary, notes and currency with the
+`wta_llms_summary`, `wta_llms_notes` and `wta_llms_currency` filters.
 
 ### AI crawler policy (the `ai_crawlers` module)
 

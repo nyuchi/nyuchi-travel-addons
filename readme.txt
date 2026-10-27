@@ -115,6 +115,7 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* New: a complete llms.txt for AI assistants (off by default). Serves /llms.txt, listing every trip by country with its length and from-price, the destinations, key pages, park guides, articles and policies, and /llms-full.txt with each trip's overview, itinerary and inclusions. Cached and rebuilt when content changes. Yoast SEO writes its own llms.txt as a physical file, so turn that off for this one to be reached.
 * Change: the AI crawler policy module (off by default) now welcomes every AI crawler, training bots included, instead of blocking training bots. It names them with an explicit Allow in robots.txt, declares `Content-Signal: search=yes, ai-input=yes, ai-train=yes` in robots.txt and as a response header (which overrides the default Cloudflare adds to its Markdown responses) and adds the sitemap. Block a bot with the `wta_ai_blocked_bots` filter.
 * Fix: trip pages no longer tell search engines and AI assistants that every trip costs 0. The TouristTrip schema now carries the trip's from-price per person sharing (the same figure the trip cards show), is left without an offer when a trip has no price, and no longer shows "&amp;" literally in day titles. Switch off with the `wta_compat_trip_schema_fix` filter.
 

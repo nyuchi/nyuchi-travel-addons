@@ -59,6 +59,13 @@ A run takes about ten seconds.
   capability (#39), write nothing else when they refuse, still let a
   contributor move a trip between draft and pending, and report the refusal
   in a dry run. Skipped on WordPress older than 6.9 (no Abilities API).
+- `TermFaqTest.php`: country FAQs. The `faqs` term field (JSON storage, the
+  sanitiser and its HTML allow-list, the admin save), REST, JSON and CSV
+  transfer, the walk from a trip or place up to its country, the `<details>`
+  markup, and the single FAQPage graph (merging, de-duplication, escaping, and
+  yielding to Yoast, Rank Math, Elementor and in-content FAQ schema). The Elementor
+  widget is a thin shell over `WTA_Term_FAQ`, which is what runs here: Elementor
+  is not installed in the test site.
 
 No test reaches the network: `tests/includes/class-wta-test-http.php` answers
 every request or refuses it.

@@ -54,6 +54,7 @@ WIDE_COLUMNS = {
     "description": 60,
     "field:long_description": 60,
     "field:visa_note": 40,
+    "field:faqs": 60,
 }
 
 # Drop-downs for terms.csv: column -> allowed values. A blank is always allowed.

@@ -77,19 +77,20 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key                | Module                          | What it does                                                                                                                   |
-| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                |
-| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes              |
-| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                       |
-| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                   |
-| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                        |
-| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                 |
-| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                               |
-| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                      |
-| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                     |
-| `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                      |
-| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
+| Key                | Module                          | What it does                                                                                                                    |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                 |
+| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes               |
+| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                        |
+| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                    |
+| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                         |
+| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                  |
+| `term_faq`         | Country FAQs                    | The Term FAQ widget: a country's FAQs as an accessible accordion, plus one FAQPage schema graph that yields to other FAQ schema |
+| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                                |
+| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                       |
+| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                      |
+| `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                       |
+| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**  |
 | `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**          |
 
 The `assets` module is the one exception to "every module defaults to on": it
@@ -371,9 +372,36 @@ taxonomies.
 The `elementor` module registers one widget per itinerary section, so a single
 trip template can be composed and edited in Elementor rather than in a theme
 file: hero, legs, route, seasonality, options, checklist, notes, gallery,
-trip card, destination grid, activity cards and experience strip. Each widget
+trip card, destination grid, activity cards, experience strip and term FAQ. Each widget
 carries style and responsive controls, including per-device grid columns and a
 choice of which registered image size to load.
+
+### Country FAQs
+
+Each country has one FAQ source: the **FAQs** field on its term (Trips >
+Destinations > edit a country), a repeater of question and answer pairs. Answers
+keep basic formatting (paragraphs, bold, italic, lists, links). The values are
+stored as JSON in the term meta `wta_faqs`, and are available over REST as
+`wta_faqs`, in the term export and import (JSON, and CSV as one JSON cell in
+`field:faqs`), and through the `update-term` ability.
+
+The **Term FAQ** widget (`wta-term-faq`) shows them:
+
+- On a country archive it shows that country's FAQs. On a trip, or on a place
+  beneath a country, it walks up the term's ancestors to the nearest one that has
+  FAQs. On a regular page, which has no destination, choose the destination in
+  the widget's Source control.
+- It renders native `<details>` and `<summary>` items, styled with the itinerary
+  design tokens, and prints nothing when there are no FAQs.
+- It publishes **one** FAQPage JSON-LD graph in the footer. Several widgets merge
+  into it, and a question is never published twice. It is left out when Yoast SEO
+  (including its FAQ block), Rank Math, an Elementor accordion or toggle with its
+  FAQ schema switch on, or markup in the content already publishes FAQPage schema.
+
+Filters: `wta_term_faq_term` (the term to look up from), `wta_term_faq_schema`
+(the graph; return null to publish none), `wta_term_faq_schema_enabled`,
+`wta_term_faq_other_schema_present`, `wta_faq_allowed_html` and
+`wta_faq_max_items` (default 50).
 
 Two Elementor dynamic tags are also registered, for term text and term images,
 and `templates/elementor/single-itinerary.json` is an importable template that

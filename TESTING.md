@@ -72,6 +72,13 @@ A run takes about ten seconds.
   directory (never the real `ABSPATH`); an unrelated `sw.js` is left alone;
   the not-writable report with path and script; run-once on `admin_init`; the
   disabling filter; the button's capability and nonce checks.
+- `TermFaqTest.php`: country FAQs. The `faqs` term field (JSON storage, the
+  sanitiser and its HTML allow-list, the admin save), REST, JSON and CSV
+  transfer, the walk from a trip or place up to its country, the `<details>`
+  markup, and the single FAQPage graph (merging, de-duplication, escaping, and
+  yielding to Yoast, Rank Math, Elementor and in-content FAQ schema). The Elementor
+  widget is a thin shell over `WTA_Term_FAQ`, which is what runs here: Elementor
+  is not installed in the test site.
 
 No test reaches the network: `tests/includes/class-wta-test-http.php` answers
 every request or refuses it.

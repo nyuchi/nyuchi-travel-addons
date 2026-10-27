@@ -99,6 +99,7 @@ the others.
 | `login_style`      | Sign-in page styling            | Gives the WorkOS sign-in page and wp-login.php the site look. **Off by default**                                                                         |
 | `workos_mfa`       | WorkOS second-factor step       | Lets the WorkOS sign-in page ask for the authenticator code. **Off by default**                                                                          |
 | `workos_bridge`    | WorkOS sign-in cookie bridge    | Finishes a WorkOS sign-in on wp-login.php so the login cookie sticks (one-time token, 90 seconds). **Off by default**                                    |
+| `safaribookings`   | SafariBookings reviews script   | Loads the SafariBookings reviews script from WordPress instead of Cloudflare Zaraz. **Off by default**                                                   |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the

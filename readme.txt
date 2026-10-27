@@ -115,6 +115,7 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* New: SafariBookings reviews script module (off by default). Loads the reviews script from WordPress, asynchronously in the footer, so Cloudflare Zaraz can be switched off.
 * Change: the sign-in page's one-time code is now six separate boxes (the sign-in page styling module). Pasting a code, autofill and the page's own validation still work, and it submits when the last digit is entered. Turn the script off with the `wta_login_style_js` filter.
 * Fix: signing in with WorkOS no longer sends you back to the login page on hosts that drop the login cookie on the plugin's own sign-in routes (the `workos_bridge` module, off by default). After WorkOS confirms the user, the last step runs on wp-login.php with a one-time token (random, 90 seconds, single use, tied to the browser), which sets the cookie.
 * Fix: the WorkOS sign-in page no longer gets stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required (off by default, the `workos_mfa` module). It turns that WorkOS reply into the authenticator-code step the page already has. The second factor is still checked by WorkOS.

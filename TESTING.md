@@ -59,6 +59,19 @@ A run takes about ten seconds.
   capability (#39), write nothing else when they refuse, still let a
   contributor move a trip between draft and pending, and report the refusal
   in a dry run. Skipped on WordPress older than 6.9 (no Abilities API).
+- `PwaTest.php`: the `pwa` module is off by default and registers nothing
+  while off but the legacy clean-up; defaults and sanitising; the manifest
+  (valid JSON, headers, icons with real sizes, invalid icons reported); the
+  endpoint URLs; the generated worker text (exclusions, network-first
+  navigation that never stores a page, asset strategies and limits, cache
+  names that change with the release); the offline page; head and footer
+  output, including nothing while WP Travel's PWA is on; the `pwa-status`
+  ability.
+- `PwaLegacyTest.php`: detection of WP Travel's old `sw.js` by its signature
+  and its replacement by the kill-switch worker, on a file in a scratch
+  directory (never the real `ABSPATH`); an unrelated `sw.js` is left alone;
+  the not-writable report with path and script; run-once on `admin_init`; the
+  disabling filter; the button's capability and nonce checks.
 
 No test reaches the network: `tests/includes/class-wta-test-http.php` answers
 every request or refuses it.

@@ -112,6 +112,22 @@ telemetry or usage ping. To hide the star count, add
 
 == Changelog ==
 
+= Unreleased =
+* New: a progressive web app module that fixes WP Travel's built-in PWA. It serves a
+  current web app manifest, a service worker and an offline page from the plugin, so
+  guests can install the site and still see a friendly page without a connection. Pages
+  always come from the network, so a returning visitor is never shown a stale page; only
+  static files are cached, and every release clears old caches. It never touches wp-admin,
+  login, the REST API, forms, checkout or enquiry pages. Off by default; switch it on from
+  the new PWA tab, where the name, colours, icons and offline message are set.
+* Fixed: returning visitors could keep seeing an out-of-date homepage because WP Travel's
+  old /sw.js stays in the web root after its PWA is switched off. The plugin now replaces
+  that file (only when it is WP Travel's own) with a worker that removes itself and its
+  caches from visitors' browsers, and tells you in wp-admin what it did. If the file
+  cannot be written, the notice gives the path and the script to paste in. This does not
+  depend on the PWA module being on.
+* New: the pwa-status ability reports the PWA setup, icon checks and the old worker's state.
+
 = 1.12.0 =
 * Changed: requires PHP 8.2 or later (it was 7.4). Sites on older PHP need to upgrade
   PHP first; WordPress will not install this update on PHP older than 8.2.

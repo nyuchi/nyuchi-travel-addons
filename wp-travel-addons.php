@@ -40,6 +40,8 @@ require_once WTA_DIR . 'includes/class-wta-term-fields.php';
 require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-assets.php';
+require_once WTA_DIR . 'includes/class-wta-pwa.php';
+require_once WTA_DIR . 'includes/class-wta-pwa-legacy.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -140,6 +142,12 @@ final class WP_Travel_Addons {
                 'detail'  => 'Keeps the WP Travel booking widget, Google Maps and WP Travel Pro bundles off pages that cannot use them. Off until switched on, because it changes what the front end loads.',
                 'default' => 0,
             ),
+            'pwa' => array(
+                'class'   => 'WTA_PWA',
+                'label'   => 'Progressive web app',
+                'detail'  => 'An installable, offline-capable site: a current web app manifest, a service worker that never serves a stale page, and an offline page. Replaces the WP Travel PWA. Off until switched on, because it changes what the front end prints and registers. Settings are on the PWA tab.',
+                'default' => 0,
+            ),
         );
     }
 
@@ -182,6 +190,12 @@ final class WP_Travel_Addons {
         // this costs nothing on an ordinary front-end request.
         $this->modules['updater'] = new WTA_Updater();
         $this->modules['admin'] = new WTA_Admin($this);
+
+        // Always constructed, whatever the pwa module switch says: it removes
+        // WP Travel's old /sw.js, which keeps running in visitors' browsers
+        // after WP Travel's PWA setting is turned off. It registers hooks
+        // only and reads the file on admin_init when something has changed.
+        $this->modules['pwa_legacy'] = new WTA_PWA_Legacy();
 
         // Only adds the Plugins-row link; the count is fetched by the admin
         // screen itself when it renders.

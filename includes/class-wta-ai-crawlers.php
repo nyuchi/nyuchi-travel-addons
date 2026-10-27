@@ -2,9 +2,10 @@
 /**
  * AI crawler policy for robots.txt.
  *
- * Search and answer crawlers are welcome, so the site can be found and quoted
- * by assistants. Crawlers that collect pages to train models are disallowed.
- * The lists are filterable so a site can move a bot from one to the other.
+ * Every AI crawler is welcome by default, so the site can be found, quoted and
+ * learned from by assistants: search and answer bots, and bots that collect
+ * pages to train models. Nothing is blocked unless a site adds a bot to the
+ * blocked list with a filter.
  *
  * WordPress builds robots.txt on the fly and Yoast adds its own lines to the
  * same filter, so this module only appends. A physical robots.txt file in the
@@ -19,34 +20,60 @@ if (!defined('ABSPATH')) {
 
 class WTA_AI_Crawlers {
 
-    /** Crawlers that fetch pages to answer a question or build a search index. */
-    const SEARCH_BOTS = array(
+    /** AI crawlers named in robots.txt with an explicit Allow. */
+    const ALLOWED_BOTS = array(
         'OAI-SearchBot',
         'ChatGPT-User',
+        'GPTBot',
         'Claude-SearchBot',
         'Claude-User',
-        'PerplexityBot',
-        'Perplexity-User',
-    );
-
-    /** Crawlers that collect pages to train models. */
-    const TRAINING_BOTS = array(
-        'GPTBot',
         'ClaudeBot',
         'anthropic-ai',
+        'PerplexityBot',
+        'Perplexity-User',
         'Google-Extended',
         'Applebot-Extended',
         'CCBot',
-        'Bytespider',
-        'Meta-ExternalAgent',
     );
 
+    /** Crawlers disallowed by default: none. Add some with wta_ai_blocked_bots. */
+    const BLOCKED_BOTS = array();
+
     /** Content Signals, https://contentsignals.org: what a crawler may do with content. */
-    const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=no';
+    const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes';
 
     public function __construct() {
         // After Yoast, which appends its sitemap line late.
         add_filter('robots_txt', array($this, 'filter_robots'), 100000, 2);
+
+        // Cloudflare's Markdown for Agents serves pages to agents and adds
+        // "ai-train=yes" unless the origin sends its own Content-Signal header.
+        add_action('send_headers', array($this, 'send_content_signal'));
+    }
+
+    /**
+     * Send the Content-Signal header on front-end responses, so the policy
+     * also reaches agents that never read robots.txt and overrides the default
+     * Cloudflare adds to its Markdown responses.
+     *
+     * @return void
+     */
+    public function send_content_signal() {
+        if (is_admin() || headers_sent()) {
+            return;
+        }
+
+        /**
+         * The Content-Signal value sent in the response header and written to
+         * robots.txt. Return an empty string to send nothing.
+         *
+         * @param string $signal Default, search=yes, ai-input=yes, ai-train=yes.
+         */
+        $signal = (string) apply_filters('wta_ai_content_signal', self::CONTENT_SIGNAL);
+
+        if ('' !== trim($signal)) {
+            header('Content-Signal: ' . preg_replace('/[^A-Za-z0-9=, _\-]/', '', $signal));
+        }
     }
 
     /**
@@ -61,28 +88,30 @@ class WTA_AI_Crawlers {
             return $output;
         }
 
-        $search   = (array) apply_filters('wta_ai_search_bots', self::SEARCH_BOTS);
-        $training = (array) apply_filters('wta_ai_training_bots', self::TRAINING_BOTS);
+        $allowed = (array) apply_filters('wta_ai_allowed_bots', self::ALLOWED_BOTS);
+        $blocked = (array) apply_filters('wta_ai_blocked_bots', self::BLOCKED_BOTS);
 
-        // A bot in both lists is treated as a training bot: the stricter rule wins.
-        $search = array_values(array_diff($search, $training));
+        // A bot in both lists is blocked: the stricter rule wins.
+        $allowed = array_values(array_diff($allowed, $blocked));
 
         $output = rtrim($output);
 
-        if (false === stripos($output, 'Content-Signal:')) {
-            $output = preg_replace('/^(User-agent:\s*\*\s*)$/mi', "$1\nContent-Signal: " . self::CONTENT_SIGNAL, $output, 1);
+        $signal = trim((string) apply_filters('wta_ai_content_signal', self::CONTENT_SIGNAL));
+
+        if ('' !== $signal && false === stripos($output, 'Content-Signal:')) {
+            $output = preg_replace('/^(User-agent:\s*\*\s*)$/mi', "$1\nContent-Signal: " . $signal, $output, 1);
         }
 
         $block = '';
 
-        if ($search) {
-            $block .= "\n\n# Search and answer engines are welcome.\n";
-            $block .= self::agents($search) . "Allow: /\n";
+        if ($allowed) {
+            $block .= "\n\n# AI search, answer and training crawlers are welcome.\n";
+            $block .= self::agents($allowed) . "Allow: /\n";
         }
 
-        if ($training) {
-            $block .= "\n# Crawlers that collect pages to train AI models are not.\n";
-            $block .= self::agents($training) . "Disallow: /\n";
+        if ($blocked) {
+            $block .= "\n# Blocked on this site.\n";
+            $block .= self::agents($blocked) . "Disallow: /\n";
         }
 
         $output .= $block;

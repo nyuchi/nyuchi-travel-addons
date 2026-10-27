@@ -299,7 +299,7 @@ class WTA_Widget_Gallery extends \Elementor\Widget_Base {
             . '.wta-itin .wta-gallery-grid[data-cols="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}'
             . '.wta-itin .wta-gallery-grid[data-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}'
             . '@media (max-width:1024px){.wta-itin .wta-gallery-grid[data-cols="3"],.wta-itin .wta-gallery-grid[data-cols="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}}'
-            . '@media (max-width:640px){.wta-itin .wta-gallery-grid{grid-template-columns:minmax(0,1fr)}}'
+            . '@media (max-width:640px){.wta-itin .wta-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));--wta-gal-ratio:1/1}}'
             . '.wta-itin .wta-gallery-item{margin:0;min-width:0;display:flex;flex-direction:column;gap:6px}'
             /* The tile owns the ratio and the overflow. */
             . '.wta-itin .wta-gallery-media{aspect-ratio:var(--wta-gal-ratio,3/4);position:relative;display:block;overflow:hidden;border-radius:4px;background:var(--forest-deep);line-height:0}'

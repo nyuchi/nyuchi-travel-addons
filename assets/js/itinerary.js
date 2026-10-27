@@ -591,6 +591,26 @@
    * binders are idempotent, so re-running on that hook costs nothing and keeps
    * the preview interactive.
    */
+  /*
+   * The site header is fixed, so the hero has to clear it. Measure it rather than
+   * guess: its height changes at every breakpoint and whenever the header is
+   * edited. The CSS carries sensible defaults for the moment before this runs.
+   */
+  function measureHeader() {
+    var header = document.querySelector('.elementor-location-header > *');
+
+    if (!header) {
+      return;
+    }
+
+    var fixed = window.getComputedStyle(header).position === 'fixed';
+    document.documentElement.style.setProperty('--wta-header-h', fixed ? header.offsetHeight + 'px' : '0px');
+  }
+
+  measureHeader();
+  window.addEventListener('load', measureHeader);
+  window.addEventListener('resize', measureHeader);
+
   window.addEventListener('elementor/frontend/init', function () {
     if (window.elementorFrontend && window.elementorFrontend.hooks) {
       window.elementorFrontend.hooks.addAction('frontend/element_ready/widget', function ($scope) {

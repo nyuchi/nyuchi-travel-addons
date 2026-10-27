@@ -120,9 +120,11 @@ class WTA_Widget_Legs extends \Elementor\Widget_Base {
         $days = (isset($data['days']) && is_array($data['days'])) ? array_values($data['days']) : array();
 
         if (!$legs || !$days) {
-            echo '<div class="wta-itin"><div class="wta-wrap"><p class="wta-eyebrow">'
+            WTA_Elementor::empty_notice(
+                '<div class="wta-itin"><div class="wta-wrap"><p class="wta-eyebrow">'
                 . esc_html__('Legs and days: no itinerary authored for this trip.', 'wp-travel-addons')
-                . '</p></div></div>';
+                . '</p></div></div>'
+            );
 
             return;
         }

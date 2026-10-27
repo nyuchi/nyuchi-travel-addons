@@ -119,9 +119,11 @@ class WTA_Widget_Seasonality extends \Elementor\Widget_Base {
         $months = (!empty($season['months']) && is_array($season['months'])) ? array_values($season['months']) : array();
 
         if (!$rows || !$months) {
-            echo '<div class="wta-itin"><div class="wta-wrap"><p class="wta-eyebrow">'
+            WTA_Elementor::empty_notice(
+                '<div class="wta-itin"><div class="wta-wrap"><p class="wta-eyebrow">'
                 . esc_html__('When to go: no seasonality authored for this trip.', 'wp-travel-addons')
-                . '</p></div></div>';
+                . '</p></div></div>'
+            );
 
             return;
         }

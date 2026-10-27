@@ -8,9 +8,9 @@
 [![CI](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/ci.yml/badge.svg)](https://github.com/nyuchi/nyuchi-travel-addons/actions/workflows/ci.yml)
 [![License: GPL v2 or later](https://img.shields.io/badge/License-GPL_v2_or_later-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-2.0.html)
 ![WordPress](https://img.shields.io/badge/WordPress-5.9%2B-21759B?style=flat-square&logo=wordpress&logoColor=white)
-![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?style=flat-square&logo=php&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat-square&logo=php&logoColor=white)
 
-**Version:** 1.10.0 | **Requires:** WordPress 5.9+, PHP 7.4+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
+**Version:** 1.12.0 | **Requires:** WordPress 5.9+, PHP 8.2+, an active [WP Travel](https://wptravel.io) | **Tested up to:** WordPress 7.0 | **Releases:** [GitHub Releases](https://github.com/nyuchi/nyuchi-travel-addons/releases)
 
 ---
 
@@ -39,7 +39,10 @@ the wrong tool.
 
 ## Requirements
 
-WordPress 5.9 or later, PHP 7.4 or later, and an active WP Travel installation.
+WordPress 5.9 or later, PHP 8.2 or later, and an active WP Travel installation.
+The PHP minimum was raised from 7.4 to 8.2: a breaking requirement change for
+sites on older PHP, shipping in the next minor release. There is no maximum PHP
+version.
 Each module checks that the trip post type exists before registering anything,
 so the plugin stays inert rather than erroring if WP Travel is deactivated.
 
@@ -310,6 +313,55 @@ recipients come from `update-inquiry-form`, which WP Travel applies through its
 Two Elementor dynamic tags are also registered, for term text and term images,
 and `templates/elementor/single-itinerary.json` is an importable template that
 assembles the widgets into a working trip page.
+
+## Standard components
+
+### Trip card: the way to list trips
+
+The **Trip Cards** widget (`wta-trip-cards`) is the one way to list trips on
+a site, whether that is a home page row, a destination archive or a related
+trips block. Do not rebuild a trip list from Elementor's Portfolio or Posts
+widgets with custom CSS.
+
+Each card is a single link to the trip. Its accessible name reads title,
+price, then duration, for example "Serengeti Migration, From $2,450 per person
+sharing, 10 days". The price is always the starting-from price, never a range:
+`From $X` with a small qualifier beneath it. A trip with no price, or a price
+of zero, shows the request label instead of a number. A trip with only days
+set shows "10 days"; with only nights, "3 nights". When there is neither a
+duration nor a price line, the meta row is left out.
+
+| Control               | Default              | What it does                                                                                                              |
+| --------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `count`               | 6                    | How many trips (1 to 48)                                                                                                  |
+| `columns`             | 3 / 2 / 1            | Columns on desktop, tablet and mobile                                                                                     |
+| `orderby`             | `date`               | Newest first, title, manual order or random                                                                               |
+| `taxonomy`, `terms`   | none                 | Restrict to term slugs in one taxonomy                                                                                    |
+| `filter_taxonomy`     | none                 | Also require a term, for example "featured"; `filter_terms` narrows it, `filter_fallback` relaxes it when nothing matches |
+| `use_archive`         | on                   | On a destination, activity or trip-type archive, show that term's trips and honour paging                                 |
+| `current_terms`       | off                  | On a single trip, show other trips sharing its terms                                                                      |
+| `style`               | `overlay`            | `overlay` (text over image) or `stacked` (text below image)                                                               |
+| `ratio`               | `3-4`                | Image shape: `1-1`, `4-3`, `3-4` or `16-9`                                                                                |
+| `show_duration`       | on                   | Duration line                                                                                                             |
+| `show_price`          | on                   | Starting-from price                                                                                                       |
+| `show_destination`    | on                   | Destination badge on the image                                                                                            |
+| `show_excerpt`        | off                  | Trip summary                                                                                                              |
+| `cta`                 | `View itinerary`     | Button label                                                                                                              |
+| `price_request_label` | `Price on request`   | Shown in place of the price when a trip has none                                                                          |
+| `price_suffix`        | `per person sharing` | Small qualifier after "From $X". Editable; leave empty to hide                                                            |
+| `cta_request`         | `Request price`      | Button label for a trip with no price                                                                                     |
+| `footnote`            | empty                | Short note printed once under the grid, only when at least one card shows a price                                         |
+
+The widget's own defaults for `style` and `ratio` are `overlay` and `3-4`.
+This site's trip lists use **`style` stacked, `ratio` 4-3, `columns` 3 / 2 / 1,
+`cta` "View itinerary" and `cta_request` "Request price"**, so set those when
+adding the widget to a page, and fill in `footnote` wherever a price shows.
+
+Prices go through WP Travel's own formatter (`wptravel_get_formated_price_currency`,
+or `wp_travel_get_formated_price_currency` on older releases), so the symbol
+and separators match the rest of the site. If neither function exists the card
+formats the number itself, using WP Travel's currency symbol or `$`; the
+`wta_trip_card_currency_symbol` filter overrides the symbol.
 
 ## REST API reference
 

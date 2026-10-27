@@ -333,7 +333,15 @@
 
 .wta-card{min-width:0;border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--rule)}
 .wta-card-link{display:block;color:inherit;text-decoration:none;height:100%}
-.wta-card-link:focus-visible{outline:2px solid var(--dust);outline-offset:2px}
+.wta-card-link:focus-visible{outline:3px solid var(--navy);outline-offset:-3px}
+/* The card clips its contents, which would cut a ring drawn on the link, so
+   browsers with :has() draw the ring on the card itself. Navy outline with a
+   white gap reads on a light or a dark page; the gold used before was about
+   2:1 on white. */
+@supports selector(:has(*)){
+  .wta-card-link:focus-visible{outline:none}
+  .wta-card:has(.wta-card-link:focus-visible){outline:3px solid var(--navy);outline-offset:3px;box-shadow:0 0 0 3px #fff}
+}
 
 /* The clipping container. This is the element that must own overflow. */
 /* The ratio is a default, not a rule. Setting aspect-ratio directly on a
@@ -370,8 +378,13 @@
 .wta-card-excerpt{margin:0;font-size:14px;color:var(--ink-soft);line-height:1.55}
 .wta-card-meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;margin-top:2px}
 .wta-card-dur{font-family:var(--mono);font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft)}
-.wta-card-price{margin-left:auto;font-family:var(--display);font-weight:700;font-size:16px;color:var(--dust-deep);letter-spacing:-.01em}
+.wta-card-price{
+  margin-left:auto;display:inline-flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;gap:0 .3em;
+  font-family:var(--display);font-weight:700;font-size:16px;color:var(--dust-deep);letter-spacing:-.01em;
+}
 .wta-card-price small{font-family:var(--body);font-weight:400;font-size:12px;color:var(--ink-soft);letter-spacing:0}
+/* "per person sharing" sits on its own line under the amount. */
+.wta-card-price .wta-card-suffix{flex-basis:100%;text-align:right}
 .wta-card-cta{
   align-self:flex-start;margin-top:8px;
   border:1px solid var(--rule);border-radius:999px;padding:8px 18px;
@@ -394,7 +407,7 @@
 .wta-cards-grid[data-style="overlay"] .wta-card-excerpt,
 .wta-cards-grid[data-style="overlay"] .wta-card-dur{color:rgba(232,220,192,.75)}
 .wta-cards-grid[data-style="overlay"] .wta-card-price{color:var(--dust)}
-.wta-cards-grid[data-style="overlay"] .wta-card-price small{color:rgba(232,220,192,.6)}
+.wta-cards-grid[data-style="overlay"] .wta-card-price small{color:rgba(232,220,192,.85)}
 .wta-cards-grid[data-style="overlay"] .wta-card-cta{border-color:rgba(232,220,192,.4);color:var(--bleach)}
 .wta-cards-grid[data-style="overlay"] .wta-card:hover .wta-card-cta{background:var(--dust);border-color:var(--dust);color:var(--forest-deep)}
 
@@ -414,6 +427,10 @@
 .wta-card:hover .wta-card-cta.is-request{background:var(--dust);border-color:var(--dust);color:var(--forest-deep)}
 .wta-cards-grid[data-style="overlay"] .wta-card-cta.is-request{border-color:var(--dust);color:var(--dust)}
 
+/* Footnote under the card grid. Solid colour, not a translucent one, so the
+   contrast does not depend on what sits behind it: #595959 is 7:1 on white and
+   about 6:1 on cream. */
+.wta-cards-footnote{margin:14px 0 0;text-align:center;font-size:13px;line-height:1.5;color:#595959}
 
 /* ── HOST THEME RESET ───────────────────────────────────────────────────────
  * This site sets `button { border-radius:999px !important }` globally, and the

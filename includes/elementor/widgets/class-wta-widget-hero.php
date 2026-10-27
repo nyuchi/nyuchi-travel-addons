@@ -65,7 +65,7 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
             'label'       => 'Show the hero triptych',
             'type'        => \Elementor\Controls_Manager::SWITCHER,
             'default'     => 'yes',
-            'description' => 'One panel per leg, built from the trip featured image.',
+            'description' => 'One panel per leg: the leg country image, or the trip featured image when the country has none.',
         ));
 
         $this->end_controls_section();
@@ -101,7 +101,8 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
             $legs = array(array('title' => '', 'accent' => 'forest'));
         }
 
-        $image = get_the_post_thumbnail_url(get_the_ID(), $this->wta_image_size('hero', $settings));
+        $size  = $this->wta_image_size('hero', $settings);
+        $image = get_the_post_thumbnail_url(get_the_ID(), $size);
 
         echo '<div class="wta-hero-art" aria-hidden="true"><div class="wta-triptych" data-panels="' . count($legs) . '">';
 
@@ -111,16 +112,30 @@ class WTA_Widget_Hero extends \Elementor\Widget_Base {
 
             printf('<figure class="wta-panel wta-accent-%s">', esc_attr($accent));
 
+            // Each panel is a leg, so it shows that leg's own country image when
+            // the term has one. Using the trip photo for every panel put the same
+            // picture, sliced three ways, under different country labels. Legs
+            // without a term image fall back to the trip featured image.
+            $leg_image = $image;
+
+            if (count($legs) > 1 && !empty($leg['term_id']) && class_exists('WTA_Term_Media')) {
+                $term_image = WTA_Term_Media::get_image_url((int) $leg['term_id'], $size, false);
+
+                if ($term_image) {
+                    $leg_image = $term_image;
+                }
+            }
+
             // The image box is always rendered so every panel is the same size,
             // with or without a photograph. The photograph is shown as it is: no
             // tint, no filter, no overlay.
             printf(
                 '<span class="wta-panel-img"%s></span>',
-                $image
+                $leg_image
                     ? sprintf(
                         ' style="background-image:url(%s);background-position:%d%% 50%%"',
-                        esc_url($image),
-                        (int) (count($legs) > 1 ? $i * (100 / (count($legs) - 1)) : 50)
+                        esc_url($leg_image),
+                        (int) (($leg_image === $image && count($legs) > 1) ? $i * (100 / (count($legs) - 1)) : 50)
                     )
                     : ''
             );

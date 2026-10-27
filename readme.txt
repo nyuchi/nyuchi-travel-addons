@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.12.0
+Stable tag: 1.14.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -112,7 +112,7 @@ telemetry or usage ping. To hide the star count, add
 
 == Changelog ==
 
-= Unreleased =
+= 1.14.0 =
 * New: a progressive web app module that fixes WP Travel's built-in PWA. It serves a
   current web app manifest, a service worker and an offline page from the plugin, so
   guests can install the site and still see a friendly page without a connection. Pages

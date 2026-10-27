@@ -68,5 +68,7 @@ body.workos-authkit-body #workos-authkit-root a{color:#152744;text-underline-off
 body.workos-authkit-body #workos-authkit-root .wa-below-card-back{color:#5C4326;font-size:14px}
 body.workos-authkit-body :focus-visible{outline:2px solid #BAA18C;outline-offset:2px}
 @media (max-width:480px){body.workos-authkit-body #workos-authkit-root .wa-card{padding:24px 20px}}
+body.workos-authkit-body #workos-authkit-root input[autocomplete="one-time-code"]{box-sizing:content-box;width:calc(6 * 3.25rem - .25rem);max-width:100%;padding:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1.75rem;font-weight:600;line-height:3.5rem;min-height:3.5rem;height:3.5rem;letter-spacing:calc(3.25rem - 1ch);text-indent:calc((3.25rem - 1ch) / 2);text-align:left;color:#152744;border:1px solid rgba(21,39,68,.25);border-radius:12px;background:repeating-linear-gradient(90deg,#fff 0,#fff 3rem,rgba(21,39,68,.18) 3rem,rgba(21,39,68,.18) 3.25rem);overflow:hidden}
+body.workos-authkit-body #workos-authkit-root input[autocomplete="one-time-code"]::placeholder{color:rgba(21,39,68,.3)}
 CSS;
 }

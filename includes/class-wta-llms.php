@@ -70,6 +70,34 @@ class WTA_LLMS {
         }
 
         add_action('admin_notices', array($this, 'conflict_notice'));
+        add_action('send_headers', array($this, 'send_link_headers'));
+    }
+
+    /**
+     * Point agents at the llms.txt files and the sitemap from the home page's
+     * response headers, so they can be found without parsing the page.
+     *
+     * @return string[] The Link header values.
+     */
+    public function link_headers() {
+        return array(
+            '<' . home_url('/llms.txt') . '>; rel="alternate"; type="text/plain"; title="llms.txt"',
+            '<' . home_url('/llms-full.txt') . '>; rel="alternate"; type="text/plain"; title="llms-full.txt"',
+            '<' . home_url('/sitemap_index.xml') . '>; rel="sitemap"; type="application/xml"',
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function send_link_headers() {
+        if (is_admin() || headers_sent() || !(is_front_page() || is_home())) {
+            return;
+        }
+
+        foreach ($this->link_headers() as $value) {
+            header('Link: ' . $value, false);
+        }
     }
 
     /* ------------------------------------------------------------- routing */

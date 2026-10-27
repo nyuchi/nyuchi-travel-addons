@@ -47,6 +47,7 @@ require_once WTA_DIR . 'includes/class-wta-consent.php';
 require_once WTA_DIR . 'includes/class-wta-consent-log.php';
 require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
 require_once WTA_DIR . 'includes/class-wta-llms.php';
+require_once WTA_DIR . 'includes/class-wta-hardening.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -174,6 +175,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_LLMS',
                 'label'   => 'llms.txt for AI assistants',
                 'detail'  => 'Serves /llms.txt (every trip with its length and from-price, destinations, key pages, park guides and recent articles) and /llms-full.txt (each trip with overview, itinerary and inclusions), built from the site and cached. Off until switched on. Yoast SEO writes its own llms.txt as a physical file; turn that feature off in Yoast so this one is reached.',
+                'default' => 0,
+            ),
+            'hardening' => array(
+                'class'   => 'WTA_Hardening',
+                'label'   => 'Login hardening',
+                'detail'  => 'Hides the public list of usernames in the REST API (/wp-json/wp/v2/users) and closes XML-RPC, the two doors password-guessing bots use first. Logged-in editors and admins still see the user list. Off until switched on, because a site that uses XML-RPC (Jetpack, old mobile apps) would lose it.',
                 'default' => 0,
             ),
         );

@@ -95,6 +95,7 @@ the others.
 | `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
 | `ai_crawlers`      | AI crawler policy               | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
 | `llms`             | llms.txt for AI assistants      | Serves a complete /llms.txt and /llms-full.txt built from your trips, destinations and key pages. **Off by default**                                     |
+| `hardening`        | Login hardening                 | Hides the public username list in the REST API and closes XML-RPC. **Off by default**                                                                    |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -194,6 +195,15 @@ Filters: `wta_pwa_defaults`, `wta_pwa_settings`, `wta_pwa_manifest`,
 `wta_pwa_categories`, `wta_pwa_exclude_paths`, `wta_pwa_cache_limits`,
 `wta_pwa_precache`, `wta_pwa_font_hosts`, `wta_pwa_register_logged_in`,
 `wta_pwa_wp_travel_active`, `wta_pwa_legacy_cleanup`, `wta_pwa_legacy_sw_path`.
+
+### Login hardening (the `hardening` module)
+
+Two doors that password-guessing bots use first. `/wp-json/wp/v2/users` is
+removed for visitors, so usernames are no longer handed out (editors and admins
+still see it), and XML-RPC is closed, including the pingback header. Keep either
+open with the `wta_hardening_hide_rest_users` or `wta_hardening_close_xmlrpc`
+filter (return `false`). Turn it off on a site that needs XML-RPC, such as one
+using Jetpack or an old mobile app.
 
 ### llms.txt for AI assistants (the `llms` module)
 

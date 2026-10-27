@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.22.0
+Stable tag: 1.23.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,9 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.23.0 =
+* Fix: signing in with WorkOS no longer sends you back to the login page on hosts that drop the login cookie on the plugin's own sign-in routes (the `workos_bridge` module, off by default). After WorkOS confirms the user, the last step runs on wp-login.php with a one-time token (random, 90 seconds, single use, tied to the browser), which sets the cookie.
 
 = 1.22.0 =
 * Change: the sign-in page's one-time code is now six separate boxes (the sign-in page styling module). Pasting a code, autofill and the page's own validation still work, and it submits when the last digit is entered. Turn the script off with the `wta_login_style_js` filter.

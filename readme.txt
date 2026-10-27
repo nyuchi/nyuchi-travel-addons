@@ -115,7 +115,12 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* Fix: trip pages no longer tell search engines and AI assistants that every trip costs 0. The TouristTrip schema now carries the trip's from-price per person sharing (the same figure the trip cards show), is left without an offer when a trip has no price, and no longer shows "&amp;" literally in day titles. Switch off with the `wta_compat_trip_schema_fix` filter.
+
+= 1.17.0 =
 * Fix: the home page hero video no longer shows an untappable play button on phones that refuse to autoplay it. The button is hidden and, if playback does not start, the poster image shows instead. Switch off with the `wta_compat_hero_video_fallback` filter.
+
+= 1.16.0 =
 * New: a cookie consent banner. It asks first-time visitors, and everyone again after you
   change the policy version, to accept all, decline (necessary cookies only) or choose
   analytics and marketing separately. Accept and Decline look and weigh the same, it works

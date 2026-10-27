@@ -25,13 +25,23 @@ class InquiryFormModuleTest extends WTA_Inquiry_Test_Case {
     }
 
     /**
-     * WP Travel's field list before any filter. The test case restores the
-     * hooks after every test, so removing them here does not leak.
+     * WP Travel's field list before any filter, with the filters put back
+     * afterwards so the test can go on to save something and look again.
      */
     protected function default_fields() {
-        remove_all_filters('wp_travel_enquiries_form_fields');
+        global $wp_filter;
 
-        return wptravel_enquiries_form_fields();
+        $hook = 'wp_travel_enquiries_form_fields';
+        $held = isset($wp_filter[$hook]) ? clone $wp_filter[$hook] : null;
+
+        remove_all_filters($hook);
+        $fields = wptravel_enquiries_form_fields();
+
+        if (null !== $held) {
+            $wp_filter[$hook] = $held;
+        }
+
+        return $fields;
     }
 
     /**

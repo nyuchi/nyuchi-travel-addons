@@ -49,6 +49,7 @@ require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
 require_once WTA_DIR . 'includes/class-wta-llms.php';
 require_once WTA_DIR . 'includes/class-wta-hardening.php';
 require_once WTA_DIR . 'includes/class-wta-login-style.php';
+require_once WTA_DIR . 'includes/class-wta-workos-mfa.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -182,6 +183,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_Hardening',
                 'label'   => 'Login hardening',
                 'detail'  => 'Hides the public list of usernames in the REST API (/wp-json/wp/v2/users) and closes XML-RPC, the two doors password-guessing bots use first. Logged-in editors and admins still see the user list. Off until switched on, because a site that uses XML-RPC (Jetpack, old mobile apps) would lose it.',
+                'default' => 0,
+            ),
+            'workos_mfa' => array(
+                'class'   => 'WTA_WorkOS_MFA',
+                'label'   => 'WorkOS second-factor step',
+                'detail'  => 'Fixes the WorkOS sign-in page getting stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required: it turns that WorkOS reply into the authenticator-code step the page already has. Nothing is relaxed, the second factor is still checked by WorkOS. Off until switched on.',
                 'default' => 0,
             ),
             'login_style' => array(

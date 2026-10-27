@@ -73,6 +73,7 @@ class WTA_Abilities {
         $this->register_audit_classification();
         $this->register_scan_compat();
         $this->register_pwa_status();
+        $this->register_consent_status();
     }
 
     /* ----------------------------------------------------------- get-trip */
@@ -871,6 +872,77 @@ class WTA_Abilities {
 
             'execute_callback' => function () {
                 return WTA_PWA::status();
+            },
+        ));
+    }
+
+    /* ------------------------------------------------------- consent-status */
+
+    protected function register_consent_status() {
+        $strings = array('type' => 'array', 'items' => array('type' => 'string'));
+
+        wp_register_ability(self::NS . 'consent-status', array(
+            'label'       => 'Cookie consent status',
+            'description' => 'Report the state of the site\'s cookie consent banner: whether the Travel Addons consent module is on, a summary of its settings (policy version, lifetime, position, categories, privacy link, Meta Pixel ID, regional defaults, logging and Do-Not-Track handling), the Google Consent Mode defaults it emits, the script and stylesheet URLs, other consent tools detected that would show a second banner, and how many consent records were logged in the last 30 days by choice (all, necessary only, custom) when logging is on. Read-only and contains no personal data. Use it to check the banner is live and whether Usercentrics, Zaraz or another CMP still needs switching off.',
+            'category'    => self::CATEGORY,
+
+            'input_schema' => array(
+                'type'       => 'object',
+                'properties' => array(),
+            ),
+
+            'output_schema' => array(
+                'type'       => 'object',
+                'properties' => array(
+                    'module_enabled' => array('type' => 'boolean', 'description' => 'Whether the consent module switch is on.'),
+                    'settings'       => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'policy_version'    => array('type' => 'string', 'description' => 'Changing it asks every visitor again.'),
+                            'lifetime_days'     => array('type' => 'integer'),
+                            'position'          => array('type' => 'string', 'enum' => WTA_Consent::POSITIONS),
+                            'categories'        => $strings,
+                            'privacy_url'       => array('type' => 'string'),
+                            'meta_pixel_id'     => array('type' => 'string', 'description' => 'Empty when the built-in pixel loader is off.'),
+                            'regions_analytics' => $strings,
+                            'regions_marketing' => $strings,
+                            'logging'           => array('type' => 'boolean'),
+                            'respect_dnt'       => array('type' => 'boolean'),
+                        ),
+                    ),
+                    'consent_mode'   => array('type' => 'object', 'description' => 'The defaults printed in the head before any choice.'),
+                    'scripts'        => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'js'  => array('type' => 'string'),
+                            'css' => array('type' => 'string'),
+                        ),
+                    ),
+                    'records'        => array(
+                        'type'       => 'object',
+                        'properties' => array(
+                            'logging'           => array('type' => 'boolean'),
+                            'window_days'       => array('type' => 'integer'),
+                            'total'             => array('type' => 'integer'),
+                            'by_choice'         => array('type' => 'object', 'description' => 'all, necessary and custom counts.'),
+                            'analytics_granted' => array('type' => 'integer'),
+                            'marketing_granted' => array('type' => 'integer'),
+                        ),
+                    ),
+                    'conflicts'      => array('type' => 'array', 'items' => array('type' => 'object'), 'description' => 'Other consent tools detected (id, label, how).'),
+                    'warnings'       => $strings,
+                ),
+                'required'   => array('module_enabled', 'settings', 'consent_mode', 'scripts', 'records'),
+            ),
+
+            'permission_callback' => array($this, 'can_manage_options'),
+
+            'meta' => array(
+                'annotations' => array('readonly' => true),
+            ),
+
+            'execute_callback' => function () {
+                return WTA_Consent::status();
             },
         ));
     }

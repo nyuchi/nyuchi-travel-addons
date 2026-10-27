@@ -50,6 +50,7 @@ require_once WTA_DIR . 'includes/class-wta-llms.php';
 require_once WTA_DIR . 'includes/class-wta-hardening.php';
 require_once WTA_DIR . 'includes/class-wta-login-style.php';
 require_once WTA_DIR . 'includes/class-wta-workos-mfa.php';
+require_once WTA_DIR . 'includes/class-wta-workos-bridge.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -189,6 +190,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_WorkOS_MFA',
                 'label'   => 'WorkOS second-factor step',
                 'detail'  => 'Fixes the WorkOS sign-in page getting stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required: it turns that WorkOS reply into the authenticator-code step the page already has. Nothing is relaxed, the second factor is still checked by WorkOS. Off until switched on.',
+                'default' => 0,
+            ),
+            'workos_bridge' => array(
+                'class'   => 'WTA_WorkOS_Bridge',
+                'label'   => 'WorkOS sign-in cookie bridge',
+                'detail'  => 'Fixes WorkOS sign-in sending you back to the login page: on this host the login cookie is lost on the plugin\'s own sign-in routes, so the final step is handed to wp-login.php, which sets it. Uses a one-time token (random, 90 seconds, single use, tied to the browser). Off until switched on.',
                 'default' => 0,
             ),
             'login_style' => array(

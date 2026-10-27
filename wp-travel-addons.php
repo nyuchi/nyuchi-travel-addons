@@ -166,7 +166,7 @@ final class WP_Travel_Addons {
             'ai_crawlers' => array(
                 'class'   => 'WTA_AI_Crawlers',
                 'label'   => 'AI crawler policy',
-                'detail'  => 'Adds a policy for AI crawlers to robots.txt: search and answer bots are welcome, training bots are disallowed, plus a Content-Signal line and the sitemap. Off until switched on, because it changes your robots.txt.',
+                'detail'  => 'Adds a policy for AI crawlers to robots.txt: every AI crawler is welcome (search, answer and training bots), plus a Content-Signal line and header and the sitemap. Blocking a bot is opt-in. Off until switched on, because it changes your robots.txt.',
                 'default' => 0,
             ),
         );

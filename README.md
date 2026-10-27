@@ -93,7 +93,7 @@ the others.
 | `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**                           |
 | `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
 | `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
-| `ai_crawlers`      | AI crawler policy               | Adds search and answer bots as allowed, AI training bots as disallowed, a Content-Signal line and the sitemap to robots.txt. **Off by default**          |
+| `ai_crawlers`      | AI crawler policy               | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -196,22 +196,21 @@ Filters: `wta_pwa_defaults`, `wta_pwa_settings`, `wta_pwa_manifest`,
 
 ### AI crawler policy (the `ai_crawlers` module)
 
-Appends a policy for AI crawlers to the robots.txt WordPress serves. Search and
-answer crawlers (OAI-SearchBot, ChatGPT-User, Claude-SearchBot, Claude-User,
-PerplexityBot, Perplexity-User) are allowed so assistants can find and quote the
-site. Crawlers that collect pages to train models (GPTBot, ClaudeBot,
-anthropic-ai, Google-Extended, Applebot-Extended, CCBot, Bytespider,
-Meta-ExternalAgent) are disallowed. It also adds
-`Content-Signal: search=yes, ai-input=yes, ai-train=no` to the `*` group and a
-`Sitemap:` line when none is present. The same signal is sent as a
-`Content-Signal` response header on every front-end page; that header overrides
-the `ai-train=yes` Cloudflare's Markdown for Agents adds by default. Change the
-value with the `wta_ai_content_signal` filter.
+Appends a policy for AI crawlers to the robots.txt WordPress serves, and sends
+it as a `Content-Signal` response header. Every AI crawler is welcome by
+default, training crawlers included: OAI-SearchBot, ChatGPT-User, GPTBot,
+Claude-SearchBot, Claude-User, ClaudeBot, anthropic-ai, PerplexityBot,
+Perplexity-User, Google-Extended, Applebot-Extended and CCBot each get an
+explicit `Allow: /`. It adds
+`Content-Signal: search=yes, ai-input=yes, ai-train=yes` to the `*` group and a
+`Sitemap:` line when none is present. The header overrides the `ai-train=yes`
+default Cloudflare's Markdown for Agents adds, so both say the same thing.
 
-Move a bot between the lists with the `wta_ai_search_bots` and
-`wta_ai_training_bots` filters. A physical `robots.txt` file in the web root
-bypasses WordPress and is not changed; Cloudflare's own content-signal setting
-is separate and is changed in the Cloudflare dashboard.
+Nothing is blocked unless you ask: add bots with the `wta_ai_blocked_bots`
+filter (blocking wins over allowing), change the list with `wta_ai_allowed_bots`
+and the signal with `wta_ai_content_signal`. A physical `robots.txt` file in the
+web root bypasses WordPress and is not changed; Cloudflare's own AI bot
+policies are separate and are changed in the Cloudflare dashboard.
 
 ### Cookie consent (the `consent` module)
 

@@ -203,7 +203,10 @@ site. Crawlers that collect pages to train models (GPTBot, ClaudeBot,
 anthropic-ai, Google-Extended, Applebot-Extended, CCBot, Bytespider,
 Meta-ExternalAgent) are disallowed. It also adds
 `Content-Signal: search=yes, ai-input=yes, ai-train=no` to the `*` group and a
-`Sitemap:` line when none is present.
+`Sitemap:` line when none is present. The same signal is sent as a
+`Content-Signal` response header on every front-end page; that header overrides
+the `ai-train=yes` Cloudflare's Markdown for Agents adds by default. Change the
+value with the `wta_ai_content_signal` filter.
 
 Move a bot between the lists with the `wta_ai_search_bots` and
 `wta_ai_training_bots` filters. A physical `robots.txt` file in the web root

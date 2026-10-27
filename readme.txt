@@ -115,6 +115,7 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
+* New: the AI crawler policy module now also sends a `Content-Signal` response header (search=yes, ai-input=yes, ai-train=no), which overrides the `ai-train=yes` Cloudflare adds to its Markdown responses by default. Change the value with the `wta_ai_content_signal` filter.
 * New: an AI crawler policy module for robots.txt (off by default). It allows search and answer crawlers, disallows AI training crawlers, adds a Content-Signal line and the sitemap. Move a bot between the lists with the `wta_ai_search_bots` and `wta_ai_training_bots` filters.
 * Fix: trip pages no longer tell search engines and AI assistants that every trip costs 0. The TouristTrip schema now carries the trip's from-price per person sharing (the same figure the trip cards show), is left without an offer when a trip has no price, and no longer shows "&amp;" literally in day titles. Switch off with the `wta_compat_trip_schema_fix` filter.
 

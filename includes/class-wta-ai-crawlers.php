@@ -47,6 +47,35 @@ class WTA_AI_Crawlers {
     public function __construct() {
         // After Yoast, which appends its sitemap line late.
         add_filter('robots_txt', array($this, 'filter_robots'), 100000, 2);
+
+        // Cloudflare's Markdown for Agents serves pages to agents and adds
+        // "ai-train=yes" unless the origin sends its own Content-Signal header.
+        add_action('send_headers', array($this, 'send_content_signal'));
+    }
+
+    /**
+     * Send the Content-Signal header on front-end responses, so the policy
+     * also reaches agents that never read robots.txt and overrides the default
+     * Cloudflare adds to its Markdown responses.
+     *
+     * @return void
+     */
+    public function send_content_signal() {
+        if (is_admin() || headers_sent()) {
+            return;
+        }
+
+        /**
+         * The Content-Signal value sent in the response header and written to
+         * robots.txt. Return an empty string to send nothing.
+         *
+         * @param string $signal Default, search=yes, ai-input=yes, ai-train=no.
+         */
+        $signal = (string) apply_filters('wta_ai_content_signal', self::CONTENT_SIGNAL);
+
+        if ('' !== trim($signal)) {
+            header('Content-Signal: ' . preg_replace('/[^A-Za-z0-9=, _\-]/', '', $signal));
+        }
     }
 
     /**
@@ -69,8 +98,10 @@ class WTA_AI_Crawlers {
 
         $output = rtrim($output);
 
-        if (false === stripos($output, 'Content-Signal:')) {
-            $output = preg_replace('/^(User-agent:\s*\*\s*)$/mi', "$1\nContent-Signal: " . self::CONTENT_SIGNAL, $output, 1);
+        $signal = trim((string) apply_filters('wta_ai_content_signal', self::CONTENT_SIGNAL));
+
+        if ('' !== $signal && false === stripos($output, 'Content-Signal:')) {
+            $output = preg_replace('/^(User-agent:\s*\*\s*)$/mi', "$1\nContent-Signal: " . $signal, $output, 1);
         }
 
         $block = '';

@@ -30,6 +30,13 @@ class LoginStyleTest extends WP_UnitTestCase {
         $this->assertStringContainsString('Instrument Sans', implode('', (array) $inline));
     }
 
+    public function test_the_email_code_field_is_drawn_as_six_boxes() {
+        $css = (new WTA_Login_Style())->css();
+
+        $this->assertStringContainsString('input[autocomplete="one-time-code"]', $css);
+        $this->assertStringContainsString('repeating-linear-gradient', $css);
+    }
+
     public function test_the_css_can_be_changed_with_a_filter() {
         add_filter('wta_login_style_css', function () {
             return 'body{color:red}';

@@ -115,7 +115,8 @@ telemetry or usage ping. To hide the star count, add
 == Changelog ==
 
 = Unreleased =
-* New: sign-in page styling module (off by default). Gives the WorkOS sign-in page and the standard wp-login.php form the site look: sand background, the site's display and body fonts, a white card and navy pill buttons. Adjust it with the `wta_login_style_css` filter.
+* Fix: the WorkOS sign-in page no longer gets stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required (off by default, the `workos_mfa` module). It turns that WorkOS reply into the authenticator-code step the page already has. The second factor is still checked by WorkOS.
+* New: sign-in page styling module (off by default). Gives the WorkOS sign-in page and the standard wp-login.php form the site look: sand background, the site's display and body fonts, a white card and navy pill buttons. The one-time code field is drawn as six boxes. Adjust it with the `wta_login_style_css` filter.
 * New: login hardening module (off by default). Hides the public list of usernames in the REST API (`/wp-json/wp/v2/users`) from visitors and closes XML-RPC, the two doors password-guessing bots use first. Editors and admins still see the user list. Keep either open with the `wta_hardening_hide_rest_users` or `wta_hardening_close_xmlrpc` filter.
 * New: with the llms.txt module on, the home page sends `Link` headers pointing to `/llms.txt`, `/llms-full.txt` and the sitemap.
 * New: a complete llms.txt for AI assistants (off by default). Serves /llms.txt, listing every trip by country with its length and from-price, the destinations, key pages, park guides, articles and policies, and /llms-full.txt with each trip's overview, itinerary and inclusions. Cached and rebuilt when content changes. Yoast SEO writes its own llms.txt as a physical file, so turn that off for this one to be reached.

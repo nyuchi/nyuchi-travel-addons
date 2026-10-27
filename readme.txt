@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.12.0
+Stable tag: 1.18.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -114,7 +114,7 @@ telemetry or usage ping. To hide the star count, add
 
 == Changelog ==
 
-= Unreleased =
+= 1.18.0 =
 * New: an AI crawler policy module for robots.txt (off by default). It allows search and answer crawlers, disallows AI training crawlers, adds a Content-Signal line and the sitemap. Move a bot between the lists with the `wta_ai_search_bots` and `wta_ai_training_bots` filters.
 * Fix: trip pages no longer tell search engines and AI assistants that every trip costs 0. The TouristTrip schema now carries the trip's from-price per person sharing (the same figure the trip cards show), is left without an offer when a trip has no price, and no longer shows "&amp;" literally in day titles. Switch off with the `wta_compat_trip_schema_fix` filter.
 

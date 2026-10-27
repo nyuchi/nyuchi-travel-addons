@@ -95,7 +95,7 @@ the others.
 | `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
 | `ai_crawlers`      | AI crawler policy               | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
 | `llms`             | llms.txt for AI assistants      | Serves a complete /llms.txt and /llms-full.txt built from your trips, destinations and key pages. **Off by default**                                     |
-| `hardening`        | Login hardening                 | Hides the public username list in the REST API and closes XML-RPC. **Off by default**                                                                      |
+| `hardening`        | Login hardening                 | Hides the public username list in the REST API and closes XML-RPC. **Off by default**                                                                    |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the

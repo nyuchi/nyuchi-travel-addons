@@ -478,6 +478,11 @@ if (!function_exists('wta_switch')) {
     </form>
     <?php endif; ?>
 
+    <?php // --------------------------------------------------------------- PWA ?>
+    <?php if ('pwa' === $current_tab) : ?>
+        <?php include WTA_DIR . 'admin/views/pwa-tab.php'; ?>
+    <?php endif; ?>
+
     <?php WTA_GitHub_Stars::render(); ?>
 
 </div>

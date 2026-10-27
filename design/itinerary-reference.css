@@ -557,3 +557,33 @@
 }
 .wta-hero-guide span{font-size:14.5px;line-height:1.55;max-width:38ch;color:rgba(232,220,192,.78)}
 .wta-hero-guide + .wta-gradient-bar{margin-top:clamp(32px,5vw,56px)}
+
+/* ── TERM FAQ ───────────────────────────────────────────────────────────────
+ * Native <details>/<summary>, so it works without script and is announced as a
+ * disclosure by assistive technology. Rendered by class-wta-widget-term-faq.php.
+ * The sec-head h2 rule sizes the default heading; h3/h4 take the same look. */
+.wta-faq__title{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(26px,4.4vw,44px);letter-spacing:-.025em;line-height:1;margin:0;
+}
+.wta-faq__list{display:flex;flex-direction:column;gap:8px}
+.wta-faq__item{border:1px solid var(--rule);border-left:3px solid var(--dust-deep);background:#fff;border-radius:2px}
+.wta-faq__q{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  min-height:44px;padding:15px 16px;cursor:pointer;list-style:none;
+  font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em;line-height:1.3;
+}
+.wta-faq__q::-webkit-details-marker{display:none}
+.wta-faq__q::marker{content:""}
+.wta-faq__q::after{
+  content:"";flex:none;width:9px;height:9px;margin-right:4px;
+  border-right:2px solid var(--dust-deep);border-bottom:2px solid var(--dust-deep);
+  transform:rotate(45deg);transition:transform .18s ease;
+}
+.wta-faq__item[open] > .wta-faq__q::after{transform:rotate(-135deg)}
+.wta-faq__q:hover{background:rgba(197,165,114,.12)}
+.wta-faq__a{padding:0 16px 18px;color:var(--ink);font-size:15.5px;line-height:1.62;max-width:72ch}
+.wta-faq__a > :first-child{margin-top:0}
+.wta-faq__a > :last-child{margin-bottom:0}
+.wta-faq__a a{color:var(--navy);text-decoration:underline;text-underline-offset:2px}
+@media (prefers-reduced-motion:reduce){ .wta-faq__q::after{transition:none} }

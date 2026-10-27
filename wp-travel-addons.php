@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility helpers. By Nyuchi Web Services.
- * Version:     1.13.0
+ * Version:     1.14.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.13.0');
+define('WTA_VERSION', '1.14.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -37,9 +37,12 @@ require_once WTA_DIR . 'includes/class-wta-term-status.php';
 require_once WTA_DIR . 'includes/class-wta-elementor-tags.php';
 require_once WTA_DIR . 'includes/class-wta-term-media.php';
 require_once WTA_DIR . 'includes/class-wta-term-fields.php';
+require_once WTA_DIR . 'includes/class-wta-term-faq.php';
 require_once WTA_DIR . 'includes/class-wta-taxonomy-audit.php';
 require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-assets.php';
+require_once WTA_DIR . 'includes/class-wta-pwa.php';
+require_once WTA_DIR . 'includes/class-wta-pwa-legacy.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -114,6 +117,11 @@ final class WP_Travel_Addons {
                 'label'  => 'Destination and activity detail',
                 'detail' => 'Structured facts for destinations (country, gateway airport, currency, best months) and activities (duration, difficulty, minimum age, best months).',
             ),
+            'term_faq' => array(
+                'class'  => 'WTA_Term_FAQ',
+                'label'  => 'Country FAQs',
+                'detail' => 'The Term FAQ widget: shows the FAQs written on a country (or on a destination) as an accessible accordion, and publishes them as one FAQPage schema graph that steps aside for FAQ schema from another source.',
+            ),
             'term_status' => array(
                 'class'  => 'WTA_Term_Status',
                 'label'  => 'Term publication state',
@@ -138,6 +146,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_Assets',
                 'label'   => 'Conditional asset loading',
                 'detail'  => 'Keeps the WP Travel booking widget, Google Maps and WP Travel Pro bundles off pages that cannot use them. Off until switched on, because it changes what the front end loads.',
+                'default' => 0,
+            ),
+            'pwa' => array(
+                'class'   => 'WTA_PWA',
+                'label'   => 'Progressive web app',
+                'detail'  => 'An installable, offline-capable site: a current web app manifest, a service worker that never serves a stale page, and an offline page. Replaces the WP Travel PWA. Off until switched on, because it changes what the front end prints and registers. Settings are on the PWA tab.',
                 'default' => 0,
             ),
         );
@@ -182,6 +196,12 @@ final class WP_Travel_Addons {
         // this costs nothing on an ordinary front-end request.
         $this->modules['updater'] = new WTA_Updater();
         $this->modules['admin'] = new WTA_Admin($this);
+
+        // Always constructed, whatever the pwa module switch says: it removes
+        // WP Travel's old /sw.js, which keeps running in visitors' browsers
+        // after WP Travel's PWA setting is turned off. It registers hooks
+        // only and reads the file on admin_init when something has changed.
+        $this->modules['pwa_legacy'] = new WTA_PWA_Legacy();
 
         // Only adds the Plugins-row link; the count is fetched by the admin
         // screen itself when it renders.

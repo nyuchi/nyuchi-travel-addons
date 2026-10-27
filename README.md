@@ -77,19 +77,21 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key                | Module                          | What it does                                                                                                                   |
-| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                |
-| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes              |
-| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                       |
-| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                   |
-| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                        |
-| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                 |
-| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                               |
-| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                      |
-| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                     |
-| `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                      |
-| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default** |
+| Key                | Module                          | What it does                                                                                                                    |
+| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                 |
+| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes               |
+| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                        |
+| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                    |
+| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                         |
+| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                  |
+| `term_faq`         | Country FAQs                    | The Term FAQ widget: a country's FAQs as an accessible accordion, plus one FAQPage schema graph that yields to other FAQ schema |
+| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                                |
+| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                       |
+| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                      |
+| `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                       |
+| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**  |
+| `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**           |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -100,6 +102,95 @@ Elementor/Customizer previews. What it removes, and where it keeps everything,
 is adjustable through the `wta_assets_rules`, `wta_assets_keep_paths`,
 `wta_assets_keep_shortcodes` and `wta_assets_needed` filters. It only
 dequeues, never deregisters.
+
+### Progressive web app (the `pwa` module)
+
+WP Travel's built-in PWA has three faults: its service worker caches `/` when
+it installs and answers cache-first, so a returning visitor can be shown an
+out-of-date homepage indefinitely; it has no offline page and no error
+handling; and its `/sw.js` is a physical file in the web root that stays
+behind, still running in visitors' browsers, after the PWA setting is turned
+off. The `pwa` module replaces it. It is **off by default**; switch it on from
+the **PWA** tab (the same switch is on the Modules tab).
+
+What it serves, all from the plugin and nothing written to the web root:
+
+| URL                         | What                                                              |
+| --------------------------- | ----------------------------------------------------------------- |
+| `/wta-manifest.webmanifest` | The web app manifest, built from the settings                     |
+| `/wta-sw.js`                | The service worker, with `Service-Worker-Allowed: /` and no-cache |
+| `/wta-offline`              | The page shown when the network is down                           |
+
+Requests are matched on `parse_request`, so no rewrite rules are added and
+nothing needs flushing. Without pretty permalinks, or with the **Endpoint
+style** set to query URLs, the same three are served at
+`/?wta_pwa=manifest|sw|offline`. Use that if a web server answers a missing
+`.js` or `.webmanifest` URL with its own 404 before WordPress sees it.
+
+Settings (PWA tab): name, short name, description, theme and background
+colour, start URL, display mode, the 192 px, 512 px and maskable 512 px icons
+from the media library, the offline page title, message and image, a cache
+version and the endpoint style. An icon slot left empty falls back to the
+WordPress site icon (which WordPress crops to 192 and 512). The maskable icon
+never falls back, because only a person can check its safe zone. Every icon is
+checked (square, large enough, PNG or WebP) and the manifest declares its real
+size; the tab says what is wrong, and the manifest leaves out an icon that
+would make it invalid.
+
+The page head gets `<link rel="manifest">`, `theme-color` and, when no site
+icon is set (WordPress prints its own when one is), `apple-touch-icon`. The
+registration script is printed in the footer, with a feature check, only when
+the module is on, and never in wp-admin or for signed-in users.
+
+How the worker behaves:
+
+- **Pages are never served stale.** A navigation always goes to the network.
+  Only when that fetch fails (offline) does the worker answer, with the
+  precached offline page. HTML is never stored in a cache.
+- **Static files** under `/wp-content/` (scripts, styles) are served
+  stale-while-revalidate; fonts and images are cache-first, each cache with a
+  maximum number of entries, a maximum size per file and an expiry.
+- **Never touched:** `/wp-admin`, `wp-login.php`, `/wp-json`, `admin-ajax.php`,
+  every request that is not a GET, any URL whose query string contains
+  `nonce` or `preview`, and enquiry, checkout, cart, booking and account
+  pages. Signed-in users are not registered. Extend the list with the
+  `wta_pwa_exclude_paths` filter.
+- **Releases invalidate old caches.** Cache names include the plugin version,
+  the **Cache version** setting and a hash of the offline page, and the worker
+  deletes every `wta-pwa-` cache that is not current when it activates. It
+  calls `skipWaiting()` and `clients.claim()`, so a new worker takes over at
+  once.
+- **Two PWAs never run at once.** While WP Travel's own PWA is on
+  (`wp_travel_settings.enable_pwa` is `yes`) the module prints no manifest and
+  registers no worker, and an admin notice says why.
+- **Switching the module off cleans up after itself.** Once the worker has
+  been served, `/wta-sw.js` answers with the kill-switch script while the
+  module is off, so browsers that registered it remove it.
+
+#### Removing WP Travel's old service worker
+
+This runs whether or not the module is on, because the stale worker is already
+in visitors' browsers. When WP Travel's PWA setting is not `yes`, and
+`ABSPATH/sw.js` contains WP Travel's signature
+(`const staticWPTravel = "wp-travel"`), the file's contents are replaced with a
+kill-switch worker (`assets/js/wta-sw-kill.js`) that deletes all caches,
+unregisters itself and reloads open pages. A `sw.js` without the signature is
+never changed. It is written through `WP_Filesystem`, once on `admin_init`
+(again only if the file changes, or after an update following a failure), and
+the result is kept in the `wta_pwa_legacy` option and shown in an admin
+notice. The PWA tab shows the state and a **Remove old service worker**
+button (nonce, `manage_options`). If the file cannot be written, the notice
+gives the exact path and the script to paste in. Disable all of it with
+`add_filter( 'wta_pwa_legacy_cleanup', '__return_false' );`.
+
+The `nyuchi-travel/pwa-status` ability (`manage_options`, read-only) reports
+whether the module is on and active, the manifest, worker and offline URLs,
+the cache build, each icon check and the state of the old `sw.js`.
+
+Filters: `wta_pwa_defaults`, `wta_pwa_settings`, `wta_pwa_manifest`,
+`wta_pwa_categories`, `wta_pwa_exclude_paths`, `wta_pwa_cache_limits`,
+`wta_pwa_precache`, `wta_pwa_font_hosts`, `wta_pwa_register_logged_in`,
+`wta_pwa_wp_travel_active`, `wta_pwa_legacy_cleanup`, `wta_pwa_legacy_sw_path`.
 
 ### Trip abilities added with the WP Travel abilities module
 
@@ -281,9 +372,36 @@ taxonomies.
 The `elementor` module registers one widget per itinerary section, so a single
 trip template can be composed and edited in Elementor rather than in a theme
 file: hero, legs, route, seasonality, options, checklist, notes, gallery,
-trip card, destination grid, activity cards and experience strip. Each widget
+trip card, destination grid, activity cards, experience strip and term FAQ. Each widget
 carries style and responsive controls, including per-device grid columns and a
 choice of which registered image size to load.
+
+### Country FAQs
+
+Each country has one FAQ source: the **FAQs** field on its term (Trips >
+Destinations > edit a country), a repeater of question and answer pairs. Answers
+keep basic formatting (paragraphs, bold, italic, lists, links). The values are
+stored as JSON in the term meta `wta_faqs`, and are available over REST as
+`wta_faqs`, in the term export and import (JSON, and CSV as one JSON cell in
+`field:faqs`), and through the `update-term` ability.
+
+The **Term FAQ** widget (`wta-term-faq`) shows them:
+
+- On a country archive it shows that country's FAQs. On a trip, or on a place
+  beneath a country, it walks up the term's ancestors to the nearest one that has
+  FAQs. On a regular page, which has no destination, choose the destination in
+  the widget's Source control.
+- It renders native `<details>` and `<summary>` items, styled with the itinerary
+  design tokens, and prints nothing when there are no FAQs.
+- It publishes **one** FAQPage JSON-LD graph in the footer. Several widgets merge
+  into it, and a question is never published twice. It is left out when Yoast SEO
+  (including its FAQ block), Rank Math, an Elementor accordion or toggle with its
+  FAQ schema switch on, or markup in the content already publishes FAQPage schema.
+
+Filters: `wta_term_faq_term` (the term to look up from), `wta_term_faq_schema`
+(the graph; return null to publish none), `wta_term_faq_schema_enabled`,
+`wta_term_faq_other_schema_present`, `wta_faq_allowed_html` and
+`wta_faq_max_items` (default 50).
 
 Two Elementor dynamic tags are also registered, for term text and term images,
 and `templates/elementor/single-itinerary.json` is an importable template that
@@ -410,6 +528,8 @@ Options the plugin owns:
 | ----------------------- | ----------------------------------------------------------------- |
 | `wta_module_<key>`      | Per-module switch, one per module in the table above, seeded to 1 |
 | `wta_status_taxonomies` | Taxonomies that carry publication state                           |
+| `wta_pwa_settings`      | PWA module settings (the PWA tab)                                 |
+| `wta_pwa_legacy`        | Result of the last old-`sw.js` clean-up                           |
 | `wta_version`           | Installed version                                                 |
 
 ## Versioning

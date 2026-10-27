@@ -92,7 +92,7 @@ class WTA_Term_Transfer {
 
         wp_register_ability(WTA_Travel_Abilities::NS . 'export-terms', array(
             'label'       => 'Export destination and activity terms as JSON',
-            'description' => 'Download destination and activity terms (up to ' . self::MAX_TERMS . ' per call) with their name, archive description and structured fields: country, gateway airport, languages, currency, visa note, best months, standout and long description for destinations; duration, difficulty, minimum age, typical cost, permit, best months, standout and long description for activities. Slug, parent and publication state are included for context and ignored on import. Edit the document, then pass it to import-terms.',
+            'description' => 'Download destination and activity terms (up to ' . self::MAX_TERMS . ' per call) with their name, archive description and structured fields: country, gateway airport, languages, currency, visa note, best months, standout, long description and FAQs (a list of question and answer pairs) for destinations; duration, difficulty, minimum age, typical cost, permit, best months, standout and long description for activities. Slug, parent and publication state are included for context and ignored on import. Edit the document, then pass it to import-terms.',
             'category'    => WTA_Travel_Abilities::CATEGORY,
             'input_schema' => $input,
             'output_schema' => array(
@@ -117,7 +117,7 @@ class WTA_Term_Transfer {
 
         wp_register_ability(WTA_Travel_Abilities::NS . 'export-terms-csv', array(
             'label'       => 'Export destination and activity terms as CSV',
-            'description' => 'The same terms as export-terms, as one terms.csv for a spreadsheet: one row per term, a column per field named field:<key>. Months are numbers joined by "|"; permit_required is yes or no. Blank cell keeps a value, [clear] clears it. Pass the edited file to import-terms-csv.',
+            'description' => 'The same terms as export-terms, as one terms.csv for a spreadsheet: one row per term, a column per field named field:<key>. Months are numbers joined by "|"; permit_required is yes or no; faqs is one JSON cell holding a list of {question, answer}. Blank cell keeps a value, [clear] clears it. Pass the edited file to import-terms-csv.',
             'category'    => WTA_Travel_Abilities::CATEGORY,
             'input_schema' => $input,
             'output_schema' => array(
@@ -496,6 +496,23 @@ class WTA_Term_Transfer {
     }
 
     /**
+     * Whether a field's CSV cell holds JSON rather than a "|" separated list.
+     *
+     * @param string $key
+     */
+    protected static function is_json_field($key) {
+        foreach (self::taxonomies() as $taxonomy) {
+            $fields = WTA_Term_Fields::fields($taxonomy);
+
+            if (isset($fields[$key]) && 'faqs' === $fields[$key]['control']) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param array<string, mixed> $doc An export-terms document.
      */
     public static function to_csv(array $doc) {
@@ -541,6 +558,11 @@ class WTA_Term_Transfer {
 
             case 'checkbox':
                 return $value ? 'yes' : 'no';
+
+            case 'faqs':
+                // One JSON cell: a list of {question, answer}. Blank when
+                // there are none, which import reads as "unchanged".
+                return $value ? (string) wp_json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
 
             default:
                 return (string) $value;
@@ -598,6 +620,10 @@ class WTA_Term_Transfer {
 
                 if (WTA_Trip_CSV::CLEAR === $value) {
                     $entry['fields'][$key] = '';
+                } elseif (self::is_json_field($key)) {
+                    // Answers contain "|", which would otherwise be read as a
+                    // list separator and shred the JSON.
+                    $entry['fields'][$key] = $value;
                 } elseif (false !== strpos($value, '|')) {
                     $entry['fields'][$key] = explode('|', $value);
                 } else {

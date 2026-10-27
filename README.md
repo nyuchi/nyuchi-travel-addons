@@ -77,21 +77,21 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key                | Module                          | What it does                                                                                                                    |
-| ------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                 |
-| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes               |
-| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                        |
-| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                    |
-| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                         |
-| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                  |
-| `term_faq`         | Country FAQs                    | The Term FAQ widget: a country's FAQs as an accessible accordion, plus one FAQPage schema graph that yields to other FAQ schema |
-| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                                |
-| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                       |
-| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                      |
-| `compat`           | Compatibility helpers           | Trip timeline stylesheet, and a scan for day text that breaks WT Widgets older than 1.4.8                                       |
-| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**  |
-| `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**           |
+| Key                | Module                          | What it does                                                                                                                                             |
+| ------------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                                          |
+| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes                                        |
+| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                                                 |
+| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                                             |
+| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                                                  |
+| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                                           |
+| `term_faq`         | Country FAQs                    | The Term FAQ widget: a country's FAQs as an accessible accordion, plus one FAQPage schema graph that yields to other FAQ schema                          |
+| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                                                         |
+| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                                                |
+| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                                               |
+| `compat`           | Compatibility helpers           | Trip timeline stylesheet, a scan for day text that breaks WT Widgets older than 1.4.8, and the jQuery dependency WT Widgets omits from its slick scripts |
+| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**                           |
+| `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the

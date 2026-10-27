@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.14.0
+Stable tag: 1.15.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,13 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.15.0 =
+* Fixed: removes a JavaScript error ("jQuery is not defined") that appeared in the browser
+  console on every page. WT Widgets for Elementor loads its slick carousel scripts without
+  telling WordPress they need jQuery, so they ran too early. The compatibility module now
+  declares that dependency, only for those scripts and only when it is missing. No change
+  to how any page looks.
 
 = 1.14.0 =
 * New: a progressive web app module that fixes WP Travel's built-in PWA. It serves a

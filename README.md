@@ -92,6 +92,7 @@ the others.
 | `compat`           | Compatibility helpers           | Trip timeline stylesheet, a scan for day text that breaks WT Widgets older than 1.4.8, and the jQuery dependency WT Widgets omits from its slick scripts |
 | `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**                           |
 | `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
+| `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -191,6 +192,133 @@ Filters: `wta_pwa_defaults`, `wta_pwa_settings`, `wta_pwa_manifest`,
 `wta_pwa_categories`, `wta_pwa_exclude_paths`, `wta_pwa_cache_limits`,
 `wta_pwa_precache`, `wta_pwa_font_hosts`, `wta_pwa_register_logged_in`,
 `wta_pwa_wp_travel_active`, `wta_pwa_legacy_cleanup`, `wta_pwa_legacy_sw_path`.
+
+### Cookie consent (the `consent` module)
+
+A consent banner that replaces a third-party tool such as Usercentrics. It is
+the [Mzizi](https://mzizi.dev/components/cookie-consent) cookie-consent design
+(`role="dialog"`, `data-slot="cookie-consent"`, a fixed bottom bar with Manage,
+Decline and Accept, rounded buttons) in dependency-free JavaScript and CSS with
+the Iconic tokens. The Mzizi component is presentational, so the storage,
+categories and signalling are this module's. Accept and Decline share one style
+on purpose: equal size, weight and colour. It is **off by default**; switch it
+on from the **Consent** tab (the same switch is on the Modules tab).
+
+> This is a tool, not legal advice. Have the banner wording and your privacy
+> policy reviewed for GDPR and POPIA before relying on them.
+
+To set it up:
+
+1. Open Travel Addons, Consent. Check the privacy policy link (default
+   `/privacy-policy/`; the page must exist), the banner text and the category
+   descriptions. Use the live preview.
+2. Add `[wta_cookie_settings]` to the footer (a Shortcode widget, an Elementor
+   Shortcode widget, or a menu link to `#wta-cookie-settings`) so visitors can
+   change their mind. `window.wtaConsent.open()` does the same from code.
+3. Switch the module on and save. Check the site in a private window.
+
+**Behaviour.** The banner shows when there is no stored choice and again when
+the policy version changes. Accept all, Decline (necessary only) and Manage (a
+panel with analytics and marketing toggles and Save choices). Escape closes the
+panel only, and focus returns to where it was. The choice is stored in the
+first-party cookie `wta_consent` (JSON: version, ts, analytics, marketing, and a
+random consent id; `SameSite=Lax`, `Secure` on https, `path=/`, lifetime set in
+the settings, 180 days by default, 395 at most) with a localStorage mirror.
+Everything depends on the visitor in the browser only: the page is the same for
+everyone, so Varnish and Cloudflare page caches are unaffected. The script
+(`assets/js/wta-consent.js`, deferred) and stylesheet (`assets/css/wta-consent.css`)
+load on public pages only, never in wp-admin, feeds, the Customizer or the
+Elementor editor and preview. Changing **Policy version** asks everyone again.
+
+**Google Consent Mode v2.** At `wp_head` priority 1 the page sets
+`ad_storage`, `ad_user_data`, `ad_personalization` and `analytics_storage` to
+`denied` and `functionality_storage` and `security_storage` to `granted`, with
+`wait_for_update: 500`, before any tag runs. A returning visitor's stored choice
+is applied in the same snippet. On a choice the script calls
+`gtag('consent','update', ...)` (analytics maps to `analytics_storage`,
+marketing to `ad_storage`, `ad_user_data` and `ad_personalization`) and pushes
+`{event: 'wta_consent_update', wta_consent: {necessary, analytics, marketing, version, source}}`
+to `dataLayer`. The default is denied everywhere; "Analytics/Marketing granted
+by default in" takes ISO 3166 codes (`US`, `US-CA`) for Google's `region`
+parameter. The banner is still shown everywhere; there is no geo lookup.
+
+**GTM wiring.** This module does not load Google Tag Manager; Site Kit or
+Elementor already do. In GTM:
+
+1. Admin, Container Settings, tick **Enable consent overview**.
+2. For each tag, open Advanced Settings, Consent Settings. Google tags
+   (GA4, Ads) have built-in checks. For other tags choose **Require additional
+   consent** and list `analytics_storage` (analytics) or `ad_storage`
+   (advertising), or fire on the custom event `wta_consent_update`.
+3. Preview in Tag Assistant: before a choice the Consent tab should show the
+   four signals denied; after Accept they should read granted.
+
+**Holding back other scripts.** Any
+`<script type="text/plain" data-wta-consent="analytics|marketing">` (inline or
+`src`) is run as a normal script when that category is allowed, including on
+later visits. In PHP, `echo wta_consent_script( 'marketing', $src_or_inline, $attrs );`
+builds the tag, and the filter `wta_consent_gated_handles` (handle to category)
+holds back an enqueued script. Withdrawing consent cannot unload a script that
+already ran: it stops running on the next page load.
+
+**Meta Pixel.** Set a Pixel ID and the module loads `fbevents.js` only after
+marketing consent, then calls `fbq('consent','revoke')` if the visitor takes it
+back. Leave it empty if the pixel is already loaded elsewhere (GTM, Zaraz), or
+it counts twice.
+
+**Consent log (optional, off by default).** Each choice is posted to
+`POST /wp-json/wta/v1/consent` and stored in the `wta_consent_log` table: the
+cookie's random consent id, the time, policy version, the two choices, a salted
+HMAC of the IP address cut to 16 hex characters, and the browser family. No
+name, email, full IP address or full user agent. The endpoint has no nonce (the
+page is cached) but accepts only a UUID, a short version string and two
+booleans, refuses a foreign `Origin`, allows 10 requests per hashed address per
+10 minutes, and skips visitors who send Do Not Track (a setting, on by
+default). Records older than 13 months are deleted daily by WP-Cron. The
+records contain nothing that links to an email address, so WordPress's
+export and erase tools only find them when a site maps an email to consent ids
+with the `wta_consent_ids_for_email` filter; `WTA_Consent_Log::delete_ids()`
+removes records by id. The Consent tab shows the last 30 days by choice.
+
+The `nyuchi-travel/consent-status` ability (`manage_options`, read-only)
+reports whether the module is on, a settings summary, the policy version, the
+script URLs, other consent tools detected, and the 30 day record counts.
+
+Filters: `wta_consent_defaults`, `wta_consent_settings`,
+`wta_consent_should_output`, `wta_consent_client_config`, `wta_consent_labels`,
+`wta_consent_gated_handles`, `wta_consent_script_html`, `wta_consent_conflicts`,
+`wta_consent_client_ip`, `wta_consent_rate_limit`,
+`wta_consent_log_retention_days`, `wta_consent_ids_for_email`.
+
+**Moving from Zaraz and Usercentrics.** Do it in this order so there is no
+gap and no double banner:
+
+1. Switch the module on here and check the banner and Consent Mode on the live
+   site. The Consent tab lists other consent tools it can detect and can scan
+   the live home page for Usercentrics and Zaraz.
+2. Make sure the tags that matter load through GTM (or Site Kit) with consent
+   settings, and, if you want the pixel, set the Pixel ID here.
+3. In Cloudflare, Zaraz, Consent: switch off the consent modal. Then remove the
+   Zaraz tools you replaced (Google tag, Facebook pixel) so nothing is loaded
+   twice.
+4. Remove Usercentrics: take its script out of the page (a Zaraz tool, a tag or
+   the theme), then pause the configuration in the Usercentrics admin.
+5. Check again in a private window, and with a fresh scan.
+
+**Privacy policy wording (suggestions, not advice).** Name the cookie
+(`wta_consent`: stores your cookie choice, up to the chosen lifetime), say that
+analytics and marketing tags only run after consent and that consent can be
+withdrawn from the "Cookie settings" link, name the analytics and advertising
+providers, and, if the log is on, describe it as above with its 13 month
+retention. WordPress adds a suggested paragraph under Settings, Privacy, Policy
+Guide.
+
+**Limitations.** Consent Mode only affects tags that read it. The banner is
+shown to every visitor (no region detection). Global Privacy Control is not
+read. Withdrawing consent does not unload scripts already running; the page
+needs a reload. If a theme style resets `button` or `input` aggressively the
+banner's own rules, which are scoped under `.wta-consent`, win for the banner
+only. The log cannot be matched to a person by email.
 
 ### Trip abilities added with the WP Travel abilities module
 

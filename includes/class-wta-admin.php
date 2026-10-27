@@ -42,6 +42,9 @@ class WTA_Admin {
 
         // The PWA tab's image pickers use the media library modal.
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media'));
+
+        // The Consent tab's live preview uses the front-end banner files.
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_consent_preview'));
     }
 
     /* ----------------------------------------------------------------- Menu */
@@ -57,6 +60,7 @@ class WTA_Admin {
             'classification' => array('Classification', 'category'),
             'terms'          => array('Terms', 'tag'),
             'pwa'            => array('PWA', 'smartphone'),
+            'consent'        => array('Consent', 'privacy'),
             'modules'        => array('Modules', 'admin-plugins'),
         );
     }
@@ -201,6 +205,10 @@ class WTA_Admin {
             $this->save_terms();
         } elseif ('pwa' === $form) {
             $this->save_pwa();
+        } elseif ('consent' === $form) {
+            $this->save_consent();
+        } elseif ('consent_scan' === $form) {
+            $this->scan_consent();
         }
     }
 
@@ -208,6 +216,46 @@ class WTA_Admin {
         if (isset($_GET['page'], $_GET['tab']) && self::SLUG === sanitize_key(wp_unslash($_GET['page'])) && 'pwa' === sanitize_key(wp_unslash($_GET['tab']))) {
             wp_enqueue_media();
         }
+    }
+
+    public function enqueue_consent_preview() {
+        if (isset($_GET['page'], $_GET['tab']) && self::SLUG === sanitize_key(wp_unslash($_GET['page'])) && 'consent' === sanitize_key(wp_unslash($_GET['tab']))) {
+            WTA_Consent::enqueue_preview();
+        }
+    }
+
+    private function save_consent() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to change consent settings.', 'wp-travel-addons'));
+        }
+
+        check_admin_referer('wta_save_consent', 'wta_consent_nonce');
+
+        // sanitize() unslashes and validates every value.
+        $input = isset($_POST['wta_consent']) && is_array($_POST['wta_consent']) ? $_POST['wta_consent'] : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+
+        update_option(WTA_Consent::OPTION, WTA_Consent::sanitize($input));
+        update_option('wta_module_consent', isset($_POST['module_consent']) ? 1 : 0);
+
+        if (!empty(WTA_Consent::settings()['log_enabled'])) {
+            WTA_Consent_Log::install();
+        }
+
+        WTA_Consent_Log::sync_schedule();
+
+        $this->redirect_to('consent');
+    }
+
+    private function scan_consent() {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to scan the site.', 'wp-travel-addons'));
+        }
+
+        check_admin_referer('wta_scan_consent', 'wta_consent_scan_nonce');
+
+        WTA_Consent::scan_live_page();
+
+        $this->redirect_to('consent');
     }
 
     private function save_pwa() {

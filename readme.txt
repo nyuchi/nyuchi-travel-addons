@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.15.0
+Stable tag: 1.16.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,7 +62,9 @@ competing to answer the same question.
 Small helpers for WP Travel companion plugins: the single-trip timeline stylesheet, and a
 scan for itinerary day text that breaks WT Widgets for Elementor older than 1.4.8 (the printf
 defect fixed upstream, WP Travel ticket #2051). The runtime guard that worked around that
-defect has been removed. Helpers are deleted once they are no longer needed.
+defect has been removed. It also declares the jQuery dependency that WT Widgets for
+Elementor 1.4.9 leaves out of its slick carousel scripts, which can be switched off with the
+wta_compat_slick_jquery_fix filter. Helpers are deleted once they are no longer needed.
 
 == Installation ==
 
@@ -111,6 +113,28 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.16.0 =
+* New: a cookie consent banner. It asks first-time visitors, and everyone again after you
+  change the policy version, to accept all, decline (necessary cookies only) or choose
+  analytics and marketing separately. Accept and Decline look and weigh the same, it works
+  with the keyboard and screen readers, and on phones it is a bottom sheet that does not
+  cover the page. The choice is remembered in a first-party cookie for 180 days by
+  default. Off by default; switch it on from the new Consent tab, where the wording,
+  privacy policy link, categories, position and a live preview are set.
+* New: Google Consent Mode v2. Before a choice, Google tags are told that advertising and
+  analytics storage are denied, then updated when the visitor chooses. The banner works
+  with a cached site, because the visitor's choice is handled in the browser. Google Tag
+  Manager is not added by this plugin; the container must read Consent Mode (see the README).
+* New: a [wta_cookie_settings] shortcode and window.wtaConsent.open() to reopen the
+  choices, a wta_consent_script() helper and data-wta-consent attribute to hold back other
+  scripts until a category is allowed, and an optional Meta Pixel loader that only loads
+  after marketing consent and respects withdrawal.
+* New: an optional consent log (off by default) that keeps a random id, the time, the
+  policy version, the choices, a salted and shortened IP hash and the browser family for 13
+  months, with WordPress export and erase support, and a consent-status ability. The Consent
+  tab lists other consent tools (Usercentrics, Cloudflare Zaraz, Complianz and others) that
+  would show a second banner. This is a tool, not legal advice: have the wording reviewed.
 
 = 1.15.0 =
 * Fixed: removes a JavaScript error ("jQuery is not defined") that appeared in the browser

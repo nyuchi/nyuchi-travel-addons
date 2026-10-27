@@ -3,7 +3,7 @@
  * Plugin Name: Nyuchi Travel Addons - Trip Tools for WP Travel
  * Plugin URI:  https://github.com/nyuchi/nyuchi-travel-addons
  * Description: Extends WP Travel with a REST-accessible trip schema, publication state for taxonomy terms, classification diagnostics, and compatibility helpers. By Nyuchi Web Services.
- * Version:     1.15.0
+ * Version:     1.16.0
  * Author:      Nyuchi Web Services
  * Author URI:  https://nyuchi.com
  * Developer:   Bryan Fawcett (@bryanfawcett)
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('WTA_VERSION', '1.15.0');
+define('WTA_VERSION', '1.16.0');
 define('WTA_FILE', __FILE__);
 define('WTA_DIR', plugin_dir_path(__FILE__));
 define('WTA_URL', plugin_dir_url(__FILE__));
@@ -43,6 +43,8 @@ require_once WTA_DIR . 'includes/class-wta-compat.php';
 require_once WTA_DIR . 'includes/class-wta-assets.php';
 require_once WTA_DIR . 'includes/class-wta-pwa.php';
 require_once WTA_DIR . 'includes/class-wta-pwa-legacy.php';
+require_once WTA_DIR . 'includes/class-wta-consent.php';
+require_once WTA_DIR . 'includes/class-wta-consent-log.php';
 require_once WTA_DIR . 'includes/class-wta-travel-abilities.php';
 require_once WTA_DIR . 'includes/class-wta-trip-transfer.php';
 require_once WTA_DIR . 'includes/class-wta-trip-csv.php';
@@ -154,6 +156,12 @@ final class WP_Travel_Addons {
                 'detail'  => 'An installable, offline-capable site: a current web app manifest, a service worker that never serves a stale page, and an offline page. Replaces the WP Travel PWA. Off until switched on, because it changes what the front end prints and registers. Settings are on the PWA tab.',
                 'default' => 0,
             ),
+            'consent' => array(
+                'class'   => 'WTA_Consent',
+                'label'   => 'Cookie consent',
+                'detail'  => 'A cookie consent banner (accept, decline, manage categories) with Google Consent Mode v2 signalling, held-back scripts, an optional Meta Pixel loader and an optional consent log. Off until switched on, because it changes what the front end prints. Settings are on the Consent tab.',
+                'default' => 0,
+            ),
         );
     }
 
@@ -202,6 +210,12 @@ final class WP_Travel_Addons {
         // after WP Travel's PWA setting is turned off. It registers hooks
         // only and reads the file on admin_init when something has changed.
         $this->modules['pwa_legacy'] = new WTA_PWA_Legacy();
+
+        // Always constructed, whatever the consent module switch says: the
+        // privacy tools' exporter and eraser, the retention purge and the
+        // logging endpoint must keep working for records already stored. The
+        // endpoint answers 404 while the module or logging is off.
+        $this->modules['consent_log'] = new WTA_Consent_Log();
 
         // Only adds the Plugins-row link; the count is fetched by the admin
         // screen itself when it renders.

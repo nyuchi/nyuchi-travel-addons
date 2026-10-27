@@ -479,6 +479,10 @@ if (!function_exists('wta_switch')) {
     <?php endif; ?>
 
     <?php // --------------------------------------------------------------- PWA ?>
+    <?php if ('consent' === $current_tab) : ?>
+        <?php include WTA_DIR . 'admin/views/consent-tab.php'; ?>
+    <?php endif; ?>
+
     <?php if ('pwa' === $current_tab) : ?>
         <?php include WTA_DIR . 'admin/views/pwa-tab.php'; ?>
     <?php endif; ?>

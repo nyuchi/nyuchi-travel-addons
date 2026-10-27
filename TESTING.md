@@ -80,6 +80,21 @@ A run takes about ten seconds.
   widget is a thin shell over `WTA_Term_FAQ`, which is what runs here: Elementor
   is not installed in the test site.
 
+- `ConsentTest.php`: the `consent` module. Off by default and nothing hooked
+  while off; nothing printed in wp-admin or the Elementor editor and preview;
+  the Consent Mode defaults at `wp_head` priority 1 (denied, `wait_for_update`,
+  gtag defined first, regional entries, the stored-choice snippet run in Node);
+  settings sanitising; the inline JSON config; the held-script helper and the
+  handle filter; the Meta Pixel setting; the logging endpoint (validation, origin,
+  Do Not Track, the rate limit, 13 month purge); privacy export and erase; the
+  detection of other consent tools; the `consent-status` ability; the Consent tab.
+  The table is dropped by hand between tests because creating it ends the
+  test's transaction on SQLite.
+- `tests/js/consent-core.test.js` and `tests/js/head-snippet.test.js`: the pure
+  functions of `assets/js/wta-consent.js` and the head snippet, in plain Node
+  (`node tests/js/consent-core.test.js`). `ConsentTest` runs them and
+  `node --check`; they are skipped where Node is missing.
+
 - `SlickJqueryTest.php`: the `compat` module adds the missing `jquery`
   dependency to WT Widgets' slick scripts, resolves jQuery first, and leaves
   alone scripts that already depend on it, absent handles, other scripts, and

@@ -77,29 +77,30 @@ alongside someone else's product without becoming load-bearing in ways that are
 hard to back out of, so any single module can be turned off without disturbing
 the others.
 
-| Key                | Module                          | What it does                                                                                                                                             |
-| ------------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `trip_meta`        | Trip REST schema                | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                                          |
-| `itinerary`        | Itinerary schema                | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes                                        |
-| `trip_editor`      | Itinerary editor                | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                                                 |
-| `elementor`        | Elementor widgets               | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                                             |
-| `term_media`       | Term images and descriptions    | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                                                  |
-| `term_fields`      | Destination and activity detail | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                                           |
-| `term_faq`         | Country FAQs                    | The Term FAQ widget: a country's FAQs as an accessible accordion, plus one FAQPage schema graph that yields to other FAQ schema                          |
-| `term_status`      | Term publication state          | Adds live/draft status to taxonomy terms so a term can exist before it is public                                                                         |
-| `audit`            | Classification diagnostics      | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                                                |
-| `travel_abilities` | WP Travel abilities             | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                                               |
-| `compat`           | Compatibility helpers           | Trip timeline stylesheet, a scan for day text that breaks WT Widgets older than 1.4.8, and the jQuery dependency WT Widgets omits from its slick scripts |
-| `assets`           | Conditional asset loading       | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**                           |
-| `pwa`              | Progressive web app             | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
-| `consent`          | Cookie consent                  | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
-| `ai_crawlers`      | AI crawler policy               | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
-| `llms`             | llms.txt for AI assistants      | Serves a complete /llms.txt and /llms-full.txt built from your trips, destinations and key pages. **Off by default**                                     |
-| `hardening`        | Login hardening                 | Hides the public username list in the REST API and closes XML-RPC. **Off by default**                                                                    |
-| `login_style`      | Sign-in page styling            | Gives the WorkOS sign-in page and wp-login.php the site look. **Off by default**                                                                         |
-| `workos_mfa`       | WorkOS second-factor step       | Lets the WorkOS sign-in page ask for the authenticator code. **Off by default**                                                                          |
-| `workos_bridge`    | WorkOS sign-in cookie bridge    | Finishes a WorkOS sign-in on wp-login.php so the login cookie sticks (one-time token, 90 seconds). **Off by default**                                    |
-| `safaribookings`   | SafariBookings reviews script   | Loads the SafariBookings reviews script from WordPress instead of Cloudflare Zaraz. **Off by default**                                                   |
+| Key                | Module                               | What it does                                                                                                                                             |
+| ------------------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `trip_meta`        | Trip REST schema                     | Exposes WP Travel trip fields and the day-by-day itinerary through the REST API                                                                          |
+| `itinerary`        | Itinerary schema                     | Trip data WP Travel does not store: legs, route stops, month-by-month suitability, traveller choices, field notes                                        |
+| `trip_editor`      | Itinerary editor                     | Puts the itinerary schema on the trip edit screen, so an itinerary can be authored without a REST client                                                 |
+| `elementor`        | Elementor widgets                    | A widget per itinerary section, so one trip template can be composed and edited in Elementor                                                             |
+| `term_media`       | Term images and descriptions         | Featured image and dependable description for terms, falling back to a trip so no archive renders blank                                                  |
+| `term_fields`      | Destination and activity detail      | Country, gateway airport, currency and best months; activity duration, difficulty, minimum age                                                           |
+| `term_faq`         | Country FAQs                         | The Term FAQ widget: a country's FAQs as an accessible accordion, plus one FAQPage schema graph that yields to other FAQ schema                          |
+| `term_status`      | Term publication state               | Adds live/draft status to taxonomy terms so a term can exist before it is public                                                                         |
+| `audit`            | Classification diagnostics           | Reports flat hierarchies, empty terms, non-segmenting terms and cross-taxonomy duplicates                                                                |
+| `travel_abilities` | WP Travel abilities                  | Exposes WP Travel and WP Travel Pro over the Abilities API: trips, pricing, dates, taxonomies, diagnostics                                               |
+| `compat`           | Compatibility helpers                | Trip timeline stylesheet, a scan for day text that breaks WT Widgets older than 1.4.8, and the jQuery dependency WT Widgets omits from its slick scripts |
+| `assets`           | Conditional asset loading            | Dequeues the WP Travel booking widget, Google Maps and WP Travel Pro bundles on pages that cannot use them. **Off by default**                           |
+| `pwa`              | Progressive web app                  | Installable, offline-capable site: manifest, service worker and offline page served by the plugin. **Off by default**                                    |
+| `consent`          | Cookie consent                       | Accept / Decline / Manage banner, Google Consent Mode v2, held-back scripts, optional Meta Pixel loader and consent log. **Off by default**              |
+| `ai_crawlers`      | AI crawler policy                    | Allows every AI crawler explicitly in robots.txt, adds a Content-Signal line and header and the sitemap; blocking is opt-in. **Off by default**          |
+| `llms`             | llms.txt for AI assistants           | Serves a complete /llms.txt and /llms-full.txt built from your trips, destinations and key pages. **Off by default**                                     |
+| `hardening`        | Login hardening                      | Hides the public username list in the REST API and closes XML-RPC. **Off by default**                                                                    |
+| `login_style`      | Sign-in page styling                 | Gives the WorkOS sign-in page and wp-login.php the site look. **Off by default**                                                                         |
+| `workos_mfa`       | WorkOS second-factor step            | Lets the WorkOS sign-in page ask for the authenticator code. **Off by default**                                                                          |
+| `workos_bridge`    | WorkOS sign-in cookie bridge         | Finishes a WorkOS sign-in on wp-login.php so the login cookie sticks (one-time token, 90 seconds). **Off by default**                                    |
+| `safaribookings`   | SafariBookings reviews script        | Loads the SafariBookings reviews script from WordPress instead of Cloudflare Zaraz. **Off by default**                                                   |
+| `kweli`            | Mukoko Kweli places on the route map | A route stop can point at a Kweli place and take its position from it, through the Nyuchi API. **Off by default**                                        |
 
 The `assets` module is the one exception to "every module defaults to on": it
 changes what the front end loads, so it stays off until switched on from the
@@ -743,3 +744,20 @@ see [LICENSE](https://github.com/nyuchi/nyuchi-travel-addons/blob/main/LICENSE).
 
 © Nyuchi Web Services. Developed by Bryan Fawcett
 ([@bryanfawcett](https://github.com/bryanfawcett)).
+
+### Mukoko Kweli places on the route map
+
+Turn on the `kweli` module and each route stop gets a **Kweli place** field (a
+place id or slug). The stop's position then comes from that place in
+[Mukoko Kweli](https://kweli.mukoko.com), where place information is stored and
+built. The plugin asks the Nyuchi API (`https://api.nyuchi.com/v1/places/{id}`)
+from the server and keeps each answer for a day, so visitors never call the API
+from their browsers and no third-party map is loaded. A failed lookup is
+remembered for an hour so a down API is not hit on every page view.
+
+A stop keeps its own latitude and longitude as the fallback. If the API fails,
+the place is unknown, or the place sits more than 150 km from where the stop
+already says it is (for example a swapped latitude and longitude in Kweli), the
+stop stays as authored. Typed names and subtitles are never overwritten; an
+empty name or subtitle is filled from the place. The filter `wta_kweli_base`
+points the module at a staging API.

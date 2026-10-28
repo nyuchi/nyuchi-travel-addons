@@ -48,6 +48,7 @@ require_once WTA_DIR . 'includes/class-wta-consent-log.php';
 require_once WTA_DIR . 'includes/class-wta-ai-crawlers.php';
 require_once WTA_DIR . 'includes/class-wta-llms.php';
 require_once WTA_DIR . 'includes/class-wta-hardening.php';
+require_once WTA_DIR . 'includes/class-wta-kweli.php';
 require_once WTA_DIR . 'includes/class-wta-safaribookings.php';
 require_once WTA_DIR . 'includes/class-wta-login-style.php';
 require_once WTA_DIR . 'includes/class-wta-workos-mfa.php';
@@ -191,6 +192,12 @@ final class WP_Travel_Addons {
                 'class'   => 'WTA_WorkOS_MFA',
                 'label'   => 'WorkOS second-factor step',
                 'detail'  => 'Fixes the WorkOS sign-in page getting stuck on "The user must complete an MFA challenge to finish authenticating" when multi-factor sign-in is required: it turns that WorkOS reply into the authenticator-code step the page already has. Nothing is relaxed, the second factor is still checked by WorkOS. Off until switched on.',
+                'default' => 0,
+            ),
+            'kweli' => array(
+                'class'   => 'WTA_Kweli',
+                'label'   => 'Mukoko Kweli places on the route map',
+                'detail'  => 'Lets a route stop point at a place in Mukoko Kweli (id or slug) and takes its position from that place, fetched on the server through the Nyuchi API and kept for a day. A stop keeps its own latitude and longitude as the fallback. Off until switched on.',
                 'default' => 0,
             ),
             'safaribookings' => array(

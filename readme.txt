@@ -4,7 +4,7 @@ Tags: wp travel, travel, itinerary, taxonomy, rest api
 Requires at least: 5.9
 Tested up to: 7.0
 Requires PHP: 8.2
-Stable tag: 1.24.0
+Stable tag: 1.25.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,9 @@ telemetry or usage ping. To hide the star count, add
 `wta_show_star_count` filter.
 
 == Changelog ==
+
+= 1.25.0 =
+* New: Mukoko Kweli places on the route map (the `kweli` module, off by default). A route stop can point at a Kweli place and take its position from it, fetched on the server through the Nyuchi API and kept for a day. A stop keeps its own coordinates as the fallback, and a place more than 150 km from them is ignored.
 
 = 1.24.0 =
 * New: SafariBookings reviews script module (off by default). Loads the reviews script from WordPress, asynchronously in the footer, so Cloudflare Zaraz can be switched off.

@@ -530,6 +530,13 @@ class WTA_Trip_Editor {
             ));
 
             $this->field(array(
+                'name'  => $prefix . '[place]',
+                'key'   => '[place]',
+                'label' => 'Kweli place (id or slug, optional)',
+                'value' => self::pick($row, 'place'),
+            ));
+
+            $this->field(array(
                 'type'  => 'number',
                 'name'  => $prefix . '[nights]',
                 'key'   => '[nights]',

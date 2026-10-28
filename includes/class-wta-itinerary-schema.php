@@ -122,6 +122,7 @@ class WTA_Itinerary_Schema {
                             'x'        => array('type' => array('number', 'null'), 'description' => 'Optional manual horizontal position, 0-100. Leave null to derive from lat/lng.'),
                             'y'        => array('type' => array('number', 'null'), 'description' => 'Optional manual vertical position, 0-100. Leave null to derive from lat/lng.'),
                             'arrive'   => array('type' => 'string', 'enum' => array('fly', 'drive', 'start'), 'description' => 'How the traveller reaches this stop from the previous one.'),
+                            'place'    => array('type' => 'string', 'description' => 'Optional Mukoko Kweli place (id or slug). With the Kweli module on, the stop takes its coordinates from that place; the stop\'s own lat/lng remain the fallback.'),
                         ),
                     ),
                 ),
@@ -445,6 +446,9 @@ class WTA_Itinerary_Schema {
                 'x'        => (isset($stop['x']) && '' !== $stop['x'] && null !== $stop['x']) ? min(100, max(0, (float) $stop['x'])) : null,
                 'y'        => (isset($stop['y']) && '' !== $stop['y'] && null !== $stop['y']) ? min(100, max(0, (float) $stop['y'])) : null,
                 'arrive'   => in_array($arrive, array('fly', 'drive', 'start'), true) ? $arrive : 'drive',
+                // A Mukoko Kweli place (id or slug) this stop stands for. Empty
+                // when the stop is positioned by hand.
+                'place'    => (isset($stop['place']) && is_string($stop['place']) && preg_match('/^[A-Za-z0-9._-]{1,100}$/', trim($stop['place']))) ? trim($stop['place']) : '',
             );
         }
 
@@ -830,7 +834,9 @@ class WTA_Itinerary_Schema {
             }
         }
 
-        $data['route'] = self::project_route($data['route']);
+        // Lets a module such as Kweli fill in stop coordinates before they are
+        // projected. With none attached the stops pass through unchanged.
+        $data['route'] = self::project_route(apply_filters('wta_route_stops', $data['route']));
         $data['legs']  = self::clamp_legs(self::resolve_leg_terms($data['legs'], $post_id), count($data['days']));
 
         // A trip with no authored hero still deserves a headline block.
